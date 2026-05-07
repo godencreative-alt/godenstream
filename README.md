@@ -98,6 +98,8 @@ npm run build
 npm run start
 ```
 
+`npm run start` menjalankan `.next/standalone/server.js`; jangan gunakan `next start` langsung karena project memakai `output: "standalone"`.
+
 Default production port adalah `3000`. Untuk mengubah port:
 
 ```bash
