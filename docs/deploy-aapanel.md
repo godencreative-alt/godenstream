@@ -66,6 +66,8 @@ npm ci
 npm run build
 ```
 
+`npm run build` juga menyalin folder `.next/static` dan `public` ke `.next/standalone`. Jika langkah ini tidak ada, halaman bisa tampil tanpa CSS seperti HTML polos dengan ikon/logo sangat besar.
+
 ## 6. Jalankan standalone Next.js dengan PM2
 
 Karena project memakai standalone output, gunakan `server.js` hasil build:
@@ -101,6 +103,7 @@ Verifikasi app lokal sebelum mengubah Nginx:
 
 ```bash
 curl -I http://127.0.0.1:3000
+find .next/standalone/.next/static -type f | head
 pm2 logs dramashort --lines 50
 ```
 
