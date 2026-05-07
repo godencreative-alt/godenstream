@@ -35,7 +35,7 @@ function SearchContent() {
         Cari Shordrama
       </h1>
       <p className="mb-6 text-sm text-white/45">
-        Temukan drama pendek dari Drama-ID, DramaBox, Melolo, NetShort, dan FreeReels.
+        Temukan drama pendek dari Drama-ID, DramaBox, Melolo, NetShort, dan DramaNova.
       </p>
 
       <div className="relative mb-6 max-w-lg">

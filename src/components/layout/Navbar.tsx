@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Bars3Icon,
+  ChevronDownIcon,
   FireIcon,
   MagnifyingGlassIcon,
   PlayCircleIcon,
@@ -18,10 +19,18 @@ const navLinks = [
   { href: "/terbaru", label: "Terbaru", icon: PlayCircleIcon },
 ];
 
+const moreLinks = [
+  { href: "/syarat-dan-ketentuan", label: "Syarat dan Ketentuan" },
+  { href: "/kebijakan-privasi", label: "Kebijakan Privasi" },
+  { href: "/dmca", label: "DMCA" },
+  { href: "/tentang", label: "Tentang" },
+];
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -63,6 +72,39 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMoreOpen((open) => !open)}
+              className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
+                moreLinks.some((link) => pathname === link.href)
+                  ? "bg-[var(--dc-gold)]/15 text-[var(--dc-gold)]"
+                  : "text-white/55 hover:bg-white/[0.04] hover:text-white"
+              }`}
+            >
+              Lainnya
+              <ChevronDownIcon className={`h-4 w-4 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+            </button>
+            {moreOpen && (
+              <div className="absolute left-0 top-full z-50 mt-2 w-56 rounded-2xl border border-white/[0.08] bg-[#0e0e0e]/98 p-2 shadow-2xl backdrop-blur-2xl">
+                {moreLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMoreOpen(false)}
+                    className={`block rounded-xl px-3 py-2 text-sm transition-colors ${
+                      pathname === link.href
+                        ? "bg-[var(--dc-gold)]/15 text-[var(--dc-gold)]"
+                        : "text-white/60 hover:bg-white/[0.05] hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         <form onSubmit={submitSearch} className="ml-auto hidden max-w-xs flex-1 md:block">
@@ -98,7 +140,7 @@ export default function Navbar() {
             />
           </form>
           <nav className="grid gap-1">
-            {navLinks.map(({ href, label, icon: Icon }) => (
+            {[...navLinks, ...moreLinks.map((link) => ({ ...link, icon: ChevronDownIcon }))].map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}

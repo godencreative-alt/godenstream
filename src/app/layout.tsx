@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s | GodenStream",
   },
   description:
-    "Stream short dramas from Drama-ID, DramaBox, Melolo, NetShort, and FreeReels.",
+    "Stream short dramas from Drama-ID, DramaBox, Melolo, NetShort, and DramaNova.",
   openGraph: {
     title: "GodenStream",
     description: "Shordrama Streaming Platform",

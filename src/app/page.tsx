@@ -45,7 +45,7 @@ export default function HomePage() {
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">
             Fokus pada drama pendek dari Drama-ID, DramaBox, Melolo, NetShort,
-            dan FreeReels. Setiap platform tampil 5 kolom x 2 baris di halaman
+            dan DramaNova. Setiap platform tampil 5 kolom x 2 baris di halaman
             awal.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">

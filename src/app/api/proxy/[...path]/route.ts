@@ -19,7 +19,7 @@ const ALLOWED_PREFIXES = [
   "/dramaboxv4",
   "/melolo",
   "/netshort",
-  "/freereels",
+  "/dramanova",
 ];
 
 const RL_MAP = new Map<string, { count: number; reset: number }>();

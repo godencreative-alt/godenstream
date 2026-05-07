@@ -3,8 +3,16 @@ import type { MetadataRoute } from "next";
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://godenstream.example.com";
 
-  const platforms = ["drama-id", "dramabox", "melolo", "netshort", "freereels"];
-  const pages = ["trending", "popular", "terbaru"];
+  const platforms = ["drama-id", "dramabox", "melolo", "netshort", "dramanova"];
+  const pages = [
+    "trending",
+    "popular",
+    "terbaru",
+    "syarat-dan-ketentuan",
+    "kebijakan-privasi",
+    "dmca",
+    "tentang",
+  ];
 
   const entries: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },

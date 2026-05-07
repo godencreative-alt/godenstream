@@ -20,7 +20,7 @@ export default function PopularPage() {
         Popular
       </h1>
       <p className="mb-6 text-sm text-white/45">
-        Drama paling populer dari Drama-ID, DramaBox, Melolo, NetShort, dan FreeReels.
+        Drama paling populer dari Drama-ID, DramaBox, Melolo, NetShort, dan DramaNova.
       </p>
 
       {isLoading ? (

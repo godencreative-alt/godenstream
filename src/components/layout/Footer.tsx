@@ -9,7 +9,7 @@ const columns = [
       { href: "/platform/dramabox", label: "DramaBox" },
       { href: "/platform/melolo", label: "Melolo" },
       { href: "/platform/netshort", label: "NetShort" },
-      { href: "/platform/freereels", label: "FreeReels" },
+      { href: "/platform/dramanova", label: "DramaNova" },
     ],
   },
   {
@@ -24,16 +24,16 @@ const columns = [
   {
     title: "Account",
     links: [
-      { href: "/pricing", label: "Pricing" },
-      { href: "/drama/bookmarks", label: "Bookmarks" },
-      { href: "/drama/history", label: "Watch History" },
+      { href: "/tentang", label: "Tentang" },
+      { href: "/search", label: "Cari Shordrama" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { href: "/privacy", label: "Privacy Policy" },
-      { href: "/terms", label: "Terms of Service" },
+      { href: "/syarat-dan-ketentuan", label: "Syarat dan Ketentuan" },
+      { href: "/kebijakan-privasi", label: "Kebijakan Privasi" },
+      { href: "/dmca", label: "DMCA" },
     ],
   },
 ];

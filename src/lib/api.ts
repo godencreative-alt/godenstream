@@ -135,8 +135,9 @@ function mapShordramaItem(
         "serial_count",
         "current_count",
         "last_chapter_index",
+        "episodes",
       ]) ?? null,
-    play_count: pickNumber(item, ["playCount", "view_count", "read_count"]) ?? 0,
+    play_count: pickNumber(item, ["playCount", "view_count", "read_count", "viewCount"]) ?? 0,
     introduction: pickString(item, ["introduction", "description", "abstract"]) || null,
     language: pickString(item, ["lang", "language"]) || null,
     is_dubbed:
@@ -180,6 +181,10 @@ function extractIdramaBooks(data: unknown): Record<string, unknown>[] {
 
 function extractDataBooks(data: unknown): Record<string, unknown>[] {
   if (!isRecord(data)) return [];
+  const rows = toArray(data.rows);
+  if (rows.length > 0) return rows;
+  const dramas = toArray(data.dramas);
+  if (dramas.length > 0) return dramas;
   return toArray(data.data);
 }
 
@@ -234,14 +239,16 @@ export const SHORDRAMA_PLATFORMS = [
   },
   {
     id: 5,
-    slug: "freereels",
-    name: "FreeReels",
-    apiBase: "/freereels",
-    language: "id-ID",
-    latestPath: (page: number) => `/api/v1/new?page=${Math.max(0, page - 1)}&lang=id-ID`,
-    popularPath: (page: number) =>
-      `/api/v1/popular?page=${Math.max(0, page - 1)}&lang=id-ID`,
-    trendingPath: () => "/api/v1/foryou?lang=id-ID",
+    slug: "dramanova",
+    name: "DramaNova",
+    apiBase: "/dramanova",
+    language: "in",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?lang=in&page=${page}&size=${perPage}`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/recommend?lang=in&categoryKey=dramanova_hot&page=${page}&size=${perPage}&limit=${perPage}`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/recommend?lang=in&categoryKey=dramanova_hot&page=${page}&size=${perPage}&limit=${perPage}`,
     extract: extractDataBooks,
   },
 ] as const;
