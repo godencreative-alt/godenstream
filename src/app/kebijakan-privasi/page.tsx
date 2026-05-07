@@ -17,7 +17,7 @@ export default function PrivacyPolicyPage() {
             Informasi yang Diproses
           </h2>
           <p>
-            GodenStream dapat menggunakan data penggunaan lokal seperti riwayat
+            DramaShort dapat menggunakan data penggunaan lokal seperti riwayat
             tontonan dan bookmark untuk meningkatkan pengalaman pengguna.
           </p>
         </section>
@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="mb-2 text-lg font-semibold text-white">Kontak</h2>
           <p>
-            Untuk pertanyaan privasi, hubungi tim GodenStream melalui kanal
+            Untuk pertanyaan privasi, hubungi tim DramaShort melalui kanal
             dukungan resmi.
           </p>
         </section>

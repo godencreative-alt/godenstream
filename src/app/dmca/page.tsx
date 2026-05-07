@@ -26,7 +26,7 @@ export default function DmcaPage() {
             Peninjauan
           </h2>
           <p>
-            GodenStream akan meninjau laporan yang lengkap dan mengambil
+            DramaShort akan meninjau laporan yang lengkap dan mengambil
             tindakan yang sesuai, termasuk membatasi akses ke konten yang
             dilaporkan bila diperlukan.
           </p>

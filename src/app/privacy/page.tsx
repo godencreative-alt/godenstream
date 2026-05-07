@@ -13,7 +13,7 @@ export default function PrivacyPage() {
         <h2 className="text-lg font-semibold text-white">Data Storage</h2>
         <p>Watch history and bookmarks are stored locally on your device using localStorage. Account data is stored securely on our servers.</p>
         <h2 className="text-lg font-semibold text-white">Contact</h2>
-        <p>For privacy inquiries, contact us at privacy@godenstream.example.com</p>
+        <p>For privacy inquiries, contact us at privacy@dramashort.example.com</p>
       </div>
     </div>
   );

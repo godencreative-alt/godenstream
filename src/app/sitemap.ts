@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://godenstream.example.com";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dramashort.example.com";
 
   const platforms = ["drama-id", "dramabox", "melolo", "netshort", "dramanova"];
   const pages = [
@@ -16,7 +16,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const entries: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
-    { url: `${baseUrl}/pricing`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
   ];
 
   for (const page of pages) {

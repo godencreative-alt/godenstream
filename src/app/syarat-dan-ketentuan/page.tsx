@@ -15,14 +15,14 @@ export default function TermsPage() {
         <section>
           <h2 className="mb-2 text-lg font-semibold text-white">Penerimaan</h2>
           <p>
-            Dengan mengakses GodenStream, pengguna setuju untuk menggunakan
+            Dengan mengakses DramaShort, pengguna setuju untuk menggunakan
             layanan ini secara wajar dan mematuhi ketentuan yang berlaku.
           </p>
         </section>
         <section>
           <h2 className="mb-2 text-lg font-semibold text-white">Layanan</h2>
           <p>
-            GodenStream menampilkan katalog drama pendek dari Drama-ID,
+            DramaShort menampilkan katalog drama pendek dari Drama-ID,
             DramaBox, Melolo, NetShort, dan DramaNova melalui integrasi pihak
             ketiga.
           </p>
@@ -31,7 +31,7 @@ export default function TermsPage() {
           <h2 className="mb-2 text-lg font-semibold text-white">Konten</h2>
           <p>
             Hak cipta konten tetap dimiliki oleh pemilik atau penyedia konten
-            masing-masing. GodenStream tidak mengklaim kepemilikan atas konten
+            masing-masing. DramaShort tidak mengklaim kepemilikan atas konten
             pihak ketiga.
           </p>
         </section>

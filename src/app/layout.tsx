@@ -20,13 +20,13 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "GodenStream — Shordrama Streaming",
-    template: "%s | GodenStream",
+    default: "DramaShort — Shordrama Streaming",
+    template: "%s | DramaShort",
   },
   description:
     "Stream short dramas from Drama-ID, DramaBox, Melolo, NetShort, and DramaNova.",
   openGraph: {
-    title: "GodenStream",
+    title: "DramaShort",
     description: "Shordrama Streaming Platform",
     type: "website",
   },

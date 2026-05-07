@@ -18,7 +18,7 @@ import { getDeviceId } from "./device";
 const IS_BROWSER = typeof window !== "undefined";
 const API_PROXY = "/api/proxy";
 const UPSTREAM = process.env.UPSTREAM_API_URL || "https://captain.sapimu.au";
-const DEFAULT_API_KEY = process.env.API_KEY || process.env.NEXT_PUBLIC_API_TOKEN;
+const DEFAULT_API_KEY = process.env.API_KEY;
 
 interface Meta {
   page: number;

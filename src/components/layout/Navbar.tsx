@@ -50,7 +50,7 @@ export default function Navbar() {
             className="text-lg font-bold tracking-tight text-white"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Goden<span className="gradient-text-gold">Stream</span>
+            Drama<span className="gradient-text-gold">Short</span>
           </span>
         </Link>
 

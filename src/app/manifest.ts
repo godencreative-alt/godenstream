@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "GodenStream",
-    short_name: "GodenStream",
+    name: "DramaShort",
+    short_name: "DramaShort",
     description: "Shordrama Streaming Platform",
     start_url: "/",
     display: "standalone",

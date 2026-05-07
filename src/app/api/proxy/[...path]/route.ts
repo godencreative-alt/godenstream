@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const UPSTREAM = process.env.UPSTREAM_API_URL || "https://captain.sapimu.au";
-const DEFAULT_API_KEY = process.env.API_KEY || process.env.NEXT_PUBLIC_API_TOKEN;
+const DEFAULT_API_KEY = process.env.API_KEY;
 
 const ALLOWED_PREFIXES = [
   "/api/dramas",

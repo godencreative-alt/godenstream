@@ -7,9 +7,9 @@ export default function TermsPage() {
       <div className="prose prose-invert prose-sm max-w-none space-y-6 text-white/60">
         <p>Last updated: May 2026</p>
         <h2 className="text-lg font-semibold text-white">Acceptance</h2>
-        <p>By using GodenStream, you agree to these terms. If you do not agree, please do not use the service.</p>
+        <p>By using DramaShort, you agree to these terms. If you do not agree, please do not use the service.</p>
         <h2 className="text-lg font-semibold text-white">Service Description</h2>
-        <p>GodenStream provides streaming access to short dramas across Drama-ID, DramaBox, Melolo, NetShort, and DramaNova.</p>
+        <p>DramaShort provides streaming access to short dramas across Drama-ID, DramaBox, Melolo, NetShort, and DramaNova.</p>
         <h2 className="text-lg font-semibold text-white">Subscriptions</h2>
         <p>Some content requires a paid subscription. Plans include Free, Starter, and Premium tiers with varying access levels.</p>
         <h2 className="text-lg font-semibold text-white">Content</h2>

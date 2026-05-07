@@ -47,7 +47,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
               <PlayCircleIcon className="h-6 w-6 text-[var(--dc-gold)]" />
-              <span className="text-sm font-bold text-white">GodenStream</span>
+              <span className="text-sm font-bold text-white">DramaShort</span>
             </Link>
             <p className="mt-3 text-[12px] leading-relaxed text-white/30">
               Platform streaming shordrama dari 5 provider pilihan.
@@ -76,7 +76,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-white/[0.06] pt-6 text-center text-[11px] text-white/20">
-          GodenStream. All rights reserved.
+          DramaShort. All rights reserved.
         </div>
       </div>
     </footer>

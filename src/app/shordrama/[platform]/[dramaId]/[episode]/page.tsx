@@ -89,6 +89,17 @@ export default function ShordramaEpisodePage({
           qualities={video?.qualities}
           subtitleUrl={video?.subtitle_url}
           subtitles={video?.subtitles}
+          backHref={`/shordrama/${provider.slug}/${encodeURIComponent(dramaId)}`}
+          dramaTitle={drama?.title || provider.name}
+          episodeLabel={`EP ${episodeIndex}`}
+          prevHref={prevEp ? `/shordrama/${provider.slug}/${encodeURIComponent(dramaId)}/${prevEp.episode_index}` : null}
+          nextHref={nextEp ? `/shordrama/${provider.slug}/${encodeURIComponent(dramaId)}/${nextEp.episode_index}` : null}
+          episodeOptions={episodes.map((item) => ({
+            label: `EP ${item.episode_index}`,
+            href: `/shordrama/${provider.slug}/${encodeURIComponent(dramaId)}/${item.episode_index}`,
+            active: item.episode_index === episodeIndex,
+            locked: item.locked,
+          }))}
           isLandscape={false}
           accentColor="var(--dc-gold)"
           onProgress={(progress, duration) => {

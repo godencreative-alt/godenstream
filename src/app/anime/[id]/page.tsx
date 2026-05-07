@@ -48,7 +48,7 @@ export default function AnimeDetailPage({ params }: { params: Promise<{ id: stri
               {anime.genres.map((g) => <span key={g} className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-2.5 py-1 text-[11px] text-white/40">{g}</span>)}
             </div>
           )}
-          {anime.description && <p className="text-sm leading-relaxed text-white/50" dangerouslySetInnerHTML={{ __html: anime.description }} />}
+          {anime.description && <p className="whitespace-pre-line text-sm leading-relaxed text-white/50">{anime.description.replace(/<[^>]*>/g, "")}</p>}
           {episodes?.data?.[0] && (
             <Link href={`/anime/${id}/${episodes.data[0].episode_number}`}
               className="inline-flex items-center gap-2 rounded-xl bg-[var(--dc-violet)] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110">

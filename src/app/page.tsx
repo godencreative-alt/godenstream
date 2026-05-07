@@ -40,7 +40,7 @@ export default function HomePage() {
             className="max-w-3xl text-4xl font-bold leading-tight text-white md:text-6xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Goden<span className="gradient-text-gold">Stream</span> untuk short
+            Drama<span className="gradient-text-gold">Short</span> untuk short
             drama pilihan.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">

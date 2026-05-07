@@ -112,7 +112,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "godenstream-auth",
+      name: "dramashort-auth",
       partialize: (state) => ({ token: state.token, user: state.user }),
     },
   ),
