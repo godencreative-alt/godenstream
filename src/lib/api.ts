@@ -194,11 +194,47 @@ function extractIdramaBooks(data: unknown): Record<string, unknown>[] {
 
 function extractDataBooks(data: unknown): Record<string, unknown>[] {
   if (!isRecord(data)) return [];
-  const rows = toArray(data.rows);
-  if (rows.length > 0) return rows;
-  const dramas = toArray(data.dramas);
-  if (dramas.length > 0) return dramas;
-  return toArray(data.data);
+  const directKeys = [
+    "rows",
+    "dramas",
+    "short_plays",
+    "books",
+    "list",
+    "items",
+    "results",
+    "series",
+    "videos",
+    "playlets",
+    "recommendations",
+  ];
+
+  for (const key of directKeys) {
+    const value = toArray(data[key]);
+    if (value.length > 0) return value;
+  }
+
+  if (isRecord(data.data)) {
+    const nestedKeys = [
+      ...directKeys,
+      "rankList",
+      "searchList",
+      "homeList",
+      "records",
+      "contents",
+    ];
+    for (const key of nestedKeys) {
+      const value = toArray(data.data[key]);
+      if (value.length > 0) return value;
+    }
+    const sections = toArray(data.data.sections).flatMap((section) =>
+      toArray(section.books).concat(toArray(section.list), toArray(section.items)),
+    );
+    if (sections.length > 0) return sections;
+  }
+
+  const dataArray = toArray(data.data);
+  if (dataArray.length > 0) return dataArray;
+  return [];
 }
 
 export const SHORDRAMA_PLATFORMS = [
@@ -222,8 +258,7 @@ export const SHORDRAMA_PLATFORMS = [
     name: "DramaBox",
     apiBase: "/dramaboxv4",
     language: "in",
-    latestPath: (page: number, perPage: number) =>
-      `/api/home?page=${page}&size=${perPage}&lang=in`,
+    latestPath: () => "/api/home?lang=in",
     popularPath: () => "/api/rank?lang=in",
     trendingPath: () => "/api/rank?lang=in",
     extract: extractDramaboxBooks,
@@ -262,6 +297,486 @@ export const SHORDRAMA_PLATFORMS = [
       `/api/v1/recommend?lang=in&categoryKey=dramanova_hot&page=${page}&size=${perPage}&limit=${perPage}`,
     trendingPath: (page: number, perPage: number) =>
       `/api/v1/recommend?lang=in&categoryKey=dramanova_hot&page=${page}&size=${perPage}&limit=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 6,
+    slug: "bilitv",
+    name: "BiliTV",
+    apiBase: "/bilitv",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/recommend?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 7,
+    slug: "cashdrama",
+    name: "CashDrama",
+    apiBase: "/cashdrama",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&pageSize=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/blocks?page=${page}&pageSize=${perPage}&blockId=5&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&pageSize=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 8,
+    slug: "cubetv",
+    name: "CubeTV",
+    apiBase: "/cubetv",
+    language: "id",
+    latestPath: () => "/home/shows?lang=id",
+    popularPath: () => "/home/recommendations?lang=id",
+    trendingPath: () => "/home/trending?lang=id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 9,
+    slug: "dotdrama",
+    name: "DotDrama",
+    apiBase: "/dotdrama",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/collections?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 10,
+    slug: "dramabite",
+    name: "DramaBite",
+    apiBase: "/dramabite",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/dramas?page=${page}&lang=id`,
+    popularPath: (page: number) => `/api/v1/foryou?page=${page}&lang=id`,
+    trendingPath: (page: number) => `/api/v1/hot?page=${page}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 11,
+    slug: "dramadash",
+    name: "DramaDash",
+    apiBase: "/dramadash",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/tabs/15?page=${page}`,
+    popularPath: (page: number) => `/api/v1/tabs/15?page=${page}`,
+    trendingPath: (page: number) => `/api/v1/tabs/15?page=${page}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 12,
+    slug: "dramapops",
+    name: "DramaPops",
+    apiBase: "/dramapops",
+    language: "id",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas?limit=${perPage}&lang=id`,
+    popularPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas/popular?limit=${perPage}&lang=id`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas/trending?limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 13,
+    slug: "dramarush",
+    name: "DramaRush",
+    apiBase: "/dramarush",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/tabs/0?page=${page}&lang=id`,
+    popularPath: () => "/api/v1/ranking?lang=id",
+    trendingPath: () => "/api/v1/ranking?lang=id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 14,
+    slug: "dramawave",
+    name: "DramaWave",
+    apiBase: "/dramawave",
+    language: "id-ID",
+    latestPath: (page: number) => `/api/v1/feed/new?page=${page}&lang=id-ID`,
+    popularPath: (page: number) => `/api/v1/feed/popular?page=${page}&lang=id-ID`,
+    trendingPath: (page: number) => `/api/v1/feed/popular?page=${page}&lang=id-ID`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 15,
+    slug: "flextv",
+    name: "FlexTV",
+    apiBase: "/flextv",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/tabs/1?page=${page}&lang=id`,
+    popularPath: (page: number) => `/api/v1/tabs/1?page=${page}&lang=id`,
+    trendingPath: (page: number) => `/api/v1/tabs/1?page=${page}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 16,
+    slug: "flickreels",
+    name: "FlickReels",
+    apiBase: "/flickreels",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/for-you?page=${page}&lang=id`,
+    popularPath: (page: number) => `/api/v1/hot-rank?page=${page}&lang=id`,
+    trendingPath: (page: number) => `/api/v1/hot-rank?page=${page}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 17,
+    slug: "flickshort",
+    name: "FlickShort",
+    apiBase: "/flickshort",
+    language: "id",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/home?limit=${perPage}&lang=id`,
+    popularPath: (_page: number, perPage: number) =>
+      `/api/v1/recommend?limit=${perPage}&lang=id`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/recommend?limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 18,
+    slug: "freereels",
+    name: "FreeReels",
+    apiBase: "/freereels",
+    language: "id-ID",
+    latestPath: (page: number) => `/api/v1/new?page=${page - 1}&lang=id-ID`,
+    popularPath: (page: number) => `/api/v1/popular?page=${page - 1}&lang=id-ID`,
+    trendingPath: (page: number) => `/api/v1/foryou?page=${page - 1}&lang=id-ID`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 19,
+    slug: "fundrama",
+    name: "Fundrama",
+    apiBase: "/fundrama",
+    language: "en",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 20,
+    slug: "goodshort",
+    name: "GoodShort",
+    apiBase: "/goodshort",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/home?channelId=562&page=${page}&pageSize=${perPage}`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/home?channelId=562&page=${page}&pageSize=${perPage}`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/home?channelId=562&page=${page}&pageSize=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 21,
+    slug: "hishort",
+    name: "HiShort",
+    apiBase: "/hishort",
+    language: "id",
+    latestPath: () => "/api/v1/home",
+    popularPath: () => "/api/v1/home",
+    trendingPath: () => "/api/v1/home",
+    extract: extractDataBooks,
+  },
+  {
+    id: 22,
+    slug: "meloshort",
+    name: "MeloShort",
+    apiBase: "/meloshort",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/drama/all?page=${page}&limit=${perPage}`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/dramas/top?page=${page}&limit=${perPage}`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/dramas/discover?page=${page}&limit=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 23,
+    slug: "microdrama",
+    name: "MicroDrama",
+    apiBase: "/microdrama",
+    language: "id",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas?limit=${perPage}&lang=id`,
+    popularPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas?limit=${perPage}&lang=id`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas?limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 24,
+    slug: "minutedrama",
+    name: "MinuteDrama",
+    apiBase: "/minutedrama",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/popular?page=${page}&size=${perPage}`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/popular?page=${page}&size=${perPage}`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/popular?page=${page}&size=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 25,
+    slug: "moboreels",
+    name: "MoboReels",
+    apiBase: "/moboreels",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/seriesPage?page=${page}&pageSize=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/hotList?page=${page}&pageSize=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/guessYouLike?page=${page}&pageSize=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 26,
+    slug: "radreels",
+    name: "RadReels",
+    apiBase: "/radreels",
+    language: "en",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&size=${perPage}&lang=en`,
+    popularPath: () => "/api/v1/ranking?lang=en",
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/foryou?page=${page}&size=${perPage}&lang=en`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 27,
+    slug: "rapidtv",
+    name: "RapidTV",
+    apiBase: "/rapidtv",
+    language: "in",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&size=${perPage}&lang=in`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&size=${perPage}&lang=in`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&size=${perPage}&lang=in`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 28,
+    slug: "reelala",
+    name: "Reelala",
+    apiBase: "/reelala",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/home?page=${page}&pageSize=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/for-you?page=${page}&pageSize=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/for-you?page=${page}&pageSize=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 29,
+    slug: "reelife",
+    name: "Reelife",
+    apiBase: "/reelife",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&size=${perPage}`,
+    popularPath: () => "/api/v1/ranking",
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/foryou?page=${page}&size=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 30,
+    slug: "reelshort",
+    name: "ReelShort",
+    apiBase: "/reelshort",
+    language: "in",
+    latestPath: () => "/api/v1/new?lang=in",
+    popularPath: () => "/api/v1/foryou?lang=in",
+    trendingPath: () => "/api/v1/foryou?lang=in",
+    extract: extractDataBooks,
+  },
+  {
+    id: 31,
+    slug: "sarostv",
+    name: "SarosTV",
+    apiBase: "/sarostv",
+    language: "id",
+    latestPath: () => "/api/series?lang=id",
+    popularPath: () => "/api/recommend?lang=id",
+    trendingPath: () => "/api/theater?lang=id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 32,
+    slug: "shortbox",
+    name: "ShortBox",
+    apiBase: "/shortbox",
+    language: "en",
+    latestPath: (page: number, perPage: number) =>
+      `/api/new-list?page=${page}&page_size=${perPage}&languages=en`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/list?page=${page}&page_size=${perPage}&sort_type=1&languages=en`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/list?page=${page}&page_size=${perPage}&sort_type=1&languages=en`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 33,
+    slug: "shorten",
+    name: "Shorten",
+    apiBase: "/shorten",
+    language: "id",
+    latestPath: (page: number, perPage: number) => `/api/v1/releases?page=${page}&perPage=${perPage}`,
+    popularPath: (page: number, perPage: number) => `/api/v1/editors?page=${page}&perPage=${perPage}`,
+    trendingPath: (page: number, perPage: number) => `/api/v1/exclusive?page=${page}&perPage=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 34,
+    slug: "shortmax",
+    name: "ShortMax",
+    apiBase: "/shortmax",
+    language: "id",
+    latestPath: () => "/api/v1/feed/new?lang=id",
+    popularPath: () => "/api/v1/feed/recommend?lang=id",
+    trendingPath: () => "/api/v1/foryou?lang=id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 35,
+    slug: "shortsky",
+    name: "ShortSky",
+    apiBase: "/shortsky",
+    language: "id_id",
+    latestPath: () => "/api/home?lang=id_id",
+    popularPath: () => "/api/recommend?lang=id_id",
+    trendingPath: () => "/api/recommend?lang=id_id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 36,
+    slug: "shortwave",
+    name: "ShortWave",
+    apiBase: "/shortwave",
+    language: "id",
+    latestPath: () => "/api/all",
+    popularPath: () => "/api/top",
+    trendingPath: () => "/api/rankings",
+    extract: extractDataBooks,
+  },
+  {
+    id: 37,
+    slug: "shotshort",
+    name: "ShotShort",
+    apiBase: "/shotshort",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/popular?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/popular?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/popular?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 38,
+    slug: "snackshort",
+    name: "SnackShort",
+    apiBase: "/snackshort",
+    language: "Indonesian",
+    latestPath: () => "/api/v1/home?lang=Indonesian",
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/browsing?page=${page}&pageSize=${perPage}&lang=Indonesian`,
+    trendingPath: () => "/api/v1/tabs?lang=Indonesian",
+    extract: extractDataBooks,
+  },
+  {
+    id: 39,
+    slug: "sodareels",
+    name: "SodaReels",
+    apiBase: "/sodareels",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&count=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&count=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&count=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 40,
+    slug: "stardusttv",
+    name: "StardustTV",
+    apiBase: "/stardusttv",
+    language: "th",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/homepage?page_size=${perPage}&lang=th`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/category/1?page=${page}&page_size=${perPage}&lang=th`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/homepage?page_size=${perPage}&lang=th`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 41,
+    slug: "starshort",
+    name: "StarShort",
+    apiBase: "/starshort",
+    language: "4",
+    latestPath: () => "/api/v1/dramas/new?lang=4",
+    popularPath: () => "/api/v1/dramas?lang=4",
+    trendingPath: () => "/api/v1/dramas?lang=4",
+    extract: extractDataBooks,
+  },
+  {
+    id: 42,
+    slug: "velolo",
+    name: "Velolo",
+    apiBase: "/velolo",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/new?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/hot?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/hot?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 43,
+    slug: "vigloo",
+    name: "Vigloo",
+    apiBase: "/vigloo",
+    language: "en",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/browse?offset=0&limit=${perPage}&lang=en`,
+    popularPath: (_page: number, perPage: number) =>
+      `/api/v1/browse?sort=POPULAR&limit=${perPage}&lang=en`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/rank?limit=${perPage}&lang=en`,
     extract: extractDataBooks,
   },
 ] as const;

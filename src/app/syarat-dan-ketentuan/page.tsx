@@ -22,9 +22,8 @@ export default function TermsPage() {
         <section>
           <h2 className="mb-2 text-lg font-semibold text-white">Layanan</h2>
           <p>
-            DramaShort menampilkan katalog drama pendek dari Drama-ID,
-            DramaBox, Melolo, NetShort, dan DramaNova melalui integrasi pihak
-            ketiga.
+            DramaShort menampilkan katalog drama pendek dari platform resmi
+            captain.sapimu.au melalui integrasi pihak ketiga.
           </p>
         </section>
         <section>
