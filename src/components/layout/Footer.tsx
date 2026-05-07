@@ -3,22 +3,22 @@ import { PlayCircleIcon } from "@heroicons/react/24/outline";
 
 const columns = [
   {
-    title: "Content",
+    title: "Platform",
     links: [
-      { href: "/drama", label: "Short Drama" },
-      { href: "/anime", label: "Anime" },
-      { href: "/moviebox", label: "MovieBox" },
-      { href: "/iqiyi", label: "iQIYI" },
-      { href: "/wetv", label: "WeTV" },
+      { href: "/platform/drama-id", label: "Drama-ID" },
+      { href: "/platform/dramabox", label: "DramaBox" },
+      { href: "/platform/melolo", label: "Melolo" },
+      { href: "/platform/netshort", label: "NetShort" },
+      { href: "/platform/freereels", label: "FreeReels" },
     ],
   },
   {
     title: "Browse",
     links: [
-      { href: "/drama/browse", label: "Drama Catalog" },
-      { href: "/anime/browse", label: "Anime Catalog" },
-      { href: "/drama/popular", label: "Popular" },
-      { href: "/drama/a-z", label: "A-Z Index" },
+      { href: "/trending", label: "Trending" },
+      { href: "/popular", label: "Popular" },
+      { href: "/terbaru", label: "Terbaru" },
+      { href: "/", label: "Semua Platform" },
     ],
   },
   {
@@ -50,7 +50,7 @@ export default function Footer() {
               <span className="text-sm font-bold text-white">GodenStream</span>
             </Link>
             <p className="mt-3 text-[12px] leading-relaxed text-white/30">
-              Multi-provider streaming platform with 5 content universes.
+              Platform streaming shordrama dari 5 provider pilihan.
             </p>
           </div>
 

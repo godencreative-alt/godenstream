@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "GodenStream",
     short_name: "GodenStream",
-    description: "Multi-Universe Streaming Platform",
+    description: "Shordrama Streaming Platform",
     start_url: "/",
     display: "standalone",
     background_color: "#0a0a0a",

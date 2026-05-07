@@ -20,14 +20,14 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "GodenStream — Multi-Universe Streaming",
+    default: "GodenStream — Shordrama Streaming",
     template: "%s | GodenStream",
   },
   description:
-    "Stream short dramas, anime, movies, and premium Asian content across 5 universes.",
+    "Stream short dramas from Drama-ID, DramaBox, Melolo, NetShort, and FreeReels.",
   openGraph: {
     title: "GodenStream",
-    description: "Multi-Universe Streaming Platform",
+    description: "Shordrama Streaming Platform",
     type: "website",
   },
 };

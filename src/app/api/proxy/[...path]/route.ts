@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const UPSTREAM = process.env.UPSTREAM_API_URL || "https://api.example.com";
+const UPSTREAM = process.env.UPSTREAM_API_URL || "https://captain.sapimu.au";
+const DEFAULT_API_KEY = process.env.API_KEY || process.env.NEXT_PUBLIC_API_TOKEN;
 
 const ALLOWED_PREFIXES = [
   "/api/dramas",
@@ -14,6 +15,11 @@ const ALLOWED_PREFIXES = [
   "/api/auth",
   "/api/user",
   "/api/comments",
+  "/idrama",
+  "/dramaboxv4",
+  "/melolo",
+  "/netshort",
+  "/freereels",
 ];
 
 const RL_MAP = new Map<string, { count: number; reset: number }>();
@@ -86,8 +92,12 @@ async function handler(
     headers["Authorization"] = authHeader;
   }
 
-  if (process.env.API_KEY && !authHeader) {
-    headers["Authorization"] = `Bearer ${process.env.API_KEY}`;
+  if (DEFAULT_API_KEY && !authHeader) {
+    headers["Authorization"] = `Bearer ${DEFAULT_API_KEY}`;
+  }
+
+  if (DEFAULT_API_KEY) {
+    headers["Cookie"] = `auth_token=${DEFAULT_API_KEY}`;
   }
 
   const deviceId = req.headers.get("x-device-id");

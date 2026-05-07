@@ -65,8 +65,8 @@ export const STORAGE_KEYS = {
 
 export const SECTION_MIN_PLAN: Record<SectionKey, string> = {
   drama: "free",
-  anime: "starter",
-  moviebox: "starter",
-  iqiyi: "premium",
-  wetv: "premium",
+  anime: "free",
+  moviebox: "free",
+  iqiyi: "free",
+  wetv: "free",
 };

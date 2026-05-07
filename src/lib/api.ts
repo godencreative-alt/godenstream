@@ -17,7 +17,8 @@ import { getDeviceId } from "./device";
 
 const IS_BROWSER = typeof window !== "undefined";
 const API_PROXY = "/api/proxy";
-const UPSTREAM = process.env.UPSTREAM_API_URL || "https://api.example.com";
+const UPSTREAM = process.env.UPSTREAM_API_URL || "https://captain.sapimu.au";
+const DEFAULT_API_KEY = process.env.API_KEY || process.env.NEXT_PUBLIC_API_TOKEN;
 
 interface Meta {
   page: number;
@@ -34,8 +35,9 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     ...(init?.headers as Record<string, string>),
   };
 
-  if (!IS_BROWSER && process.env.API_KEY) {
-    headers["Authorization"] = `Bearer ${process.env.API_KEY}`;
+  if (!IS_BROWSER && DEFAULT_API_KEY) {
+    headers["Authorization"] = `Bearer ${DEFAULT_API_KEY}`;
+    headers["Cookie"] = `auth_token=${DEFAULT_API_KEY}`;
   }
 
   const res = await fetch(url, { ...init, headers });
@@ -47,6 +49,285 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     );
   }
   return res.json() as Promise<T>;
+}
+
+function toArray(value: unknown): Record<string, unknown>[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is Record<string, unknown> => isRecord(item))
+    : [];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function numberValue(value: unknown): number | undefined {
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }
+  return undefined;
+}
+
+function pickString(source: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = stringValue(source[key]);
+    if (value) return value;
+  }
+}
+
+function pickNumber(source: Record<string, unknown>, keys: string[]): number | undefined {
+  for (const key of keys) {
+    const value = numberValue(source[key]);
+    if (value !== undefined) return value;
+  }
+}
+
+function shordramaMeta(page: number, perPage: number, total?: number): Meta {
+  const safeTotal = total ?? page * perPage + 1;
+  return {
+    page,
+    per_page: perPage,
+    total: safeTotal,
+    total_pages: total ? Math.max(1, Math.ceil(total / perPage)) : page + 1,
+  };
+}
+
+function mapShordramaItem(
+  item: Record<string, unknown>,
+  provider: ShordramaPlatform,
+): Drama {
+  const id =
+    pickString(item, ["id", "bookId", "book_id"]) ||
+    String(pickNumber(item, ["id", "bookId", "book_id"]) ?? "");
+  const title =
+    pickString(item, ["title", "bookName", "book_name", "short_play_name"]) ||
+    "Untitled";
+  const cover =
+    pickString(item, [
+      "cover_url",
+      "compress_cover_url",
+      "coverWap",
+      "cover",
+      "thumb_url",
+      "first_chapter_cover",
+    ]) || null;
+
+  return {
+    id: Number(id) || Math.abs(hashId(`${provider.slug}:${id || title}`)),
+    title,
+    cover_url: cover,
+    provider_id: provider.id,
+    provider_name: provider.name,
+    provider_slug: provider.slug,
+    chapter_count:
+      pickNumber(item, [
+        "chapterCount",
+        "totalEpisodes",
+        "serial_count",
+        "current_count",
+        "last_chapter_index",
+      ]) ?? null,
+    play_count: pickNumber(item, ["playCount", "view_count", "read_count"]) ?? 0,
+    introduction: pickString(item, ["introduction", "description", "abstract"]) || null,
+    language: pickString(item, ["lang", "language"]) || null,
+    is_dubbed:
+      Boolean(item.is_dubbed) ||
+      String(item.cover_tag ?? item.title ?? "").toLowerCase().includes("dub"),
+    raw_data: null,
+  };
+}
+
+function hashId(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+function extractDramaboxBooks(data: unknown): Record<string, unknown>[] {
+  if (!isRecord(data)) return [];
+  const payload = data.data;
+  if (!isRecord(payload)) return [];
+  const nested = payload.data;
+  if (!isRecord(nested)) return [];
+  const rankList = toArray(nested.rankList);
+  if (rankList.length > 0) return rankList;
+  const searchList = toArray(nested.searchList);
+  if (searchList.length > 0) return searchList;
+  return toArray(nested.sections).flatMap((section) => toArray(section.books));
+}
+
+function extractMeloloBooks(data: unknown): Record<string, unknown>[] {
+  if (!isRecord(data) || !isRecord(data.cell)) return [];
+  return toArray(data.cell.cell_data).flatMap((cell) => toArray(cell.books));
+}
+
+function extractIdramaBooks(data: unknown): Record<string, unknown>[] {
+  if (!isRecord(data)) return [];
+  return toArray(data.short_plays);
+}
+
+function extractDataBooks(data: unknown): Record<string, unknown>[] {
+  if (!isRecord(data)) return [];
+  return toArray(data.data);
+}
+
+export const SHORDRAMA_PLATFORMS = [
+  {
+    id: 1,
+    slug: "drama-id",
+    name: "Drama-ID",
+    apiBase: "/idrama",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/latest?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/popular?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/ranking/trending?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractIdramaBooks,
+  },
+  {
+    id: 2,
+    slug: "dramabox",
+    name: "DramaBox",
+    apiBase: "/dramaboxv4",
+    language: "in",
+    latestPath: (page: number, perPage: number) =>
+      `/api/home?page=${page}&size=${perPage}&lang=in`,
+    popularPath: () => "/api/rank?lang=in",
+    trendingPath: () => "/api/rank?lang=in",
+    extract: extractDramaboxBooks,
+  },
+  {
+    id: 3,
+    slug: "melolo",
+    name: "Melolo",
+    apiBase: "/melolo",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/bookmall?lang=id&page=${page}`,
+    popularPath: (page: number) => `/api/v1/bookmall?lang=id&page=${page}`,
+    trendingPath: (page: number) => `/api/v1/bookmall?lang=id&page=${page}`,
+    extract: extractMeloloBooks,
+  },
+  {
+    id: 4,
+    slug: "netshort",
+    name: "NetShort",
+    apiBase: "/netshort",
+    language: "id_ID",
+    latestPath: (page: number) => `/api/v1/new/${page}?lang=id_ID`,
+    popularPath: (page: number) => `/api/v1/feed/${page}?lang=id_ID`,
+    trendingPath: (page: number) => `/api/v1/explore/${page}?lang=id_ID`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 5,
+    slug: "freereels",
+    name: "FreeReels",
+    apiBase: "/freereels",
+    language: "id-ID",
+    latestPath: (page: number) => `/api/v1/new?page=${Math.max(0, page - 1)}&lang=id-ID`,
+    popularPath: (page: number) =>
+      `/api/v1/popular?page=${Math.max(0, page - 1)}&lang=id-ID`,
+    trendingPath: () => "/api/v1/foryou?lang=id-ID",
+    extract: extractDataBooks,
+  },
+] as const;
+
+export type ShordramaPlatform = (typeof SHORDRAMA_PLATFORMS)[number];
+export type ShordramaPlatformSlug = ShordramaPlatform["slug"];
+export type ShordramaSort = "trending" | "popular" | "latest";
+
+export function getShordramaPlatform(
+  slug: string,
+): ShordramaPlatform | undefined {
+  return SHORDRAMA_PLATFORMS.find((platform) => platform.slug === slug);
+}
+
+export async function fetchShordramaPlatformList({
+  platform,
+  sort = "latest",
+  page = 1,
+  per_page = 10,
+}: {
+  platform: ShordramaPlatformSlug | string;
+  sort?: ShordramaSort;
+  page?: number;
+  per_page?: number;
+}): Promise<PaginatedResponse<Drama>> {
+  const selected = getShordramaPlatform(platform);
+  if (!selected) {
+    return { data: [], meta: shordramaMeta(page, per_page, 0) };
+  }
+
+  const pathFactory =
+    sort === "trending"
+      ? selected.trendingPath
+      : sort === "popular"
+        ? selected.popularPath
+        : selected.latestPath;
+  const res = await apiFetch<unknown>(
+    `${selected.apiBase}${pathFactory(page, per_page)}`,
+  );
+  const data = selected
+    .extract(res)
+    .slice(0, per_page)
+    .map((item) => mapShordramaItem(item, selected));
+
+  return {
+    data,
+    meta: shordramaMeta(page, per_page, data.length < per_page ? data.length : undefined),
+  };
+}
+
+export async function fetchShordramaHome(): Promise<
+  { platform: ShordramaPlatform; dramas: Drama[] }[]
+> {
+  const sections = await Promise.all(
+    SHORDRAMA_PLATFORMS.map(async (platform) => {
+      try {
+        const res = await fetchShordramaPlatformList({
+          platform: platform.slug,
+          sort: "latest",
+          page: 1,
+          per_page: 10,
+        });
+        return { platform, dramas: res.data };
+      } catch {
+        return { platform, dramas: [] };
+      }
+    }),
+  );
+  return sections;
+}
+
+export async function fetchShordramaSort(
+  sort: ShordramaSort,
+  page = 1,
+  perPage = 20,
+): Promise<PaginatedResponse<Drama>> {
+  const perPlatform = Math.max(4, Math.ceil(perPage / SHORDRAMA_PLATFORMS.length));
+  const sections = await Promise.all(
+    SHORDRAMA_PLATFORMS.map((platform) =>
+      fetchShordramaPlatformList({
+        platform: platform.slug,
+        sort,
+        page,
+        per_page: perPlatform,
+      }).catch(() => ({ data: [], meta: shordramaMeta(page, perPlatform, 0) })),
+    ),
+  );
+  const data = sections.flatMap((section) => section.data).slice(0, perPage);
+  return { data, meta: shordramaMeta(page, perPage) };
 }
 
 async function userFetch<T>(path: string, init?: RequestInit): Promise<T> {

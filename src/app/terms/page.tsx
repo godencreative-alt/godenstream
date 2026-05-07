@@ -9,7 +9,7 @@ export default function TermsPage() {
         <h2 className="text-lg font-semibold text-white">Acceptance</h2>
         <p>By using GodenStream, you agree to these terms. If you do not agree, please do not use the service.</p>
         <h2 className="text-lg font-semibold text-white">Service Description</h2>
-        <p>GodenStream provides streaming access to short dramas, anime, movies, and Asian content across multiple content providers.</p>
+        <p>GodenStream provides streaming access to short dramas across Drama-ID, DramaBox, Melolo, NetShort, and FreeReels.</p>
         <h2 className="text-lg font-semibold text-white">Subscriptions</h2>
         <p>Some content requires a paid subscription. Plans include Free, Starter, and Premium tiers with varying access levels.</p>
         <h2 className="text-lg font-semibold text-white">Content</h2>
