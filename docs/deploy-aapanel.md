@@ -112,7 +112,7 @@ pm2 logs dramashort
 
 Checklist UI:
 
-- Homepage menampilkan Drama-ID, DramaBox, Melolo, NetShort, DramaNova.
+- Homepage menampilkan platform resmi captain.sapimu.au.
 - Search berjalan.
 - Detail drama terbuka dari card.
 - Player episode memutar video bila upstream mengirim URL.

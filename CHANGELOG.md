@@ -5,7 +5,7 @@
 ### Added
 
 - Fokus ulang aplikasi menjadi DramaShort untuk platform shordrama.
-- Homepage dengan 5 platform: Drama-ID, DramaBox, Melolo, NetShort, dan DramaNova.
+- Homepage dengan platform resmi captain.sapimu.au.
 - Navbar Trending, Popular, Terbaru, dan dropdown Lainnya.
 - Halaman Syarat dan Ketentuan, Kebijakan Privasi, DMCA, dan Tentang.
 - Halaman aggregate Trending/Popular/Terbaru dengan filter semua platform.
@@ -18,7 +18,7 @@
 ### Changed
 
 - Branding website dan owner dari GodenStream menjadi DramaShort.
-- FreeReels diganti menjadi DramaNova pada homepage dan navigasi platform.
+- Platform homepage mengikuti daftar resmi captain.sapimu.au.
 - Package metadata diubah menjadi `dramashort` versi `1.0.0`.
 - Default browser API base diarahkan ke `/api/proxy` agar API key tidak diekspos di client.
 - Ukuran video portrait kini fit terhadap tinggi viewport, bukan memenuhi halaman secara berlebihan.

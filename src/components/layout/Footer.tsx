@@ -1,16 +1,14 @@
 import Link from "next/link";
 import { PlayCircleIcon } from "@heroicons/react/24/outline";
+import { SHORDRAMA_PLATFORMS } from "@/lib/api";
 
 const columns = [
   {
     title: "Platform",
-    links: [
-      { href: "/platform/drama-id", label: "Drama-ID" },
-      { href: "/platform/dramabox", label: "DramaBox" },
-      { href: "/platform/melolo", label: "Melolo" },
-      { href: "/platform/netshort", label: "NetShort" },
-      { href: "/platform/dramanova", label: "DramaNova" },
-    ],
+    links: SHORDRAMA_PLATFORMS.slice(0, 8).map((platform) => ({
+      href: `/platform/${platform.slug}`,
+      label: platform.name,
+    })),
   },
   {
     title: "Browse",
@@ -50,7 +48,7 @@ export default function Footer() {
               <span className="text-sm font-bold text-white">DramaShort</span>
             </Link>
             <p className="mt-3 text-[12px] leading-relaxed text-white/30">
-              Platform streaming shordrama dari 5 provider pilihan.
+              Platform streaming shordrama dari provider resmi captain.sapimu.au.
             </p>
           </div>
 
