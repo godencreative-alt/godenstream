@@ -23,6 +23,7 @@ const ALLOWED_PREFIXES = [
 ];
 
 const RL_MAP = new Map<string, { count: number; reset: number }>();
+const RL_MAX_ENTRIES = 10_000;
 
 const STRIP_HEADERS = new Set([
   "x-powered-by",
@@ -49,6 +50,7 @@ function getClientIp(req: NextRequest): string {
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
+  cleanupRateLimitEntries(now);
   const entry = RL_MAP.get(ip);
 
   if (!entry || now > entry.reset) {
@@ -59,6 +61,20 @@ function checkRateLimit(ip: string): boolean {
   if (entry.count >= 120) return false;
   entry.count++;
   return true;
+}
+
+function cleanupRateLimitEntries(now: number) {
+  if (RL_MAP.size <= RL_MAX_ENTRIES) return;
+
+  for (const [ip, entry] of RL_MAP) {
+    if (now > entry.reset) RL_MAP.delete(ip);
+  }
+
+  while (RL_MAP.size > RL_MAX_ENTRIES) {
+    const oldestIp = RL_MAP.keys().next().value;
+    if (!oldestIp) break;
+    RL_MAP.delete(oldestIp);
+  }
 }
 
 async function handler(

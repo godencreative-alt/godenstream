@@ -381,7 +381,7 @@ export default function VideoPlayer({
     if (isDoubleTap) {
       if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
       lastTapRef.current = null;
-      seekBy(10);
+      seekBy(x < rect.width / 2 ? -10 : 10);
       return;
     }
 

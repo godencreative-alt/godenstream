@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bars3Icon,
   ChevronDownIcon,
@@ -29,9 +29,30 @@ const moreLinks = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const moreRef = useRef<HTMLDivElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    setMoreOpen(false);
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        moreRef.current &&
+        e.target instanceof Node &&
+        !moreRef.current.contains(e.target)
+      ) {
+        setMoreOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -73,7 +94,7 @@ export default function Navbar() {
             );
           })}
 
-          <div className="relative">
+          <div ref={moreRef} className="relative">
             <button
               type="button"
               onClick={() => setMoreOpen((open) => !open)}
