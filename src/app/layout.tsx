@@ -20,14 +20,14 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "GodenStream — Multi-Universe Streaming",
-    template: "%s | GodenStream",
+    default: "DramaShort — Shordrama Streaming",
+    template: "%s | DramaShort",
   },
   description:
-    "Stream short dramas, anime, movies, and premium Asian content across 5 universes.",
+    "Stream short dramas from Drama-ID, DramaBox, Melolo, NetShort, and DramaNova.",
   openGraph: {
-    title: "GodenStream",
-    description: "Multi-Universe Streaming Platform",
+    title: "DramaShort",
+    description: "Shordrama Streaming Platform",
     type: "website",
   },
 };
@@ -40,6 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${spaceGrotesk.variable} ${inter.variable}`}
       suppressHydrationWarning
     >

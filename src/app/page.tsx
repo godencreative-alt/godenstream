@@ -1,122 +1,116 @@
-import Link from "next/link";
-import {
-  PlayIcon,
-  SparklesIcon,
-  FilmIcon,
-  TvIcon,
-  PlayCircleIcon,
-} from "@heroicons/react/24/outline";
+"use client";
 
-const UNIVERSES = [
-  {
-    key: "drama",
-    name: "Short Drama",
-    desc: "Bite-sized drama episodes",
-    icon: PlayIcon,
-    color: "#f5c518",
-    gradient: "from-yellow-500/20 to-yellow-700/5",
-    minPlan: "free",
-  },
-  {
-    key: "anime",
-    name: "Anime",
-    desc: "Japanese & global animation",
-    icon: SparklesIcon,
-    color: "#a78bfa",
-    gradient: "from-violet-500/20 to-violet-700/5",
-    minPlan: "starter",
-  },
-  {
-    key: "moviebox",
-    name: "MovieBox",
-    desc: "Movies & series worldwide",
-    icon: FilmIcon,
-    color: "#fb923c",
-    gradient: "from-orange-500/20 to-orange-700/5",
-    minPlan: "starter",
-  },
-  {
-    key: "iqiyi",
-    name: "iQIYI",
-    desc: "Chinese premium content",
-    icon: TvIcon,
-    color: "#22d3ee",
-    gradient: "from-cyan-500/20 to-cyan-700/5",
-    minPlan: "premium",
-  },
-  {
-    key: "wetv",
-    name: "WeTV",
-    desc: "Asian entertainment",
-    icon: PlayCircleIcon,
-    color: "#f43f5e",
-    gradient: "from-rose-500/20 to-rose-700/5",
-    minPlan: "premium",
-  },
-];
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { fetchShordramaHome, getShordramaHref } from "@/lib/api";
+import ContentCard from "@/components/sections/ContentCard";
+
+function SectionSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+      {Array.from({ length: 10 }).map((_, index) => (
+        <div key={index}>
+          <div className="skeleton aspect-[3/4] rounded-xl" />
+          <div className="skeleton mt-2 h-3 w-3/4 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function HomePage() {
+  const { data: sections, isLoading } = useQuery({
+    queryKey: ["shordrama-home"],
+    queryFn: fetchShordramaHome,
+  });
+
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 top-20 h-96 w-96 rounded-full bg-yellow-500/5 blur-[120px]" />
-        <div className="absolute -right-32 top-60 h-96 w-96 rounded-full bg-violet-500/5 blur-[120px]" />
+        <div className="absolute -left-32 top-12 h-96 w-96 rounded-full bg-yellow-500/10 blur-[120px]" />
+        <div className="absolute right-0 top-80 h-96 w-96 rounded-full bg-emerald-500/5 blur-[120px]" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-4 pt-16 pb-20 md:px-6">
-        <div className="mb-16 text-center">
+      <div className="relative mx-auto max-w-7xl px-4 py-10 md:px-6">
+        <section className="mb-10 rounded-3xl border border-white/[0.06] bg-white/[0.03] p-6 md:p-10">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.35em] text-[var(--dc-gold)]">
+            Shordrama Platform
+          </p>
           <h1
-            className="mb-4 text-4xl font-bold md:text-5xl lg:text-6xl"
+            className="max-w-3xl text-4xl font-bold leading-tight text-white md:text-6xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Goden
-            <span className="gradient-text-gold">Stream</span>
+            Drama<span className="gradient-text-gold">Short</span> untuk short
+            drama pilihan.
           </h1>
-          <p className="mx-auto max-w-lg text-sm text-white/50 md:text-base">
-            Five content universes. One platform. Stream dramas, anime, movies,
-            and premium Asian content.
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">
+            Fokus pada drama pendek dari Drama-ID, DramaBox, Melolo, NetShort,
+            dan DramaNova. Setiap platform tampil 5 kolom x 2 baris di halaman
+            awal.
           </p>
-        </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Link
+              href="/trending"
+              className="rounded-full bg-[var(--dc-gold)] px-4 py-2 text-sm font-bold text-black"
+            >
+              Lihat Trending
+            </Link>
+            <Link
+              href="/terbaru"
+              className="rounded-full border border-white/[0.08] px-4 py-2 text-sm font-semibold text-white/70 hover:text-white"
+            >
+              Drama Terbaru
+            </Link>
+          </div>
+        </section>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {UNIVERSES.map((u) => {
-            const Icon = u.icon;
-            return (
-              <Link
-                key={u.key}
-                href={`/${u.key}`}
-                className="group relative overflow-hidden rounded-2xl border border-white/[0.06] p-6 transition-all hover:border-white/[0.12] hover:shadow-lg"
-              >
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${u.gradient} opacity-0 transition-opacity group-hover:opacity-100`}
-                />
-                <div className="relative">
-                  <Icon
-                    className="mb-4 h-8 w-8"
-                    style={{ color: u.color }}
-                  />
-                  <h3 className="mb-1 text-base font-bold text-white">
-                    {u.name}
-                  </h3>
-                  <p className="text-[12px] text-white/40">{u.desc}</p>
+        <div className="space-y-12">
+          {isLoading && (
+            <>
+              <SectionSkeleton />
+              <SectionSkeleton />
+            </>
+          )}
 
-                  {u.minPlan !== "free" && (
-                    <span
-                      className="mt-3 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-medium"
-                      style={{
-                        borderColor: `${u.color}30`,
-                        background: `${u.color}15`,
-                        color: u.color,
-                      }}
-                    >
-                      {u.minPlan === "premium" ? "PREMIUM" : "STARTER"}
-                    </span>
-                  )}
+          {sections?.map(({ platform, dramas }) => (
+            <section key={platform.slug}>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/25">
+                    Platform
+                  </p>
+                  <h2
+                    className="text-2xl font-bold text-white"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {platform.name}
+                  </h2>
                 </div>
-              </Link>
-            );
-          })}
+                <Link
+                  href={`/platform/${platform.slug}`}
+                  className="shrink-0 rounded-full border border-[var(--dc-gold)]/25 px-3 py-1.5 text-xs font-bold text-[var(--dc-gold)] hover:bg-[var(--dc-gold)]/10"
+                >
+                  Selengkapnya
+                </Link>
+              </div>
+
+              {dramas.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                  {dramas.slice(0, 10).map((drama, index) => (
+                    <ContentCard
+                      key={`${platform.slug}-${drama.id}-${index}`}
+                      item={drama}
+                      href={getShordramaHref(drama)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-white/[0.06] p-8 text-center text-sm text-white/35">
+                  Konten {platform.name} belum tersedia dari API.
+                </div>
+              )}
+            </section>
+          ))}
         </div>
       </div>
     </div>

@@ -3,37 +3,37 @@ import { PlayCircleIcon } from "@heroicons/react/24/outline";
 
 const columns = [
   {
-    title: "Content",
+    title: "Platform",
     links: [
-      { href: "/drama", label: "Short Drama" },
-      { href: "/anime", label: "Anime" },
-      { href: "/moviebox", label: "MovieBox" },
-      { href: "/iqiyi", label: "iQIYI" },
-      { href: "/wetv", label: "WeTV" },
+      { href: "/platform/drama-id", label: "Drama-ID" },
+      { href: "/platform/dramabox", label: "DramaBox" },
+      { href: "/platform/melolo", label: "Melolo" },
+      { href: "/platform/netshort", label: "NetShort" },
+      { href: "/platform/dramanova", label: "DramaNova" },
     ],
   },
   {
     title: "Browse",
     links: [
-      { href: "/drama/browse", label: "Drama Catalog" },
-      { href: "/anime/browse", label: "Anime Catalog" },
-      { href: "/drama/popular", label: "Popular" },
-      { href: "/drama/a-z", label: "A-Z Index" },
+      { href: "/trending", label: "Trending" },
+      { href: "/popular", label: "Popular" },
+      { href: "/terbaru", label: "Terbaru" },
+      { href: "/", label: "Semua Platform" },
     ],
   },
   {
     title: "Account",
     links: [
-      { href: "/pricing", label: "Pricing" },
-      { href: "/drama/bookmarks", label: "Bookmarks" },
-      { href: "/drama/history", label: "Watch History" },
+      { href: "/tentang", label: "Tentang" },
+      { href: "/search", label: "Cari Shordrama" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { href: "/privacy", label: "Privacy Policy" },
-      { href: "/terms", label: "Terms of Service" },
+      { href: "/syarat-dan-ketentuan", label: "Syarat dan Ketentuan" },
+      { href: "/kebijakan-privasi", label: "Kebijakan Privasi" },
+      { href: "/dmca", label: "DMCA" },
     ],
   },
 ];
@@ -47,10 +47,10 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
               <PlayCircleIcon className="h-6 w-6 text-[var(--dc-gold)]" />
-              <span className="text-sm font-bold text-white">GodenStream</span>
+              <span className="text-sm font-bold text-white">DramaShort</span>
             </Link>
             <p className="mt-3 text-[12px] leading-relaxed text-white/30">
-              Multi-provider streaming platform with 5 content universes.
+              Platform streaming shordrama dari 5 provider pilihan.
             </p>
           </div>
 
@@ -76,7 +76,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-white/[0.06] pt-6 text-center text-[11px] text-white/20">
-          GodenStream. All rights reserved.
+          DramaShort. All rights reserved.
         </div>
       </div>
     </footer>

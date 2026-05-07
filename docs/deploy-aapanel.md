@@ -1,0 +1,129 @@
+# Deploy DramaShort di aaPanel
+
+Panduan ini memakai VPS Linux dengan aaPanel, Nginx, Node.js 22, dan PM2.
+
+## 1. Persiapan domain
+
+1. Arahkan DNS domain/subdomain ke IP VPS.
+2. Di aaPanel buka **Website** → **Add site**.
+3. Isi domain, pilih PHP static/HTML saja untuk membuat vhost awal.
+4. Aktifkan SSL di tab **SSL** setelah domain resolve.
+
+## 2. Install runtime
+
+Di aaPanel **App Store**, install:
+
+- Nginx
+- PM2 Manager atau Node.js Manager
+- Git
+
+Jika Node.js Manager belum menyediakan Node 22, install via shell:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs git
+node -v
+npm -v
+```
+
+## 3. Upload/clone project
+
+Contoh path:
+
+```bash
+mkdir -p /www/wwwroot/dramashort
+cd /www/wwwroot/dramashort
+git clone https://github.com/godencreative-alt/godenstream.git .
+git checkout devin/1778124302-shordrama-refactor-v2
+```
+
+Untuk production setelah PR merge, gunakan branch release/main yang berisi v1.0.0.
+
+## 4. Environment
+
+Buat file `.env`:
+
+```bash
+cat > .env <<'ENV'
+NEXT_PUBLIC_API_BASE=/api/proxy
+NEXT_PUBLIC_APP_URL=https://domain-anda.com
+UPSTREAM_API_URL=https://captain.sapimu.au
+API_KEY=ISI_TOKEN_API_DI_SINI
+NODE_ENV=production
+ENV
+chmod 600 .env
+```
+
+Jangan simpan API key di repository.
+
+## 5. Install dan build
+
+```bash
+npm ci
+npm run build
+```
+
+## 6. Jalankan dengan PM2
+
+```bash
+npm install -g pm2
+pm2 start npm --name dramashort -- start
+pm2 save
+pm2 startup
+```
+
+Jika ingin memakai port selain 3000:
+
+```bash
+PORT=3001 pm2 start npm --name dramashort -- start
+```
+
+## 7. Reverse proxy Nginx di aaPanel
+
+Buka site domain di aaPanel → **Config**. Tambahkan/ubah blok proxy:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+}
+```
+
+Reload Nginx dari aaPanel atau shell:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## 8. Verifikasi
+
+```bash
+curl -I https://domain-anda.com
+curl -I https://domain-anda.com/trending
+pm2 logs dramashort
+```
+
+Checklist UI:
+
+- Homepage menampilkan Drama-ID, DramaBox, Melolo, NetShort, DramaNova.
+- Search berjalan.
+- Detail drama terbuka dari card.
+- Player episode memutar video bila upstream mengirim URL.
+- Fullscreen memiliki tombol kembali dan dropdown episode.
+
+## 9. Update release berikutnya
+
+```bash
+cd /www/wwwroot/dramashort
+git pull
+npm ci
+npm run build
+pm2 restart dramashort
+```

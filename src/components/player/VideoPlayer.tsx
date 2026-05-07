@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Hls from "hls.js";
 import {
+  ArrowLeftIcon,
+  ChevronDownIcon,
   PlayIcon,
   PauseIcon,
   SpeakerWaveIcon,
@@ -23,6 +25,12 @@ interface VideoPlayerProps {
   episodeLabel?: string;
   prevHref?: string | null;
   nextHref?: string | null;
+  episodeOptions?: {
+    label: string;
+    href: string;
+    active?: boolean;
+    locked?: boolean;
+  }[];
   isLandscape?: boolean;
   accentColor?: string;
   subscriptionTier?: string;
@@ -91,6 +99,10 @@ export default function VideoPlayer({
   qualities,
   subtitleUrl,
   subtitles,
+  backHref,
+  dramaTitle,
+  episodeLabel,
+  episodeOptions,
   isLandscape = true,
   accentColor = "var(--dc-gold)",
   startTime,
@@ -101,6 +113,9 @@ export default function VideoPlayer({
   const hlsRef = useRef<Hls | null>(null);
   const lastSaveRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef<{ time: number; x: number } | null>(null);
+  const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const skipTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -114,6 +129,7 @@ export default function VideoPlayer({
   const [showSubMenu, setShowSubMenu] = useState(false);
   const [currentSubLang, setCurrentSubLang] = useState<string | null>(null);
   const [cues, setCues] = useState<{ start: number; end: number; text: string }[]>([]);
+  const [skipIndicator, setSkipIndicator] = useState<string | null>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const sortedQualities = qualities
@@ -231,6 +247,38 @@ export default function VideoPlayer({
   }, []);
 
   useEffect(() => {
+    function syncFullscreenState() {
+      setIsFullscreen(document.fullscreenElement === containerRef.current);
+    }
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+    return () => document.removeEventListener("fullscreenchange", syncFullscreenState);
+  }, []);
+
+  const seekBy = useCallback((seconds: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const maxTime = Number.isFinite(video.duration) ? video.duration : video.currentTime + seconds;
+    video.currentTime = Math.max(0, Math.min(maxTime, video.currentTime + seconds));
+    setCurrentTime(video.currentTime);
+    setSkipIndicator(seconds > 0 ? "+10 detik" : "-10 detik");
+    if (skipTimeoutRef.current) clearTimeout(skipTimeoutRef.current);
+    skipTimeoutRef.current = setTimeout(() => setSkipIndicator(null), 700);
+  }, []);
+
+  const goBack = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+      return;
+    }
+    if (backHref) {
+      window.location.href = backHref;
+      return;
+    }
+    window.history.back();
+  }, [backHref]);
+
+  useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const video = videoRef.current;
       if (!video) return;
@@ -316,16 +364,51 @@ export default function VideoPlayer({
     }, 3000);
   }
 
+  function isInteractiveTarget(target: EventTarget | null): boolean {
+    return target instanceof HTMLElement && Boolean(target.closest("button, input, select, a"));
+  }
+
+  function handlePlayerPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    if (isInteractiveTarget(e.target)) return;
+    showControlsTemporarily();
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const now = Date.now();
+    const lastTap = lastTapRef.current;
+    const isDoubleTap = lastTap && now - lastTap.time < 300 && Math.abs(x - lastTap.x) < 90;
+
+    if (isDoubleTap) {
+      if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
+      lastTapRef.current = null;
+      seekBy(x < rect.width / 2 ? -10 : 10);
+      return;
+    }
+
+    lastTapRef.current = { time: now, x };
+    if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
+    singleTapTimeoutRef.current = setTimeout(() => {
+      lastTapRef.current = null;
+      togglePlay();
+    }, 240);
+  }
+
   const currentCue = cues.find(
     (c) => currentTime >= c.start && currentTime <= c.end,
   );
+  const playerSizeClass = isFullscreen
+    ? "h-[100dvh] max-h-[100dvh] w-[100vw] max-w-[100vw] rounded-none"
+    : isLandscape
+      ? "aspect-video max-h-[calc(100svh-9rem)] max-w-full"
+      : "aspect-[9/16] max-h-[calc(100svh-9rem)] w-full max-w-[min(100%,44svh)]";
 
   return (
     <div
       ref={containerRef}
-      className={`group relative w-full bg-black ${isLandscape ? "aspect-video" : "aspect-[9/16]"} overflow-hidden rounded-2xl`}
+      className={`group relative mx-auto bg-black ${playerSizeClass} overflow-hidden`}
       onMouseMove={showControlsTemporarily}
       onMouseLeave={() => isPlaying && setShowControls(false)}
+      onPointerUp={handlePlayerPointerUp}
     >
       <video
         ref={videoRef}
@@ -335,8 +418,54 @@ export default function VideoPlayer({
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => onEnded?.()}
-        onClick={togglePlay}
       />
+
+      {isFullscreen && (
+        <div
+          className={`absolute left-0 right-0 top-0 z-40 flex items-center justify-between gap-3 bg-gradient-to-b from-black/75 to-transparent px-3 py-3 transition-opacity duration-300 ${
+            showControls ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={goBack}
+            className="flex min-w-0 items-center gap-2 rounded-full bg-black/50 px-3 py-2 text-sm font-semibold text-white hover:bg-black/70"
+            aria-label="Kembali"
+          >
+            <ArrowLeftIcon className="h-4 w-4 shrink-0" />
+            <span className="hidden max-w-[34vw] truncate sm:block">
+              {dramaTitle || "Kembali"}
+            </span>
+          </button>
+
+          {episodeOptions?.length ? (
+            <label className="relative flex items-center rounded-full bg-black/50 px-3 py-2 text-xs font-semibold text-white">
+              <span className="mr-2">{episodeLabel || "Episode"}</span>
+              <select
+                value={episodeOptions.find((option) => option.active)?.href || ""}
+                onChange={(event) => {
+                  if (event.target.value) window.location.href = event.target.value;
+                }}
+                className="appearance-none bg-transparent pr-5 text-white outline-none"
+                aria-label="Pilih episode"
+              >
+                {episodeOptions.map((option) => (
+                  <option key={option.href} value={option.href} className="bg-zinc-950 text-white">
+                    {option.locked ? "🔒 " : ""}{option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-white/70" />
+            </label>
+          ) : null}
+        </div>
+      )}
+
+      {skipIndicator && (
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/65 px-4 py-2 text-sm font-bold text-white">
+          {skipIndicator}
+        </div>
+      )}
 
       {/* Subtitle overlay */}
       {currentCue && (
@@ -344,10 +473,9 @@ export default function VideoPlayer({
           className="pointer-events-none absolute bottom-16 left-0 right-0 z-50 text-center"
           style={{ transform: "translateZ(0)" }}
         >
-          <span
-            className="inline-block rounded bg-black/70 px-3 py-1 text-sm text-white"
-            dangerouslySetInnerHTML={{ __html: currentCue.text }}
-          />
+          <span className="inline-block whitespace-pre-line rounded bg-black/70 px-3 py-1 text-sm text-white">
+            {currentCue.text}
+          </span>
         </div>
       )}
 
@@ -373,8 +501,8 @@ export default function VideoPlayer({
           </div>
 
           {/* Control buttons */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
                 onClick={togglePlay}
                 className="text-white hover:text-white/80"
@@ -387,7 +515,7 @@ export default function VideoPlayer({
                 )}
               </button>
 
-              <div className="flex items-center gap-1">
+              <div className="hidden items-center gap-1 sm:flex">
                 <button
                   onClick={toggleMute}
                   className="text-white hover:text-white/80"
@@ -410,12 +538,12 @@ export default function VideoPlayer({
                 />
               </div>
 
-              <span className="text-[12px] text-white/60">
+              <span className="whitespace-nowrap text-[12px] text-white/60">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               {/* Quality selector */}
               {sortedQualities.length > 1 && (
                 <div className="relative">

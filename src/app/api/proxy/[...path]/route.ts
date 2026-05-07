@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const UPSTREAM = process.env.UPSTREAM_API_URL || "https://api.example.com";
+const UPSTREAM = process.env.UPSTREAM_API_URL || "https://captain.sapimu.au";
+const DEFAULT_API_KEY = process.env.API_KEY;
 
 const ALLOWED_PREFIXES = [
   "/api/dramas",
@@ -14,9 +15,15 @@ const ALLOWED_PREFIXES = [
   "/api/auth",
   "/api/user",
   "/api/comments",
+  "/idrama",
+  "/dramaboxv4",
+  "/melolo",
+  "/netshort",
+  "/dramanova",
 ];
 
 const RL_MAP = new Map<string, { count: number; reset: number }>();
+const RL_MAX_ENTRIES = 10_000;
 
 const STRIP_HEADERS = new Set([
   "x-powered-by",
@@ -43,6 +50,7 @@ function getClientIp(req: NextRequest): string {
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
+  cleanupRateLimitEntries(now);
   const entry = RL_MAP.get(ip);
 
   if (!entry || now > entry.reset) {
@@ -53,6 +61,20 @@ function checkRateLimit(ip: string): boolean {
   if (entry.count >= 120) return false;
   entry.count++;
   return true;
+}
+
+function cleanupRateLimitEntries(now: number) {
+  if (RL_MAP.size <= RL_MAX_ENTRIES) return;
+
+  for (const [ip, entry] of RL_MAP) {
+    if (now > entry.reset) RL_MAP.delete(ip);
+  }
+
+  while (RL_MAP.size > RL_MAX_ENTRIES) {
+    const oldestIp = RL_MAP.keys().next().value;
+    if (!oldestIp) break;
+    RL_MAP.delete(oldestIp);
+  }
 }
 
 async function handler(
@@ -86,8 +108,12 @@ async function handler(
     headers["Authorization"] = authHeader;
   }
 
-  if (process.env.API_KEY && !authHeader) {
-    headers["Authorization"] = `Bearer ${process.env.API_KEY}`;
+  if (DEFAULT_API_KEY && !authHeader) {
+    headers["Authorization"] = `Bearer ${DEFAULT_API_KEY}`;
+  }
+
+  if (DEFAULT_API_KEY) {
+    headers["Cookie"] = `auth_token=${DEFAULT_API_KEY}`;
   }
 
   const deviceId = req.headers.get("x-device-id");
