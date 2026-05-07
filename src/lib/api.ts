@@ -865,7 +865,7 @@ export async function fetchShordramaSort(
   page = 1,
   perPage = 20,
 ): Promise<PaginatedResponse<Drama>> {
-  const perPlatform = Math.max(4, Math.ceil(perPage / SHORDRAMA_PLATFORMS.length));
+  const perPlatform = Math.max(1, Math.ceil(perPage / SHORDRAMA_PLATFORMS.length));
   const sections = await Promise.all(
     SHORDRAMA_PLATFORMS.map((platform) =>
       fetchShordramaPlatformList({
@@ -876,7 +876,16 @@ export async function fetchShordramaSort(
       }).catch(() => ({ data: [], meta: shordramaMeta(page, perPlatform, 0) })),
     ),
   );
-  const data = sections.flatMap((section) => section.data).slice(0, perPage);
+  const maxLength = Math.max(0, ...sections.map((section) => section.data.length));
+  const data: Drama[] = [];
+  for (let index = 0; index < maxLength && data.length < perPage; index++) {
+    for (const section of sections) {
+      const drama = section.data[index];
+      if (!drama) continue;
+      data.push(drama);
+      if (data.length >= perPage) break;
+    }
+  }
   return { data, meta: shordramaMeta(page, perPage) };
 }
 
@@ -1071,10 +1080,8 @@ function extractGenericEpisodes(
           "episodeNo",
           "episode",
           "number",
-          "index",
-          "chapterIndex",
-          "sort",
-        ]) || index + 1;
+        ]) ??
+        (pickNumber(episode, ["index", "chapterIndex", "sort"]) ?? index) + 1;
       return createEpisode({
         dramaId,
         sourceId:
