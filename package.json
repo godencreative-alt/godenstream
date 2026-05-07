@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "build": "next build && node scripts/prepare-standalone.js",
+    "start": "node .next/standalone/server.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
