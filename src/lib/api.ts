@@ -1008,6 +1008,180 @@ function detailFromParts(
   };
 }
 
+function extractDetailRecord(
+  data: unknown,
+  platform: ShordramaPlatform,
+  dramaId: string,
+): Record<string, unknown> | null {
+  const payload = isRecord(data) && isRecord(data.data) ? data.data : data;
+  if (!isRecord(payload)) return null;
+
+  const candidates = [
+    payload,
+    payload.drama,
+    payload.detail,
+    payload.book,
+    payload.series,
+    payload.show,
+    payload.item,
+  ].filter(isRecord);
+
+  const extracted = platform.extract(data);
+  candidates.push(...extracted);
+
+  return (
+    candidates.find((item) => {
+      const id =
+        pickString(item, ["id", "bookId", "book_id"]) ||
+        String(pickNumber(item, ["id", "bookId", "book_id"]) ?? "");
+      return id === dramaId;
+    }) ||
+    candidates.find((item) =>
+      Boolean(pickString(item, ["title", "bookName", "book_name", "short_play_name"])),
+    ) ||
+    null
+  );
+}
+
+function extractGenericEpisodes(
+  detail: Record<string, unknown>,
+  dramaId: string,
+): Episode[] {
+  const sources = [
+    detail.episodes,
+    detail.episode_list,
+    detail.episodeList,
+    detail.chapter_list,
+    detail.chapterList,
+    detail.chapters,
+    detail.videos,
+    detail.video_list,
+    detail.videoList,
+    detail.list,
+  ];
+
+  for (const source of sources) {
+    const records = toArray(source);
+    if (records.length === 0) continue;
+    return records.map((episode, index) => {
+      const order =
+        pickNumber(episode, [
+          "episode_index",
+          "episodeIndex",
+          "episodeNo",
+          "episode",
+          "number",
+          "index",
+          "chapterIndex",
+          "sort",
+        ]) || index + 1;
+      return createEpisode({
+        dramaId,
+        sourceId:
+          pickString(episode, [
+            "id",
+            "episode_id",
+            "episodeId",
+            "chapterId",
+            "fileId",
+            "vid",
+          ]) || String(order),
+        episode: order,
+        name: pickString(episode, ["title", "name", "episode_name", "episodeName"]),
+        videoUrl: pickString(episode, [
+          "play_url",
+          "video_url",
+          "url",
+          "main_url",
+          "mp4",
+          "m3u8Url",
+        ]),
+        qualities:
+          qualityMapFromList(toArray(episode.play_info_list)) ||
+          qualityMapFromList(toArray(episode.videos)) ||
+          qualityMapFromList(toArray(episode.videoPathList)),
+        subtitles: subtitleList(toArray(episode.subtitles)),
+        coverUrl: pickString(episode, ["cover", "cover_url", "episode_cover"]),
+        duration: pickNumber(episode, ["duration", "duration_seconds"]),
+        locked: Boolean(
+          episode.locked ||
+            episode.isLocked ||
+            episode.is_vip ||
+            episode.isVip ||
+            episode.is_paid ||
+            episode.isPaid ||
+            episode.need_unlock ||
+            episode.needUnlock,
+        ),
+      });
+    });
+  }
+
+  return [];
+}
+
+function placeholderEpisodes(
+  detail: Record<string, unknown>,
+  dramaId: string,
+): Episode[] {
+  const count =
+    pickNumber(detail, [
+      "chapter_count",
+      "chapterCount",
+      "episode_count",
+      "episodeCount",
+      "totalEpisodes",
+      "serial_count",
+      "current_count",
+      "last_chapter_index",
+    ]) || 0;
+  const safeCount = Math.max(0, Math.min(count, 300));
+  return Array.from({ length: safeCount }, (_, index) =>
+    createEpisode({ dramaId, episode: index + 1 }),
+  );
+}
+
+async function fetchGenericShordramaDetail(
+  platform: ShordramaPlatform,
+  dramaId: string,
+): Promise<ShordramaDetail> {
+  const encodedId = encodeURIComponent(dramaId);
+  const language = encodeURIComponent(platform.language);
+  const paths = [
+    `/api/v1/detail/${encodedId}?lang=${language}`,
+    `/api/v1/drama/${encodedId}?lang=${language}`,
+    `/api/v1/dramas/${encodedId}?lang=${language}`,
+    `/api/v1/book/${encodedId}?lang=${language}`,
+    `/api/v1/series?id=${encodedId}&lang=${language}`,
+    `/api/detail/${encodedId}?lang=${language}`,
+  ];
+
+  for (const path of paths) {
+    try {
+      const res = await apiFetch<unknown>(`${platform.apiBase}${path}`);
+      const detail = extractDetailRecord(res, platform, dramaId);
+      if (!detail) continue;
+      const episodes = extractGenericEpisodes(detail, dramaId);
+      return detailFromParts(
+        platform,
+        dramaId,
+        detail,
+        episodes.length > 0 ? episodes : placeholderEpisodes(detail, dramaId),
+      );
+    } catch {
+      continue;
+    }
+  }
+
+  const seed = (await findShordramaListItem(platform.slug, dramaId)) || { id: dramaId };
+  return detailFromParts(
+    platform,
+    dramaId,
+    seed,
+    placeholderEpisodes(seed, dramaId),
+  );
+}
+
 function extractTags(items: Record<string, unknown>[]): Tag[] {
   return items
     .map((item, index) => {
@@ -1198,7 +1372,7 @@ export async function fetchShordramaDetail(
   if (platform.slug === "melolo") return fetchMeloloDetail(platform, dramaId);
   if (platform.slug === "netshort") return fetchNetshortDetail(platform, dramaId);
   if (platform.slug === "dramanova") return fetchDramanovaDetail(platform, dramaId);
-  throw new Error("Platform tidak didukung");
+  return fetchGenericShordramaDetail(platform, dramaId);
 }
 
 export async function fetchShordramaEpisodes(
