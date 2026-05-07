@@ -96,9 +96,9 @@ export default function HomePage() {
 
               {dramas.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-                  {dramas.slice(0, 10).map((drama) => (
+                  {dramas.slice(0, 10).map((drama, index) => (
                     <ContentCard
-                      key={`${platform.slug}-${drama.id}`}
+                      key={`${platform.slug}-${drama.id}-${index}`}
                       item={drama}
                       href={`/platform/${platform.slug}`}
                     />

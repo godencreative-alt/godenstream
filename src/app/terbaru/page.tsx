@@ -27,9 +27,9 @@ export default function TerbaruPage() {
         <GridSkeleton />
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
-          {data?.data.map((drama) => (
+          {data?.data.map((drama, index) => (
             <ContentCard
-              key={`${drama.provider_slug}-${drama.id}`}
+              key={`${drama.provider_slug}-${drama.id}-${index}`}
               item={drama}
               href={`/platform/${drama.provider_slug}`}
             />
