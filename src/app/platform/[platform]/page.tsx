@@ -5,6 +5,7 @@ import { notFound, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchShordramaPlatformList,
+  getShordramaHref,
   getShordramaPlatform,
   type ShordramaSort,
 } from "@/lib/api";
@@ -83,7 +84,7 @@ export default function PlatformPage() {
             <ContentCard
               key={`${platform.slug}-${drama.id}-${index}`}
               item={drama}
-              href={`/platform/${platform.slug}`}
+              href={getShordramaHref(drama)}
             />
           ))}
         </div>

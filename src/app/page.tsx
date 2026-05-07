@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { fetchShordramaHome } from "@/lib/api";
+import { fetchShordramaHome, getShordramaHref } from "@/lib/api";
 import ContentCard from "@/components/sections/ContentCard";
 
 function SectionSkeleton() {
@@ -100,7 +100,7 @@ export default function HomePage() {
                     <ContentCard
                       key={`${platform.slug}-${drama.id}-${index}`}
                       item={drama}
-                      href={`/platform/${platform.slug}`}
+                      href={getShordramaHref(drama)}
                     />
                   ))}
                 </div>

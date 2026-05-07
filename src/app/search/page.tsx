@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { fetchShordramaSearch } from "@/lib/api";
+import { fetchShordramaSearch, getShordramaHref } from "@/lib/api";
 import ContentCard from "@/components/sections/ContentCard";
 import { GridSkeleton } from "@/components/ui/Skeleton";
 import { Spinner } from "@/components/ui/Spinner";
@@ -59,7 +59,7 @@ function SearchContent() {
             <ContentCard
               key={`${drama.provider_slug}-${drama.id}-${index}`}
               item={drama}
-              href={`/platform/${drama.provider_slug}`}
+              href={getShordramaHref(drama)}
             />
           ))}
         </div>

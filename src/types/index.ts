@@ -2,6 +2,7 @@
 
 export interface Drama {
   id: number;
+  original_id?: string;
   title: string;
   cover_url: string | null;
   provider_id: number;
@@ -78,6 +79,7 @@ export interface Provider {
 export interface Episode {
   id: number;
   drama_id: number;
+  source_id?: string;
   episode_index: number;
   episode_name: string | null;
   video_url: string | null;
@@ -85,6 +87,8 @@ export interface Episode {
   subtitles: { lang: string; url: string }[] | null;
   qualities: Record<string, string> | null;
   status: string;
+  locked?: boolean;
+  cover_url?: string | null;
   duration_seconds?: number | null;
 }
 

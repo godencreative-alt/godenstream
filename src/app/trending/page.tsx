@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchShordramaSort } from "@/lib/api";
+import { fetchShordramaSort, getShordramaHref } from "@/lib/api";
 import ContentCard from "@/components/sections/ContentCard";
 import { GridSkeleton } from "@/components/ui/Skeleton";
 
@@ -31,7 +31,7 @@ export default function TrendingPage() {
             <ContentCard
               key={`${drama.provider_slug}-${drama.id}-${index}`}
               item={drama}
-              href={`/platform/${drama.provider_slug}`}
+              href={getShordramaHref(drama)}
             />
           ))}
         </div>
