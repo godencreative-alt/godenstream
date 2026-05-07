@@ -15,11 +15,49 @@ const ALLOWED_PREFIXES = [
   "/api/auth",
   "/api/user",
   "/api/comments",
-  "/idrama",
+  "/bilitv",
+  "/cashdrama",
+  "/cubetv",
+  "/dotdrama",
+  "/dramabite",
   "/dramaboxv4",
-  "/melolo",
-  "/netshort",
+  "/dramadash",
   "/dramanova",
+  "/dramapops",
+  "/dramarush",
+  "/dramawave",
+  "/flextv",
+  "/flickreels",
+  "/flickshort",
+  "/freereels",
+  "/fundrama",
+  "/goodshort",
+  "/hishort",
+  "/idrama",
+  "/melolo",
+  "/meloshort",
+  "/microdrama",
+  "/minutedrama",
+  "/moboreels",
+  "/netshort",
+  "/radreels",
+  "/rapidtv",
+  "/reelala",
+  "/reelife",
+  "/reelshort",
+  "/sarostv",
+  "/shortbox",
+  "/shorten",
+  "/shortmax",
+  "/shortsky",
+  "/shortwave",
+  "/shotshort",
+  "/snackshort",
+  "/sodareels",
+  "/stardusttv",
+  "/starshort",
+  "/velolo",
+  "/vigloo",
 ];
 
 const RL_MAP = new Map<string, { count: number; reset: number }>();
@@ -37,7 +75,9 @@ const STRIP_HEADERS = new Set([
 ]);
 
 function isAllowed(path: string): boolean {
-  return ALLOWED_PREFIXES.some((p) => path.startsWith(p));
+  return ALLOWED_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  );
 }
 
 function getClientIp(req: NextRequest): string {

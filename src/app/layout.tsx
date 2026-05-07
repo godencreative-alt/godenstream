@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s | DramaShort",
   },
   description:
-    "Stream short dramas from Drama-ID, DramaBox, Melolo, NetShort, and DramaNova.",
+    "Stream short dramas from all supported captain.sapimu.au drama platforms.",
   openGraph: {
     title: "DramaShort",
     description: "Shordrama Streaming Platform",

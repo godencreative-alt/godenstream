@@ -194,11 +194,47 @@ function extractIdramaBooks(data: unknown): Record<string, unknown>[] {
 
 function extractDataBooks(data: unknown): Record<string, unknown>[] {
   if (!isRecord(data)) return [];
-  const rows = toArray(data.rows);
-  if (rows.length > 0) return rows;
-  const dramas = toArray(data.dramas);
-  if (dramas.length > 0) return dramas;
-  return toArray(data.data);
+  const directKeys = [
+    "rows",
+    "dramas",
+    "short_plays",
+    "books",
+    "list",
+    "items",
+    "results",
+    "series",
+    "videos",
+    "playlets",
+    "recommendations",
+  ];
+
+  for (const key of directKeys) {
+    const value = toArray(data[key]);
+    if (value.length > 0) return value;
+  }
+
+  if (isRecord(data.data)) {
+    const nestedKeys = [
+      ...directKeys,
+      "rankList",
+      "searchList",
+      "homeList",
+      "records",
+      "contents",
+    ];
+    for (const key of nestedKeys) {
+      const value = toArray(data.data[key]);
+      if (value.length > 0) return value;
+    }
+    const sections = toArray(data.data.sections).flatMap((section) =>
+      toArray(section.books).concat(toArray(section.list), toArray(section.items)),
+    );
+    if (sections.length > 0) return sections;
+  }
+
+  const dataArray = toArray(data.data);
+  if (dataArray.length > 0) return dataArray;
+  return [];
 }
 
 export const SHORDRAMA_PLATFORMS = [
@@ -222,8 +258,7 @@ export const SHORDRAMA_PLATFORMS = [
     name: "DramaBox",
     apiBase: "/dramaboxv4",
     language: "in",
-    latestPath: (page: number, perPage: number) =>
-      `/api/home?page=${page}&size=${perPage}&lang=in`,
+    latestPath: () => "/api/home?lang=in",
     popularPath: () => "/api/rank?lang=in",
     trendingPath: () => "/api/rank?lang=in",
     extract: extractDramaboxBooks,
@@ -262,6 +297,486 @@ export const SHORDRAMA_PLATFORMS = [
       `/api/v1/recommend?lang=in&categoryKey=dramanova_hot&page=${page}&size=${perPage}&limit=${perPage}`,
     trendingPath: (page: number, perPage: number) =>
       `/api/v1/recommend?lang=in&categoryKey=dramanova_hot&page=${page}&size=${perPage}&limit=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 6,
+    slug: "bilitv",
+    name: "BiliTV",
+    apiBase: "/bilitv",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/recommend?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 7,
+    slug: "cashdrama",
+    name: "CashDrama",
+    apiBase: "/cashdrama",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&pageSize=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/blocks?page=${page}&pageSize=${perPage}&blockId=5&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&pageSize=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 8,
+    slug: "cubetv",
+    name: "CubeTV",
+    apiBase: "/cubetv",
+    language: "id",
+    latestPath: () => "/home/shows?lang=id",
+    popularPath: () => "/home/recommendations?lang=id",
+    trendingPath: () => "/home/trending?lang=id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 9,
+    slug: "dotdrama",
+    name: "DotDrama",
+    apiBase: "/dotdrama",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/collections?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 10,
+    slug: "dramabite",
+    name: "DramaBite",
+    apiBase: "/dramabite",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/dramas?page=${page}&lang=id`,
+    popularPath: (page: number) => `/api/v1/foryou?page=${page}&lang=id`,
+    trendingPath: (page: number) => `/api/v1/hot?page=${page}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 11,
+    slug: "dramadash",
+    name: "DramaDash",
+    apiBase: "/dramadash",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/tabs/15?page=${page}`,
+    popularPath: (page: number) => `/api/v1/tabs/15?page=${page}`,
+    trendingPath: (page: number) => `/api/v1/tabs/15?page=${page}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 12,
+    slug: "dramapops",
+    name: "DramaPops",
+    apiBase: "/dramapops",
+    language: "id",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas?limit=${perPage}&lang=id`,
+    popularPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas/popular?limit=${perPage}&lang=id`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas/trending?limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 13,
+    slug: "dramarush",
+    name: "DramaRush",
+    apiBase: "/dramarush",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/tabs/0?page=${page}&lang=id`,
+    popularPath: () => "/api/v1/ranking?lang=id",
+    trendingPath: () => "/api/v1/ranking?lang=id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 14,
+    slug: "dramawave",
+    name: "DramaWave",
+    apiBase: "/dramawave",
+    language: "id-ID",
+    latestPath: (page: number) => `/api/v1/feed/new?page=${page}&lang=id-ID`,
+    popularPath: (page: number) => `/api/v1/feed/popular?page=${page}&lang=id-ID`,
+    trendingPath: (page: number) => `/api/v1/feed/popular?page=${page}&lang=id-ID`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 15,
+    slug: "flextv",
+    name: "FlexTV",
+    apiBase: "/flextv",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/tabs/1?page=${page}&lang=id`,
+    popularPath: (page: number) => `/api/v1/tabs/1?page=${page}&lang=id`,
+    trendingPath: (page: number) => `/api/v1/tabs/1?page=${page}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 16,
+    slug: "flickreels",
+    name: "FlickReels",
+    apiBase: "/flickreels",
+    language: "id",
+    latestPath: (page: number) => `/api/v1/for-you?page=${page}&lang=id`,
+    popularPath: (page: number) => `/api/v1/hot-rank?page=${page}&lang=id`,
+    trendingPath: (page: number) => `/api/v1/hot-rank?page=${page}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 17,
+    slug: "flickshort",
+    name: "FlickShort",
+    apiBase: "/flickshort",
+    language: "id",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/home?limit=${perPage}&lang=id`,
+    popularPath: (_page: number, perPage: number) =>
+      `/api/v1/recommend?limit=${perPage}&lang=id`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/recommend?limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 18,
+    slug: "freereels",
+    name: "FreeReels",
+    apiBase: "/freereels",
+    language: "id-ID",
+    latestPath: (page: number) => `/api/v1/new?page=${page - 1}&lang=id-ID`,
+    popularPath: (page: number) => `/api/v1/popular?page=${page - 1}&lang=id-ID`,
+    trendingPath: (page: number) => `/api/v1/foryou?page=${page - 1}&lang=id-ID`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 19,
+    slug: "fundrama",
+    name: "Fundrama",
+    apiBase: "/fundrama",
+    language: "en",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 20,
+    slug: "goodshort",
+    name: "GoodShort",
+    apiBase: "/goodshort",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/home?channelId=562&page=${page}&pageSize=${perPage}`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/home?channelId=562&page=${page}&pageSize=${perPage}`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/home?channelId=562&page=${page}&pageSize=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 21,
+    slug: "hishort",
+    name: "HiShort",
+    apiBase: "/hishort",
+    language: "id",
+    latestPath: () => "/api/v1/home",
+    popularPath: () => "/api/v1/home",
+    trendingPath: () => "/api/v1/home",
+    extract: extractDataBooks,
+  },
+  {
+    id: 22,
+    slug: "meloshort",
+    name: "MeloShort",
+    apiBase: "/meloshort",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/drama/all?page=${page}&limit=${perPage}`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/dramas/top?page=${page}&limit=${perPage}`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/dramas/discover?page=${page}&limit=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 23,
+    slug: "microdrama",
+    name: "MicroDrama",
+    apiBase: "/microdrama",
+    language: "id",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas?limit=${perPage}&lang=id`,
+    popularPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas?limit=${perPage}&lang=id`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/dramas?limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 24,
+    slug: "minutedrama",
+    name: "MinuteDrama",
+    apiBase: "/minutedrama",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/popular?page=${page}&size=${perPage}`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/popular?page=${page}&size=${perPage}`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/popular?page=${page}&size=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 25,
+    slug: "moboreels",
+    name: "MoboReels",
+    apiBase: "/moboreels",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/seriesPage?page=${page}&pageSize=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/hotList?page=${page}&pageSize=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/guessYouLike?page=${page}&pageSize=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 26,
+    slug: "radreels",
+    name: "RadReels",
+    apiBase: "/radreels",
+    language: "en",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&size=${perPage}&lang=en`,
+    popularPath: () => "/api/v1/ranking?lang=en",
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/foryou?page=${page}&size=${perPage}&lang=en`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 27,
+    slug: "rapidtv",
+    name: "RapidTV",
+    apiBase: "/rapidtv",
+    language: "in",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&size=${perPage}&lang=in`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&size=${perPage}&lang=in`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&size=${perPage}&lang=in`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 28,
+    slug: "reelala",
+    name: "Reelala",
+    apiBase: "/reelala",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/home?page=${page}&pageSize=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/for-you?page=${page}&pageSize=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/for-you?page=${page}&pageSize=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 29,
+    slug: "reelife",
+    name: "Reelife",
+    apiBase: "/reelife",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/dramas?page=${page}&size=${perPage}`,
+    popularPath: () => "/api/v1/ranking",
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/foryou?page=${page}&size=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 30,
+    slug: "reelshort",
+    name: "ReelShort",
+    apiBase: "/reelshort",
+    language: "in",
+    latestPath: () => "/api/v1/new?lang=in",
+    popularPath: () => "/api/v1/foryou?lang=in",
+    trendingPath: () => "/api/v1/foryou?lang=in",
+    extract: extractDataBooks,
+  },
+  {
+    id: 31,
+    slug: "sarostv",
+    name: "SarosTV",
+    apiBase: "/sarostv",
+    language: "id",
+    latestPath: () => "/api/series?lang=id",
+    popularPath: () => "/api/recommend?lang=id",
+    trendingPath: () => "/api/theater?lang=id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 32,
+    slug: "shortbox",
+    name: "ShortBox",
+    apiBase: "/shortbox",
+    language: "en",
+    latestPath: (page: number, perPage: number) =>
+      `/api/new-list?page=${page}&page_size=${perPage}&languages=en`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/list?page=${page}&page_size=${perPage}&sort_type=1&languages=en`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/list?page=${page}&page_size=${perPage}&sort_type=1&languages=en`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 33,
+    slug: "shorten",
+    name: "Shorten",
+    apiBase: "/shorten",
+    language: "id",
+    latestPath: (page: number, perPage: number) => `/api/v1/releases?page=${page}&perPage=${perPage}`,
+    popularPath: (page: number, perPage: number) => `/api/v1/editors?page=${page}&perPage=${perPage}`,
+    trendingPath: (page: number, perPage: number) => `/api/v1/exclusive?page=${page}&perPage=${perPage}`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 34,
+    slug: "shortmax",
+    name: "ShortMax",
+    apiBase: "/shortmax",
+    language: "id",
+    latestPath: () => "/api/v1/feed/new?lang=id",
+    popularPath: () => "/api/v1/feed/recommend?lang=id",
+    trendingPath: () => "/api/v1/foryou?lang=id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 35,
+    slug: "shortsky",
+    name: "ShortSky",
+    apiBase: "/shortsky",
+    language: "id_id",
+    latestPath: () => "/api/home?lang=id_id",
+    popularPath: () => "/api/recommend?lang=id_id",
+    trendingPath: () => "/api/recommend?lang=id_id",
+    extract: extractDataBooks,
+  },
+  {
+    id: 36,
+    slug: "shortwave",
+    name: "ShortWave",
+    apiBase: "/shortwave",
+    language: "id",
+    latestPath: () => "/api/all",
+    popularPath: () => "/api/top",
+    trendingPath: () => "/api/rankings",
+    extract: extractDataBooks,
+  },
+  {
+    id: 37,
+    slug: "shotshort",
+    name: "ShotShort",
+    apiBase: "/shotshort",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/popular?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/popular?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/popular?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 38,
+    slug: "snackshort",
+    name: "SnackShort",
+    apiBase: "/snackshort",
+    language: "Indonesian",
+    latestPath: () => "/api/v1/home?lang=Indonesian",
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/browsing?page=${page}&pageSize=${perPage}&lang=Indonesian`,
+    trendingPath: () => "/api/v1/tabs?lang=Indonesian",
+    extract: extractDataBooks,
+  },
+  {
+    id: 39,
+    slug: "sodareels",
+    name: "SodaReels",
+    apiBase: "/sodareels",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&count=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&count=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/api/v1/home?page=${page}&count=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 40,
+    slug: "stardusttv",
+    name: "StardustTV",
+    apiBase: "/stardusttv",
+    language: "th",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/homepage?page_size=${perPage}&lang=th`,
+    popularPath: (page: number, perPage: number) =>
+      `/api/v1/category/1?page=${page}&page_size=${perPage}&lang=th`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/homepage?page_size=${perPage}&lang=th`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 41,
+    slug: "starshort",
+    name: "StarShort",
+    apiBase: "/starshort",
+    language: "4",
+    latestPath: () => "/api/v1/dramas/new?lang=4",
+    popularPath: () => "/api/v1/dramas?lang=4",
+    trendingPath: () => "/api/v1/dramas?lang=4",
+    extract: extractDataBooks,
+  },
+  {
+    id: 42,
+    slug: "velolo",
+    name: "Velolo",
+    apiBase: "/velolo",
+    language: "id",
+    latestPath: (page: number, perPage: number) =>
+      `/new?page=${page}&limit=${perPage}&lang=id`,
+    popularPath: (page: number, perPage: number) =>
+      `/hot?page=${page}&limit=${perPage}&lang=id`,
+    trendingPath: (page: number, perPage: number) =>
+      `/hot?page=${page}&limit=${perPage}&lang=id`,
+    extract: extractDataBooks,
+  },
+  {
+    id: 43,
+    slug: "vigloo",
+    name: "Vigloo",
+    apiBase: "/vigloo",
+    language: "en",
+    latestPath: (_page: number, perPage: number) =>
+      `/api/v1/browse?offset=0&limit=${perPage}&lang=en`,
+    popularPath: (_page: number, perPage: number) =>
+      `/api/v1/browse?sort=POPULAR&limit=${perPage}&lang=en`,
+    trendingPath: (_page: number, perPage: number) =>
+      `/api/v1/rank?limit=${perPage}&lang=en`,
     extract: extractDataBooks,
   },
 ] as const;
@@ -350,7 +865,7 @@ export async function fetchShordramaSort(
   page = 1,
   perPage = 20,
 ): Promise<PaginatedResponse<Drama>> {
-  const perPlatform = Math.max(4, Math.ceil(perPage / SHORDRAMA_PLATFORMS.length));
+  const perPlatform = Math.max(1, Math.ceil(perPage / SHORDRAMA_PLATFORMS.length));
   const sections = await Promise.all(
     SHORDRAMA_PLATFORMS.map((platform) =>
       fetchShordramaPlatformList({
@@ -361,7 +876,16 @@ export async function fetchShordramaSort(
       }).catch(() => ({ data: [], meta: shordramaMeta(page, perPlatform, 0) })),
     ),
   );
-  const data = sections.flatMap((section) => section.data).slice(0, perPage);
+  const maxLength = Math.max(0, ...sections.map((section) => section.data.length));
+  const data: Drama[] = [];
+  for (let index = 0; index < maxLength && data.length < perPage; index++) {
+    for (const section of sections) {
+      const drama = section.data[index];
+      if (!drama) continue;
+      data.push(drama);
+      if (data.length >= perPage) break;
+    }
+  }
   return { data, meta: shordramaMeta(page, perPage) };
 }
 
@@ -491,6 +1015,178 @@ function detailFromParts(
     episodes,
     tags,
   };
+}
+
+function extractDetailRecord(
+  data: unknown,
+  platform: ShordramaPlatform,
+  dramaId: string,
+): Record<string, unknown> | null {
+  const payload = isRecord(data) && isRecord(data.data) ? data.data : data;
+  if (!isRecord(payload)) return null;
+
+  const candidates = [
+    payload,
+    payload.drama,
+    payload.detail,
+    payload.book,
+    payload.series,
+    payload.show,
+    payload.item,
+  ].filter(isRecord);
+
+  const extracted = platform.extract(data);
+  candidates.push(...extracted);
+
+  return (
+    candidates.find((item) => {
+      const id =
+        pickString(item, ["id", "bookId", "book_id"]) ||
+        String(pickNumber(item, ["id", "bookId", "book_id"]) ?? "");
+      return id === dramaId;
+    }) ||
+    candidates.find((item) =>
+      Boolean(pickString(item, ["title", "bookName", "book_name", "short_play_name"])),
+    ) ||
+    null
+  );
+}
+
+function extractGenericEpisodes(
+  detail: Record<string, unknown>,
+  dramaId: string,
+): Episode[] {
+  const sources = [
+    detail.episodes,
+    detail.episode_list,
+    detail.episodeList,
+    detail.chapter_list,
+    detail.chapterList,
+    detail.chapters,
+    detail.videos,
+    detail.video_list,
+    detail.videoList,
+    detail.list,
+  ];
+
+  for (const source of sources) {
+    const records = toArray(source);
+    if (records.length === 0) continue;
+    return records.map((episode, index) => {
+      const order =
+        pickNumber(episode, [
+          "episode_index",
+          "episodeIndex",
+          "episodeNo",
+          "episode",
+          "number",
+        ]) ??
+        (pickNumber(episode, ["index", "chapterIndex", "sort"]) ?? index) + 1;
+      return createEpisode({
+        dramaId,
+        sourceId:
+          pickString(episode, [
+            "id",
+            "episode_id",
+            "episodeId",
+            "chapterId",
+            "fileId",
+            "vid",
+          ]) || String(order),
+        episode: order,
+        name: pickString(episode, ["title", "name", "episode_name", "episodeName"]),
+        videoUrl: pickString(episode, [
+          "play_url",
+          "video_url",
+          "url",
+          "main_url",
+          "mp4",
+          "m3u8Url",
+        ]),
+        qualities:
+          qualityMapFromList(toArray(episode.play_info_list)) ||
+          qualityMapFromList(toArray(episode.videos)) ||
+          qualityMapFromList(toArray(episode.videoPathList)),
+        subtitles: subtitleList(toArray(episode.subtitles)),
+        coverUrl: pickString(episode, ["cover", "cover_url", "episode_cover"]),
+        duration: pickNumber(episode, ["duration", "duration_seconds"]),
+        locked: Boolean(
+          episode.locked ||
+            episode.isLocked ||
+            episode.is_vip ||
+            episode.isVip ||
+            episode.is_paid ||
+            episode.isPaid ||
+            episode.need_unlock ||
+            episode.needUnlock,
+        ),
+      });
+    });
+  }
+
+  return [];
+}
+
+function placeholderEpisodes(
+  detail: Record<string, unknown>,
+  dramaId: string,
+): Episode[] {
+  const count =
+    pickNumber(detail, [
+      "chapter_count",
+      "chapterCount",
+      "episode_count",
+      "episodeCount",
+      "totalEpisodes",
+      "serial_count",
+      "current_count",
+      "last_chapter_index",
+    ]) || 0;
+  const safeCount = Math.max(0, Math.min(count, 300));
+  return Array.from({ length: safeCount }, (_, index) =>
+    createEpisode({ dramaId, episode: index + 1 }),
+  );
+}
+
+async function fetchGenericShordramaDetail(
+  platform: ShordramaPlatform,
+  dramaId: string,
+): Promise<ShordramaDetail> {
+  const encodedId = encodeURIComponent(dramaId);
+  const language = encodeURIComponent(platform.language);
+  const paths = [
+    `/api/v1/detail/${encodedId}?lang=${language}`,
+    `/api/v1/drama/${encodedId}?lang=${language}`,
+    `/api/v1/dramas/${encodedId}?lang=${language}`,
+    `/api/v1/book/${encodedId}?lang=${language}`,
+    `/api/v1/series?id=${encodedId}&lang=${language}`,
+    `/api/detail/${encodedId}?lang=${language}`,
+  ];
+
+  for (const path of paths) {
+    try {
+      const res = await apiFetch<unknown>(`${platform.apiBase}${path}`);
+      const detail = extractDetailRecord(res, platform, dramaId);
+      if (!detail) continue;
+      const episodes = extractGenericEpisodes(detail, dramaId);
+      return detailFromParts(
+        platform,
+        dramaId,
+        detail,
+        episodes.length > 0 ? episodes : placeholderEpisodes(detail, dramaId),
+      );
+    } catch {
+      continue;
+    }
+  }
+
+  const seed = (await findShordramaListItem(platform.slug, dramaId)) || { id: dramaId };
+  return detailFromParts(
+    platform,
+    dramaId,
+    seed,
+    placeholderEpisodes(seed, dramaId),
+  );
 }
 
 function extractTags(items: Record<string, unknown>[]): Tag[] {
@@ -683,7 +1379,7 @@ export async function fetchShordramaDetail(
   if (platform.slug === "melolo") return fetchMeloloDetail(platform, dramaId);
   if (platform.slug === "netshort") return fetchNetshortDetail(platform, dramaId);
   if (platform.slug === "dramanova") return fetchDramanovaDetail(platform, dramaId);
-  throw new Error("Platform tidak didukung");
+  return fetchGenericShordramaDetail(platform, dramaId);
 }
 
 export async function fetchShordramaEpisodes(

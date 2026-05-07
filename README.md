@@ -1,14 +1,14 @@
 # DramaShort
 
-DramaShort adalah frontend streaming shordrama berbasis Next.js yang fokus pada katalog drama pendek dari 5 platform: Drama-ID, DramaBox, Melolo, NetShort, dan DramaNova. Aplikasi memakai proxy API server-side agar token upstream tidak perlu diekspos ke browser.
+DramaShort adalah frontend streaming shordrama berbasis Next.js yang fokus pada katalog drama pendek dari 43 platform resmi yang tersedia di captain.sapimu.au. Aplikasi memakai proxy API server-side agar token upstream tidak perlu diekspos ke browser.
 
 ## Fitur utama
 
-- Homepage dengan 5 section platform, masing-masing 5 kolom x 2 baris di desktop.
+- Homepage dengan section untuk semua platform resmi captain.sapimu.au, masing-masing 5 kolom x 2 baris di desktop.
 - Navbar utama: Trending, Popular, Terbaru, dan dropdown Lainnya.
 - Halaman legal/info: Syarat dan Ketentuan, Kebijakan Privasi, DMCA, Tentang.
 - Halaman aggregate Trending/Popular/Terbaru dengan filter semua platform.
-- Halaman platform lengkap untuk Drama-ID, DramaBox, Melolo, NetShort, dan DramaNova.
+- Halaman platform lengkap untuk seluruh provider resmi captain.sapimu.au.
 - Pencarian shordrama global.
 - Detail drama dengan daftar episode.
 - Player episode dengan HLS, pilihan kualitas, subtitle, progress lokal, fullscreen, dropdown episode fullscreen, tombol kembali fullscreen, dan double-tap skip 10 detik.
