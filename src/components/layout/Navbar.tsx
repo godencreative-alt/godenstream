@@ -27,7 +27,7 @@ export default function Navbar() {
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const q = query.trim();
-    if (q) router.push(`/drama/search?q=${encodeURIComponent(q)}`);
+    if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
   }
 
   return (

@@ -105,6 +105,7 @@ function mapShordramaItem(
   const id =
     pickString(item, ["id", "bookId", "book_id"]) ||
     String(pickNumber(item, ["id", "bookId", "book_id"]) ?? "");
+  const numericId = id.trim() ? Number(id) : Number.NaN;
   const title =
     pickString(item, ["title", "bookName", "book_name", "short_play_name"]) ||
     "Untitled";
@@ -119,7 +120,9 @@ function mapShordramaItem(
     ]) || null;
 
   return {
-    id: Number(id) || Math.abs(hashId(`${provider.slug}:${id || title}`)),
+    id: Number.isNaN(numericId)
+      ? Math.abs(hashId(`${provider.slug}:${id || title}`))
+      : numericId,
     title,
     cover_url: cover,
     provider_id: provider.id,
@@ -328,6 +331,48 @@ export async function fetchShordramaSort(
   );
   const data = sections.flatMap((section) => section.data).slice(0, perPage);
   return { data, meta: shordramaMeta(page, perPage) };
+}
+
+export async function fetchShordramaSearch(
+  query: string,
+  perPage = 30,
+): Promise<PaginatedResponse<Drama>> {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) {
+    return { data: [], meta: shordramaMeta(1, perPage, 0) };
+  }
+
+  const sections = await Promise.all(
+    SHORDRAMA_PLATFORMS.map((platform) =>
+      fetchShordramaPlatformList({
+        platform: platform.slug,
+        sort: "latest",
+        page: 1,
+        per_page: 50,
+      }).catch(() => ({ data: [], meta: shordramaMeta(1, 50, 0) })),
+    ),
+  );
+  const seen = new Set<string>();
+  const data = sections
+    .flatMap((section) => section.data)
+    .filter((drama) => {
+      const haystack = [
+        drama.title,
+        drama.provider_name,
+        drama.introduction,
+        drama.language,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const key = `${drama.provider_slug}:${drama.id}`;
+      if (seen.has(key) || !haystack.includes(q)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, perPage);
+
+  return { data, meta: shordramaMeta(1, perPage, data.length) };
 }
 
 async function userFetch<T>(path: string, init?: RequestInit): Promise<T> {
