@@ -34,7 +34,7 @@ Contoh path:
 mkdir -p /www/wwwroot/dramashort
 cd /www/wwwroot/dramashort
 git clone https://github.com/godencreative-alt/godenstream.git .
-git checkout devin/1778124302-shordrama-refactor-v2
+git checkout devin/1778412912-admin-whitelabel-dashboard
 ```
 
 Untuk production setelah PR merge, gunakan branch release/main yang berisi v1.0.0.
@@ -91,7 +91,7 @@ npm run build
 
 ```bash
 npm install -g pm2
-pm2 start npm --name dramashort -- start
+PORT=3000 HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name dramashort
 pm2 save
 pm2 startup
 ```
@@ -99,14 +99,10 @@ pm2 startup
 Jika ingin memakai port selain 3000:
 
 ```bash
-PORT=3001 pm2 start npm --name dramashort -- start
+PORT=3001 PORT=3000 HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name dramashort
 ```
 
-Jika project memakai output standalone, jalankan langsung:
-
-```bash
-PORT=3000 HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name dramashort
-```
+Project ini memakai `output: "standalone"`, jadi jalankan `.next/standalone/server.js`, bukan `next start`.
 
 ## 7. Reverse proxy Nginx di aaPanel
 
@@ -176,5 +172,5 @@ cd /www/wwwroot/dramashort
 git pull
 npm ci
 npm run build
-pm2 restart dramashort
+pm2 restart dramashort --update-env
 ```

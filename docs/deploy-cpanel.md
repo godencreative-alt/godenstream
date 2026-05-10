@@ -30,7 +30,7 @@ Upload source melalui Git Version Control, File Manager, atau SSH:
 ```bash
 cd ~/dramashort
 git clone https://github.com/godencreative-alt/godenstream.git .
-git checkout devin/1778124302-shordrama-refactor-v2
+git checkout devin/1778412912-admin-whitelabel-dashboard
 ```
 
 Untuk production setelah PR merge, gunakan branch release/main yang berisi v1.0.0.
