@@ -14,6 +14,8 @@ import {
   LanguageIcon,
 } from "@heroicons/react/24/solid";
 import { STORAGE_KEYS } from "@/lib/constants";
+import { useRuntimeSettings } from "@/components/runtime/RuntimeSettingsProvider";
+import { cachedMediaUrl } from "@/lib/media-cache-client";
 
 interface VideoPlayerProps {
   src: string;
@@ -110,6 +112,7 @@ export default function VideoPlayer({
   onEnded,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const settings = useRuntimeSettings();
   const hlsRef = useRef<Hls | null>(null);
   const lastSaveRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -147,6 +150,7 @@ export default function VideoPlayer({
   const activeSrc = currentQuality && qualities?.[currentQuality]
     ? qualities[currentQuality]
     : src;
+  const playableSrc = cachedMediaUrl(activeSrc, settings);
 
   useEffect(() => {
     if (sortedQualities.length > 0 && !currentQuality) {
@@ -156,31 +160,31 @@ export default function VideoPlayer({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !activeSrc) return;
+    if (!video || !playableSrc) return;
 
-    if (activeSrc.endsWith(".m3u8") || activeSrc.includes(".m3u8?")) {
+    if (playableSrc.endsWith(".m3u8") || playableSrc.includes(".m3u8?")) {
       if (Hls.isSupported()) {
         hlsRef.current?.destroy();
         const hls = new Hls({
           maxBufferLength: 30,
           maxMaxBufferLength: 60,
         });
-        hls.loadSource(activeSrc);
+        hls.loadSource(playableSrc);
         hls.attachMedia(video);
         hlsRef.current = hls;
       } else if (
         video.canPlayType("application/vnd.apple.mpegurl")
       ) {
-        video.src = activeSrc;
+        video.src = playableSrc;
       }
     } else {
-      video.src = activeSrc;
+      video.src = playableSrc;
     }
 
     return () => {
       hlsRef.current?.destroy();
     };
-  }, [activeSrc]);
+  }, [playableSrc]);
 
   useEffect(() => {
     const video = videoRef.current;

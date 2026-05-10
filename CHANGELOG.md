@@ -1,11 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Whitelabel admin dashboard at `/admin`.
+- Configurable website name, tagline, header/footer logo, favicon, SEO metadata, footer text, carousel, ads, anti-adblock, cache, Cloudflare, and admin credentials.
+- Front-page trending cover carousel with configurable item count and scroll speed.
+- Visitor analytics for today, seven days, month, and Top 20 watched dramas.
+- Local media cache with retention and 10GB maximum cap.
+- Optional Cloudflare R2 media cache upload support.
+- Cloudflare anti-DDoS apply endpoint for zone security settings when Cloudflare env vars are configured.
+
+### Security
+
+- Admin session uses HTTP-only cookies.
+- Media cache endpoint validates allowed HTTPS media hosts before fetching remote files.
+- Added Cloudflare/security deployment notes and env configuration.
+
 ## v1.0.0 - 2026-05-07
 
 ### Added
 
 - Fokus ulang aplikasi menjadi DramaShort untuk platform shordrama.
-- Homepage dengan 5 platform: Drama-ID, DramaBox, Melolo, NetShort, dan DramaNova.
+- Homepage dengan platform resmi captain.sapimu.au.
 - Navbar Trending, Popular, Terbaru, dan dropdown Lainnya.
 - Halaman Syarat dan Ketentuan, Kebijakan Privasi, DMCA, dan Tentang.
 - Halaman aggregate Trending/Popular/Terbaru dengan filter semua platform.
@@ -18,7 +36,7 @@
 ### Changed
 
 - Branding website dan owner dari GodenStream menjadi DramaShort.
-- FreeReels diganti menjadi DramaNova pada homepage dan navigasi platform.
+- Platform homepage mengikuti daftar resmi captain.sapimu.au.
 - Package metadata diubah menjadi `dramashort` versi `1.0.0`.
 - Default browser API base diarahkan ke `/api/proxy` agar API key tidak diekspos di client.
 - Ukuran video portrait kini fit terhadap tinggi viewport, bukan memenuhi halaman secara berlebihan.

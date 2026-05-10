@@ -43,6 +43,7 @@ export default function ShordramaEpisodePage({
   const prevEp = episodes.find((item) => item.episode_index === episodeIndex - 1);
   const nextEp = episodes.find((item) => item.episode_index === episodeIndex + 1);
   const videoSrc = video?.video_url || Object.values(video?.qualities || {})[0] || "";
+  const watchKey = `${provider?.slug || platform}:${dramaId}`;
 
   if (isLoading) {
     return (
@@ -103,6 +104,21 @@ export default function ShordramaEpisodePage({
           isLandscape={false}
           accentColor="var(--dc-gold)"
           onProgress={(progress, duration) => {
+            if (progress > 3 && !sessionStorage.getItem(`watch:${watchKey}`)) {
+              sessionStorage.setItem(`watch:${watchKey}`, "1");
+              fetch("/api/analytics/watch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  key: watchKey,
+                  title: drama?.title || provider.name,
+                  providerName: provider.name,
+                  providerSlug: provider.slug,
+                  coverUrl: drama?.cover_url || currentEp?.cover_url || null,
+                  href: `/shordrama/${provider.slug}/${encodeURIComponent(dramaId)}`,
+                }),
+              }).catch(() => {});
+            }
             saveLocalProgress({
               content_id: `${provider.slug}:${dramaId}`,
               content_name: drama?.title || "",

@@ -34,7 +34,7 @@ Contoh path:
 mkdir -p /www/wwwroot/dramashort
 cd /www/wwwroot/dramashort
 git clone https://github.com/godencreative-alt/godenstream.git .
-git checkout devin/1778124302-shordrama-refactor-v2
+git checkout devin/1778412912-admin-whitelabel-dashboard
 ```
 
 Untuk production setelah PR merge, gunakan branch release/main yang berisi v1.0.0.
@@ -50,11 +50,35 @@ NEXT_PUBLIC_APP_URL=https://domain-anda.com
 UPSTREAM_API_URL=https://captain.sapimu.au
 API_KEY=ISI_TOKEN_API_DI_SINI
 NODE_ENV=production
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=GANTI_PASSWORD_KUAT
+ADMIN_SESSION_SECRET=GANTI_RANDOM_SECRET_PANJANG
+DRAMASHORT_DATA_DIR=/www/wwwroot/dramashort-data
+DRAMASHORT_CACHE_DIR=/www/wwwroot/dramashort-cache
 ENV
 chmod 600 .env
 ```
 
 Jangan simpan API key di repository.
+
+Jika memakai Cloudflare R2/cache:
+
+```bash
+CLOUDFLARE_R2_ACCOUNT_ID=...
+CLOUDFLARE_R2_BUCKET=dramashort-cache
+CLOUDFLARE_R2_ACCESS_KEY_ID=...
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=...
+CLOUDFLARE_ZONE_ID=...
+CLOUDFLARE_API_TOKEN=...
+CLOUDFLARE_DDOS_HEADERS=true
+```
+
+Buat data/cache directory di luar public vhost:
+
+```bash
+mkdir -p /www/wwwroot/dramashort-data /www/wwwroot/dramashort-cache
+chmod 700 /www/wwwroot/dramashort-data /www/wwwroot/dramashort-cache
+```
 
 ## 5. Install dan build
 
@@ -67,7 +91,7 @@ npm run build
 
 ```bash
 npm install -g pm2
-pm2 start npm --name dramashort -- start
+PORT=3000 HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name dramashort
 pm2 save
 pm2 startup
 ```
@@ -75,8 +99,10 @@ pm2 startup
 Jika ingin memakai port selain 3000:
 
 ```bash
-PORT=3001 pm2 start npm --name dramashort -- start
+PORT=3001 PORT=3000 HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name dramashort
 ```
+
+Project ini memakai `output: "standalone"`, jadi jalankan `.next/standalone/server.js`, bukan `next start`.
 
 ## 7. Reverse proxy Nginx di aaPanel
 
@@ -112,18 +138,39 @@ pm2 logs dramashort
 
 Checklist UI:
 
-- Homepage menampilkan Drama-ID, DramaBox, Melolo, NetShort, DramaNova.
+- Homepage menampilkan platform resmi captain.sapimu.au.
 - Search berjalan.
 - Detail drama terbuka dari card.
 - Player episode memutar video bila upstream mengirim URL.
 - Fullscreen memiliki tombol kembali dan dropdown episode.
+- `/admin` bisa login dan settings tersimpan.
+- Jika cache aktif, cache usage terlihat di `/admin`.
 
-## 9. Update release berikutnya
+## 9. Cloudflare anti-DDoS
+
+Di Cloudflare dashboard:
+
+1. Pastikan DNS record domain aktif **Proxied** (orange cloud).
+2. Aktifkan **WAF Managed Rules**.
+3. Aktifkan **Bot Fight Mode** bila tersedia.
+4. Tambahkan rate limit untuk `/api/*`, terutama `/api/proxy/*`.
+5. Aktifkan **Hotlink Protection** untuk mengurangi pencurian asset.
+6. Saat serangan, aktifkan **Under Attack Mode**.
+
+Jika `CLOUDFLARE_ZONE_ID` dan `CLOUDFLARE_API_TOKEN` sudah diset, admin yang login bisa POST ke:
+
+```bash
+curl -X POST https://domain-anda.com/api/admin/cloudflare/apply
+```
+
+Lebih mudah: gunakan tombol/API client internal setelah login admin jika ditambahkan di panel.
+
+## 10. Update release berikutnya
 
 ```bash
 cd /www/wwwroot/dramashort
 git pull
 npm ci
 npm run build
-pm2 restart dramashort
+pm2 restart dramashort --update-env
 ```

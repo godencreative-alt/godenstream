@@ -5,6 +5,7 @@ import Providers from "@/providers";
 import Navbar from "@/components/layout/Navbar";
 import SectionNav from "@/components/layout/SectionNav";
 import Footer from "@/components/layout/Footer";
+import { getPublicSettings } from "@/lib/admin/store";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -18,19 +19,24 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "DramaShort — Shordrama Streaming",
-    template: "%s | DramaShort",
-  },
-  description:
-    "Stream short dramas from Drama-ID, DramaBox, Melolo, NetShort, and DramaNova.",
-  openGraph: {
-    title: "DramaShort",
-    description: "Shordrama Streaming Platform",
-    type: "website",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getPublicSettings();
+  return {
+    title: {
+      default: settings.seo.title,
+      template: settings.seo.titleTemplate,
+    },
+    description: settings.seo.description,
+    keywords: settings.seo.keywords,
+    icons: settings.whitelabel.faviconUrl ? { icon: settings.whitelabel.faviconUrl } : undefined,
+    openGraph: {
+      title: settings.whitelabel.siteName,
+      description: settings.seo.description,
+      type: "website",
+      images: settings.seo.ogImageUrl ? [settings.seo.ogImageUrl] : undefined,
+    },
+  };
+}
 
 export default function RootLayout({
   children,

@@ -13,7 +13,7 @@ export default function AboutPage() {
       <div className="space-y-6 text-sm leading-7 text-white/60">
         <p>
           DramaShort adalah antarmuka streaming yang berfokus pada drama pendek
-          dari platform Drama-ID, DramaBox, Melolo, NetShort, dan DramaNova.
+          dari semua platform resmi yang tersedia di captain.sapimu.au.
         </p>
         <p>
           Halaman awal menampilkan section per platform dengan akses cepat ke
