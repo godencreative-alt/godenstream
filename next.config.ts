@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   output: "standalone",
   turbopack: {
     root: __dirname,
+    ignoreIssue: [
+      {
+        path: "**/src/lib/admin/cache.ts",
+        title: "Encountered unexpected file in NFT list",
+      },
+    ],
   },
   images: {
     unoptimized: true,
@@ -15,6 +21,7 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    const ddosHeaders = process.env.CLOUDFLARE_DDOS_HEADERS === "true";
     return [
       {
         source: "/(.*)",
@@ -34,6 +41,12 @@ const nextConfig: NextConfig = {
             key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains; preload",
           },
+          ...(ddosHeaders
+            ? [
+                { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+                { key: "Cross-Origin-Resource-Policy", value: "same-site" },
+              ]
+            : []),
         ],
       },
       {

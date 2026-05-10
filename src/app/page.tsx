@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { fetchShordramaHome, getShordramaHref } from "@/lib/api";
 import ContentCard from "@/components/sections/ContentCard";
+import TrendingCarousel from "@/components/sections/TrendingCarousel";
+import { useRuntimeSettings } from "@/components/runtime/RuntimeSettingsProvider";
 
 function SectionSkeleton() {
   return (
@@ -19,6 +21,7 @@ function SectionSkeleton() {
 }
 
 export default function HomePage() {
+  const settings = useRuntimeSettings();
   const { data: sections, isLoading } = useQuery({
     queryKey: ["shordrama-home"],
     queryFn: fetchShordramaHome,
@@ -40,11 +43,12 @@ export default function HomePage() {
             className="max-w-3xl text-4xl font-bold leading-tight text-white md:text-6xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Drama<span className="gradient-text-gold">Short</span> untuk short
-            drama pilihan.
+            {settings?.whitelabel.siteName || "DramaShort"} untuk short drama
+            pilihan.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">
-            Fokus pada drama pendek dari semua platform resmi captain.sapimu.au.
+            {settings?.whitelabel.siteTagline ||
+              "Fokus pada drama pendek dari semua platform resmi captain.sapimu.au."}
             Setiap platform tampil 5 kolom x 2 baris di halaman awal.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
@@ -62,6 +66,8 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
+
+        <TrendingCarousel />
 
         <div className="space-y-12">
           {isLoading && (

@@ -3,6 +3,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/auth";
+import RuntimeSettingsProvider from "@/components/runtime/RuntimeSettingsProvider";
+import AdAndAntiAdblock from "@/components/runtime/AdAndAntiAdblock";
 
 function AuthInit({ children }: { children: React.ReactNode }) {
   const init = useAuthStore((s) => s.init);
@@ -33,7 +35,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthInit>{children}</AuthInit>
+      <RuntimeSettingsProvider>
+        <AuthInit>
+          {children}
+          <AdAndAntiAdblock />
+        </AuthInit>
+      </RuntimeSettingsProvider>
     </QueryClientProvider>
   );
 }

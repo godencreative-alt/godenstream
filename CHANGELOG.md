@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Whitelabel admin dashboard at `/admin`.
+- Configurable website name, tagline, header/footer logo, favicon, SEO metadata, footer text, carousel, ads, anti-adblock, cache, Cloudflare, and admin credentials.
+- Front-page trending cover carousel with configurable item count and scroll speed.
+- Visitor analytics for today, seven days, month, and Top 20 watched dramas.
+- Local media cache with retention and 10GB maximum cap.
+- Optional Cloudflare R2 media cache upload support.
+- Cloudflare anti-DDoS apply endpoint for zone security settings when Cloudflare env vars are configured.
+
+### Security
+
+- Admin session uses HTTP-only cookies.
+- Media cache endpoint validates allowed HTTPS media hosts before fetching remote files.
+- Added Cloudflare/security deployment notes and env configuration.
+
 ## v1.0.0 - 2026-05-07
 
 ### Added

@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { PlayCircleIcon } from "@heroicons/react/24/outline";
 import { SHORDRAMA_PLATFORMS } from "@/lib/api";
+import { useRuntimeSettings } from "@/components/runtime/RuntimeSettingsProvider";
 
 const columns = [
   {
@@ -37,6 +40,14 @@ const columns = [
 ];
 
 export default function Footer() {
+  const settings = useRuntimeSettings();
+  const siteName = settings?.whitelabel.siteName || "DramaShort";
+  const logoUrl = settings?.whitelabel.logoUrl || "";
+  const footerHtml =
+    settings?.whitelabel.footerHtml ||
+    "Platform streaming shordrama dari provider resmi captain.sapimu.au.";
+  const footerText = settings?.whitelabel.footerText || "All rights reserved.";
+
   return (
     <footer className="border-t border-white/[0.06] bg-[var(--dc-base)]">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
@@ -44,11 +55,16 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <PlayCircleIcon className="h-6 w-6 text-[var(--dc-gold)]" />
-              <span className="text-sm font-bold text-white">DramaShort</span>
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="" className="h-6 w-6 rounded object-contain" />
+              ) : (
+                <PlayCircleIcon className="h-6 w-6 text-[var(--dc-gold)]" />
+              )}
+              <span className="text-sm font-bold text-white">{siteName}</span>
             </Link>
-            <p className="mt-3 text-[12px] leading-relaxed text-white/30">
-              Platform streaming shordrama dari provider resmi captain.sapimu.au.
+            <p className="mt-3 whitespace-pre-line text-[12px] leading-relaxed text-white/30">
+              {footerHtml}
             </p>
           </div>
 
@@ -74,7 +90,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-white/[0.06] pt-6 text-center text-[11px] text-white/20">
-          DramaShort. All rights reserved.
+          {siteName}. {footerText}
         </div>
       </div>
     </footer>

@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { PlayIcon, FilmIcon } from "@heroicons/react/24/solid";
 import { providerBadgeColor, formatPlayCount } from "@/lib/utils";
+import { useRuntimeSettings } from "@/components/runtime/RuntimeSettingsProvider";
+import { cachedMediaUrl } from "@/lib/media-cache-client";
 
 interface ContentCardProps {
   item: {
@@ -21,6 +23,7 @@ interface ContentCardProps {
 }
 
 export default function ContentCard({ item, href }: ContentCardProps) {
+  const settings = useRuntimeSettings();
   const title = item.title || item.name || "Untitled";
   const episodeCount = item.chapter_count || item.available_episodes;
 
@@ -29,7 +32,7 @@ export default function ContentCard({ item, href }: ContentCardProps) {
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-[var(--dc-elevated)]">
         {item.cover_url ? (
           <Image
-            src={item.cover_url}
+            src={cachedMediaUrl(item.cover_url, settings)}
             alt={title}
             fill
             sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 16vw"

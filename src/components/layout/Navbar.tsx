@@ -12,6 +12,7 @@ import {
   SparklesIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useRuntimeSettings } from "@/components/runtime/RuntimeSettingsProvider";
 
 const navLinks = [
   { href: "/trending", label: "Trending", icon: FireIcon },
@@ -29,6 +30,10 @@ const moreLinks = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const settings = useRuntimeSettings();
+  const siteName = settings?.whitelabel.siteName || "DramaShort";
+  const logoUrl = settings?.whitelabel.logoUrl || "";
+
   const moreRef = useRef<HTMLDivElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -65,13 +70,18 @@ export default function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--dc-gold)]/15">
-            <PlayCircleIcon className="h-5 w-5 text-[var(--dc-gold)]" />
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="h-6 w-6 rounded-lg object-contain" />
+            ) : (
+              <PlayCircleIcon className="h-5 w-5 text-[var(--dc-gold)]" />
+            )}
           </span>
           <span
             className="text-lg font-bold tracking-tight text-white"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Drama<span className="gradient-text-gold">Short</span>
+            {siteName}
           </span>
         </Link>
 
