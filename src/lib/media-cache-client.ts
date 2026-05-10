@@ -1,6 +1,6 @@
 import type { PublicSettings } from "@/lib/admin/types";
 
-const MEDIA_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".m3u8", ".ts"];
+const MEDIA_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4"];
 
 export function shouldCacheMediaUrl(url: string | null | undefined) {
   if (!url) return false;

@@ -43,6 +43,8 @@ async function writeJsonFile(filePath: string, data: unknown) {
   await rename(tmpPath, filePath);
 }
 
+let analyticsWriteQueue = Promise.resolve();
+
 function hashPassword(password: string, salt: string) {
   return createHash("sha256").update(`${salt}:${password}`).digest("hex");
 }
@@ -277,9 +279,14 @@ export function verifyAdminSession(value?: string | null) {
   if (!value) return false;
   try {
     const decoded = Buffer.from(value, "base64url").toString("utf8");
-    const parts = decoded.split(":");
-    if (parts.length !== 3) return false;
-    const [username, expiresAtRaw, signature] = parts;
+    const signatureSeparator = decoded.lastIndexOf(":");
+    if (signatureSeparator < 0) return false;
+    const payload = decoded.slice(0, signatureSeparator);
+    const signature = decoded.slice(signatureSeparator + 1);
+    const expiresAtSeparator = payload.lastIndexOf(":");
+    if (expiresAtSeparator < 0) return false;
+    const username = payload.slice(0, expiresAtSeparator);
+    const expiresAtRaw = payload.slice(expiresAtSeparator + 1);
     const expiresAt = Number(expiresAtRaw);
     if (!username || !Number.isFinite(expiresAt) || Date.now() > expiresAt) return false;
     const secret = process.env.ADMIN_SESSION_SECRET || process.env.API_KEY || "dramashort-dev-secret";
@@ -311,6 +318,16 @@ export async function getAnalytics(): Promise<AnalyticsStore> {
 
 export async function writeAnalytics(data: AnalyticsStore) {
   await writeJsonFile(ANALYTICS_PATH, data);
+}
+
+export async function updateAnalytics(mutator: (analytics: AnalyticsStore) => void | Promise<void>) {
+  const nextWrite = analyticsWriteQueue.then(async () => {
+    const analytics = await getAnalytics();
+    await mutator(analytics);
+    await writeAnalytics(analytics);
+  });
+  analyticsWriteQueue = nextWrite.catch(() => {});
+  await nextWrite;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
