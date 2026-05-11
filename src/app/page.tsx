@@ -44,9 +44,8 @@ export default function HomePage() {
             drama pilihan.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">
-            Fokus pada drama pendek dari Drama-ID, DramaBox, Melolo, NetShort,
-            dan DramaNova. Setiap platform tampil 5 kolom x 2 baris di halaman
-            awal.
+            Fokus pada drama pendek dari semua platform resmi captain.sapimu.au.
+            Setiap platform tampil 5 kolom x 2 baris di halaman awal.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Link
