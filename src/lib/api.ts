@@ -88,6 +88,212 @@ function pickNumber(source: Record<string, unknown>, keys: string[]): number | u
   }
 }
 
+const SHORDRAMA_ID_KEYS = [
+  "id",
+  "bookId",
+  "book_id",
+  "drama_id",
+  "dramaId",
+  "dcup",
+  "dlit",
+  "dshame",
+  "shortplay_id",
+  "seriesId",
+  "programId",
+  "playId",
+  "compilationsId",
+  "fakeId",
+  "slug",
+  "hash",
+];
+
+const SHORDRAMA_TITLE_KEYS = [
+  "title",
+  "bookName",
+  "book_name",
+  "book_title",
+  "short_play_name",
+  "drama_title",
+  "nseri",
+  "nmeasu",
+  "nsin",
+  "seriesName",
+  "playName",
+  "shortPlayName",
+  "bannerName",
+  "name",
+];
+
+const SHORDRAMA_COVER_KEYS = [
+  "cover_url",
+  "compress_cover_url",
+  "coverWap",
+  "cover",
+  "coverUrl",
+  "coverHoriUrl",
+  "cover_image",
+  "poster",
+  "posterSmall",
+  "book_pic",
+  "thumb_url",
+  "first_chapter_cover",
+  "drama_cover",
+  "drama_cover_h",
+  "first_frame",
+  "fileUrl",
+  "picUrl",
+  "horizontalCoverId",
+  "bannerImage",
+  "thumbnail",
+  "thumbnailExpanded",
+  "titleImage",
+  "icon",
+  "img",
+  "pday",
+  "pbat",
+  "fdar",
+];
+
+const SHORDRAMA_COUNT_KEYS = [
+  "chapter_count",
+  "chapterCount",
+  "episode_count",
+  "episodeCount",
+  "episodesCount",
+  "totalEpisodes",
+  "totalChapters",
+  "serial_count",
+  "current_count",
+  "last_chapter_index",
+  "chapters",
+  "episodes",
+  "total",
+  "ewood",
+  "ewin",
+  "eshe",
+  "uploadOfEpisodes",
+];
+
+const SHORDRAMA_DESCRIPTION_KEYS = [
+  "introduction",
+  "description",
+  "abstract",
+  "desc",
+  "recommendIntro",
+  "special_desc",
+  "summary",
+  "synopsis",
+  "logLine",
+  "playDesc",
+  "dwill",
+  "ddet",
+  "dentra",
+];
+
+const SHORDRAMA_PLAY_COUNT_KEYS = [
+  "playCount",
+  "view_count",
+  "read_count",
+  "viewCount",
+  "watchCount",
+  "watch_count",
+  "collectNum",
+  "collect_count",
+  "fav_count",
+  "favorite_count",
+  "clickNum",
+];
+
+function firstStringFromRecord(source: Record<string, unknown>, keys: string[]): string | undefined {
+  const direct = pickString(source, keys);
+  if (direct) return direct;
+
+  for (const key of keys) {
+    const value = source[key];
+    if (isRecord(value)) {
+      const nested = pickString(value, ["url", "thumb", "src", "image", "cover"]);
+      if (nested) return nested;
+    }
+  }
+}
+
+function firstStringFromArrays(
+  source: Record<string, unknown>,
+  arrayKeys: string[],
+  valueKeys: string[],
+): string | undefined {
+  for (const arrayKey of arrayKeys) {
+    for (const item of toArray(source[arrayKey])) {
+      const value = pickString(item, valueKeys);
+      if (value) return value;
+    }
+  }
+}
+
+function shordramaRecordScore(item: Record<string, unknown>): number {
+  const nested = primaryShordramaRecord(item, false);
+  const record = nested === item ? item : nested;
+  let score = 0;
+  if (firstShordramaId(record)) score += 2;
+  if (pickString(record, SHORDRAMA_TITLE_KEYS)) score += 3;
+  if (firstShordramaCover(record)) score += 3;
+  if (pickNumber(record, SHORDRAMA_COUNT_KEYS) !== undefined) score += 1;
+  if (pickString(record, SHORDRAMA_DESCRIPTION_KEYS)) score += 1;
+  return score;
+}
+
+function primaryShordramaRecord(
+  item: Record<string, unknown>,
+  includeSelf = true,
+): Record<string, unknown> {
+  const candidates = [
+    item.program,
+    item.drama,
+    item.book,
+    item.series,
+    item.play,
+    item.shortPlay,
+    item.detail,
+    item.item,
+  ].filter(isRecord);
+
+  const bestNested = candidates
+    .map((candidate) => ({ candidate, score: shordramaRecordScoreWithoutNesting(candidate) }))
+    .sort((a, b) => b.score - a.score)[0];
+
+  if (!includeSelf) return bestNested?.candidate || item;
+
+  const selfScore = shordramaRecordScoreWithoutNesting(item);
+  return bestNested && bestNested.score > selfScore ? bestNested.candidate : item;
+}
+
+function shordramaRecordScoreWithoutNesting(item: Record<string, unknown>): number {
+  let score = 0;
+  if (firstShordramaId(item)) score += 2;
+  if (pickString(item, SHORDRAMA_TITLE_KEYS)) score += 3;
+  if (firstShordramaCover(item)) score += 3;
+  if (pickNumber(item, SHORDRAMA_COUNT_KEYS) !== undefined) score += 1;
+  if (pickString(item, SHORDRAMA_DESCRIPTION_KEYS)) score += 1;
+  return score;
+}
+
+function firstShordramaId(item: Record<string, unknown>): string | undefined {
+  const value =
+    pickString(item, SHORDRAMA_ID_KEYS) ||
+    (pickNumber(item, SHORDRAMA_ID_KEYS) !== undefined
+      ? String(pickNumber(item, SHORDRAMA_ID_KEYS))
+      : undefined);
+  return value?.trim() ? value : undefined;
+}
+
+function firstShordramaCover(item: Record<string, unknown>): string | undefined {
+  return (
+    firstStringFromRecord(item, SHORDRAMA_COVER_KEYS) ||
+    firstStringFromArrays(item, ["thumbnails", "images", "posters"], ["url", "thumb", "src"]) ||
+    undefined
+  );
+}
+
 function shordramaMeta(page: number, perPage: number, total?: number): Meta {
   const safeTotal = total ?? page * perPage + 1;
   return {
@@ -108,22 +314,14 @@ function mapShordramaItem(
   item: Record<string, unknown>,
   provider: ShordramaPlatform,
 ): Drama {
-  const id =
-    pickString(item, ["id", "bookId", "book_id"]) ||
-    String(pickNumber(item, ["id", "bookId", "book_id"]) ?? "");
+  const source = primaryShordramaRecord(item);
+  const id = firstShordramaId(source) || firstShordramaId(item) || "";
   const numericId = id.trim() ? Number(id) : Number.NaN;
   const title =
-    pickString(item, ["title", "bookName", "book_name", "short_play_name"]) ||
+    pickString(source, SHORDRAMA_TITLE_KEYS) ||
+    pickString(item, SHORDRAMA_TITLE_KEYS) ||
     "Untitled";
-  const cover =
-    pickString(item, [
-      "cover_url",
-      "compress_cover_url",
-      "coverWap",
-      "cover",
-      "thumb_url",
-      "first_chapter_cover",
-    ]) || null;
+  const cover = firstShordramaCover(source) || firstShordramaCover(item) || null;
 
   return {
     id: Number.isNaN(numericId)
@@ -135,21 +333,13 @@ function mapShordramaItem(
     provider_id: provider.id,
     provider_name: provider.name,
     provider_slug: provider.slug,
-    chapter_count:
-      pickNumber(item, [
-        "chapterCount",
-        "totalEpisodes",
-        "serial_count",
-        "current_count",
-        "last_chapter_index",
-        "episodes",
-      ]) ?? null,
-    play_count: pickNumber(item, ["playCount", "view_count", "read_count", "viewCount"]) ?? 0,
-    introduction: pickString(item, ["introduction", "description", "abstract"]) || null,
-    language: pickString(item, ["lang", "language"]) || null,
+    chapter_count: pickNumber(source, SHORDRAMA_COUNT_KEYS) ?? null,
+    play_count: pickNumber(source, SHORDRAMA_PLAY_COUNT_KEYS) ?? 0,
+    introduction: pickString(source, SHORDRAMA_DESCRIPTION_KEYS) || null,
+    language: pickString(source, ["lang", "language", "lweek", "lgain", "lhomew", "display_language"]) || null,
     is_dubbed:
-      Boolean(item.is_dubbed) ||
-      String(item.cover_tag ?? item.title ?? "").toLowerCase().includes("dub"),
+      Boolean(source.is_dubbed) ||
+      String(source.cover_tag ?? source.title ?? source.book_title ?? "").toLowerCase().includes("dub"),
     raw_data: null,
   };
 }
@@ -206,6 +396,13 @@ function extractDataBooks(data: unknown): Record<string, unknown>[] {
     "videos",
     "playlets",
     "recommendations",
+    "payloads",
+    "plays",
+    "dramaResponseList",
+    "shortPlayResponseList",
+    "lconne",
+    "lint",
+    "lsumm",
   ];
 
   for (const key of directKeys) {
@@ -221,6 +418,9 @@ function extractDataBooks(data: unknown): Record<string, unknown>[] {
       "homeList",
       "records",
       "contents",
+      "payloads",
+      "banner",
+      "eclim",
     ];
     for (const key of nestedKeys) {
       const value = toArray(data.data[key]);
@@ -234,7 +434,20 @@ function extractDataBooks(data: unknown): Record<string, unknown>[] {
 
   const dataArray = toArray(data.data);
   if (dataArray.length > 0) return dataArray;
-  return [];
+  return collectShordramaRecords(data).slice(0, 80);
+}
+
+function collectShordramaRecords(value: unknown, depth = 0): Record<string, unknown>[] {
+  if (depth > 6) return [];
+  if (Array.isArray(value)) {
+    const records = value.filter((item): item is Record<string, unknown> => isRecord(item));
+    if (records.length > 0 && records.some((item) => shordramaRecordScore(item) >= 5)) {
+      return records.filter((item) => shordramaRecordScore(item) >= 4);
+    }
+    return records.flatMap((item) => collectShordramaRecords(item, depth + 1));
+  }
+  if (!isRecord(value)) return [];
+  return Object.values(value).flatMap((item) => collectShordramaRecords(item, depth + 1));
 }
 
 export const SHORDRAMA_PLATFORMS = [
@@ -462,13 +675,13 @@ export const SHORDRAMA_PLATFORMS = [
     slug: "fundrama",
     name: "Fundrama",
     apiBase: "/fundrama",
-    language: "en",
+    language: "id",
     latestPath: (page: number, perPage: number) =>
-      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
     popularPath: (page: number, perPage: number) =>
-      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
     trendingPath: (page: number, perPage: number) =>
-      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=en`,
+      `/api/v1/dramas?page=${page}&limit=${perPage}&lang=id`,
     extract: extractDataBooks,
   },
   {
@@ -503,11 +716,11 @@ export const SHORDRAMA_PLATFORMS = [
     apiBase: "/meloshort",
     language: "id",
     latestPath: (page: number, perPage: number) =>
-      `/api/v1/drama/all?page=${page}&limit=${perPage}`,
+      `/api/v1/drama/all?page=${page}&limit=${perPage}&lang=id`,
     popularPath: (page: number, perPage: number) =>
-      `/api/v1/dramas/top?page=${page}&limit=${perPage}`,
+      `/api/v1/dramas/top?page=${page}&limit=${perPage}&lang=id`,
     trendingPath: (page: number, perPage: number) =>
-      `/api/v1/dramas/discover?page=${page}&limit=${perPage}`,
+      `/api/v1/dramas/discover?page=${page}&limit=${perPage}&lang=id`,
     extract: extractDataBooks,
   },
   {
@@ -544,12 +757,12 @@ export const SHORDRAMA_PLATFORMS = [
     name: "MoboReels",
     apiBase: "/moboreels",
     language: "id",
-    latestPath: (page: number, perPage: number) =>
-      `/api/seriesPage?page=${page}&pageSize=${perPage}&lang=id`,
-    popularPath: (page: number, perPage: number) =>
-      `/api/hotList?page=${page}&pageSize=${perPage}&lang=id`,
-    trendingPath: (page: number, perPage: number) =>
-      `/api/guessYouLike?page=${page}&pageSize=${perPage}&lang=id`,
+    latestPath: () =>
+      "/api/channelDetail?schemaId=94874897842045252&channelId=162979468352028714&skipSeries=0&langId=11",
+    popularPath: () =>
+      "/api/channelDetail?schemaId=94874897842045252&channelId=162979468352028714&skipSeries=0&langId=11",
+    trendingPath: () =>
+      "/api/channelDetail?schemaId=94874897842045252&channelId=162979468352028714&skipSeries=0&langId=11",
     extract: extractDataBooks,
   },
   {
@@ -622,10 +835,10 @@ export const SHORDRAMA_PLATFORMS = [
     slug: "sarostv",
     name: "SarosTV",
     apiBase: "/sarostv",
-    language: "id",
-    latestPath: () => "/api/series?lang=id",
-    popularPath: () => "/api/recommend?lang=id",
-    trendingPath: () => "/api/theater?lang=id",
+    language: "en_US",
+    latestPath: () => "/api/theater?lang=en_US",
+    popularPath: () => "/api/recommend?lang=en_US",
+    trendingPath: () => "/api/theater?lang=en_US",
     extract: extractDataBooks,
   },
   {
@@ -680,10 +893,10 @@ export const SHORDRAMA_PLATFORMS = [
     slug: "shortwave",
     name: "ShortWave",
     apiBase: "/shortwave",
-    language: "id",
-    latestPath: () => "/api/all",
-    popularPath: () => "/api/top",
-    trendingPath: () => "/api/rankings",
+    language: "in",
+    latestPath: () => "/api/all?lang=in",
+    popularPath: () => "/api/top?lang=in",
+    trendingPath: () => "/api/rankings?lang=in",
     extract: extractDataBooks,
   },
   {
@@ -830,6 +1043,7 @@ export async function fetchShordramaPlatformList({
   );
   const data = selected
     .extract(res)
+    .filter((item) => shordramaRecordScore(item) >= 4)
     .slice(0, per_page)
     .map((item) => mapShordramaItem(item, selected));
 
@@ -968,12 +1182,32 @@ function qualityMapFromList(items: Record<string, unknown>[]): Record<string, st
   const qualities: Record<string, string> = {};
   items.forEach((item) => {
     const url =
-      pickString(item, ["play_url", "url", "main_url", "backup_url", "videoPath", "mp4", "m3u8Url"]) ||
+      pickString(item, [
+        "play_url",
+        "url",
+        "main_url",
+        "backup_url",
+        "videoPath",
+        "mp4",
+        "m3u8Url",
+        "MainPlayUrl",
+        "BackupPlayUrl",
+        "videoUrl",
+        "backupUrl",
+        "mediaUrl",
+        "stream_url",
+        "Mopp",
+        "Bcold",
+        "Mcurr",
+        "Bdesi",
+      ]) ||
       null;
     if (!url) return;
     const label =
-      pickString(item, ["definition", "quality"]) ||
-      (pickNumber(item, ["quality", "height"]) ? `${pickNumber(item, ["quality", "height"])}p` : null) ||
+      pickString(item, ["definition", "Definition", "quality", "Quality", "Dbag", "Dcoura", "resolution"]) ||
+      (pickNumber(item, ["quality", "height", "Height", "resolution", "Wroll", "Wspare"])
+        ? `${pickNumber(item, ["quality", "height", "Height", "resolution", "Wroll", "Wspare"])}p`
+        : null) ||
       `Q${Object.keys(qualities).length + 1}`;
     qualities[label] = url;
   });
@@ -983,7 +1217,7 @@ function qualityMapFromList(items: Record<string, unknown>[]): Record<string, st
 function subtitleList(items: Record<string, unknown>[]): { lang: string; url: string }[] | null {
   const subtitles = items
     .map((item) => {
-      const url = pickString(item, ["url", "subtitle_url", "file"]);
+      const url = pickString(item, ["url", "subtitle_url", "file", "textTrackUrl"]);
       if (!url) return null;
       return {
         lang: pickString(item, ["lang", "language", "label"]) || "Subtitle",
@@ -992,6 +1226,28 @@ function subtitleList(items: Record<string, unknown>[]): { lang: string; url: st
     })
     .filter(Boolean) as { lang: string; url: string }[];
   return subtitles.length > 0 ? subtitles : null;
+}
+
+function objectQualityMap(value: unknown): Record<string, string> | null {
+  if (!isRecord(value)) return null;
+  if (Object.values(value).some(isRecord)) {
+    return qualityMapFromList(Object.values(value).filter(isRecord));
+  }
+  const qualities: Record<string, string> = {};
+  Object.entries(value).forEach(([key, raw]) => {
+    if (typeof raw !== "string" || !raw) return;
+    const label = key.replace(/^video_/, "").replace(/^q_/, "");
+    qualities[label.match(/^\d+$/) ? `${label}p` : label] = raw;
+  });
+  return Object.keys(qualities).length > 0 ? qualities : null;
+}
+
+function normalizeRelativeVideoUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("//")) return `https:${url}`;
+  if (url.startsWith("http://")) return `https://${url.slice("http://".length)}`;
+  if (url.startsWith("/v1/play/")) return `https://api.shortswave.com${url}`;
+  return url;
 }
 
 function detailFromParts(
@@ -1033,21 +1289,39 @@ function extractDetailRecord(
     payload.series,
     payload.show,
     payload.item,
+    payload.tvInfo,
+    payload.bswitc,
+    payload.btra,
+    payload.jieguo,
   ].filter(isRecord);
+
+  if (isRecord(payload.data)) candidates.push(payload.data);
+  if (isRecord(payload.dgiv)) {
+    candidates.push(...[payload.dgiv.bswitc, payload.dgiv].filter(isRecord));
+  }
+  if (isRecord(payload.dinsur)) {
+    candidates.push(...[payload.dinsur.jieguo, payload.dinsur].filter(isRecord));
+    candidates.push(...toArray(payload.dinsur.erefu));
+  }
+  if (isRecord(payload.ddriv)) {
+    candidates.push(...[payload.ddriv.btra, payload.ddriv].filter(isRecord));
+  }
+  if (isRecord(data) && isRecord(data.dataResult)) {
+    candidates.push(...[data.dataResult.tvInfo, data.dataResult].filter(isRecord));
+  }
+  candidates.push(...collectShordramaRecords(data));
 
   const extracted = platform.extract(data);
   candidates.push(...extracted);
 
   return (
     candidates.find((item) => {
-      const id =
-        pickString(item, ["id", "bookId", "book_id"]) ||
-        String(pickNumber(item, ["id", "bookId", "book_id"]) ?? "");
+      const id = firstShordramaId(item);
       return id === dramaId;
     }) ||
-    candidates.find((item) =>
-      Boolean(pickString(item, ["title", "bookName", "book_name", "short_play_name"])),
-    ) ||
+    candidates
+      .filter((item) => shordramaRecordScore(item) > 0)
+      .sort((a, b) => shordramaRecordScore(b) - shordramaRecordScore(a))[0] ||
     null
   );
 }
@@ -1067,6 +1341,14 @@ function extractGenericEpisodes(
     detail.video_list,
     detail.videoList,
     detail.list,
+    detail.chapters,
+    detail.ebeer,
+    detail.eclim,
+    detail.ppoem,
+    detail.funi,
+    detail.ffile,
+    detail.dramaResponseList,
+    detail.payloads,
   ];
 
   for (const source of sources) {
@@ -1079,7 +1361,12 @@ function extractGenericEpisodes(
           "episodeIndex",
           "episodeNo",
           "episode",
+          "episodeNum",
+          "episodeNumber",
           "number",
+          "serial_number",
+          "chapter_index",
+          "chapterOrder",
         ]) ??
         (pickNumber(episode, ["index", "chapterIndex", "sort"]) ?? index) + 1;
       return createEpisode({
@@ -1090,11 +1377,28 @@ function extractGenericEpisodes(
             "episode_id",
             "episodeId",
             "chapterId",
+            "chapter_id",
             "fileId",
             "vid",
+            "videoFakeId",
+            "id",
+            "dshame",
+            "dcup",
+            "dlit",
+            "ewash",
+            "Fwea",
+            "Fcaree",
           ]) || String(order),
         episode: order,
-        name: pickString(episode, ["title", "name", "episode_name", "episodeName"]),
+        name: pickString(episode, [
+          "title",
+          "name",
+          "episode_name",
+          "episodeName",
+          "chapter_name",
+          "chapterName",
+          "ptitl",
+        ]),
         videoUrl: pickString(episode, [
           "play_url",
           "video_url",
@@ -1102,14 +1406,35 @@ function extractGenericEpisodes(
           "main_url",
           "mp4",
           "m3u8Url",
+          "stream_url",
+          "signPlayUrl",
+          "signPlayUrlH264",
+          "mediaUrl",
+          "Mopp",
+          "Bcold",
+          "Mcurr",
+          "Bdesi",
         ]),
         qualities:
           qualityMapFromList(toArray(episode.play_info_list)) ||
+          qualityMapFromList(toArray(episode.playInfoList)) ||
           qualityMapFromList(toArray(episode.videos)) ||
-          qualityMapFromList(toArray(episode.videoPathList)),
-        subtitles: subtitleList(toArray(episode.subtitles)),
-        coverUrl: pickString(episode, ["cover", "cover_url", "episode_cover"]),
-        duration: pickNumber(episode, ["duration", "duration_seconds"]),
+          qualityMapFromList(toArray(episode.videoPathList)) ||
+          qualityMapFromList(toArray(episode.episMedia)) ||
+          objectQualityMap(episode.videoUrl) ||
+          objectQualityMap(episode.m3u8s),
+        subtitles: subtitleList(toArray(episode.subtitles)) || subtitleList(toArray(episode.sublist)),
+        coverUrl: pickString(episode, [
+          "cover",
+          "cover_url",
+          "episode_cover",
+          "video_pic",
+          "first_frame",
+          "coverImgUrl",
+          "frameExtractionCover",
+          "coverId",
+        ]),
+        duration: pickNumber(episode, ["duration", "duration_seconds", "chapter_duration", "Dissue", "Dcol"]),
         locked: Boolean(
           episode.locked ||
             episode.isLocked ||
@@ -1118,7 +1443,9 @@ function extractGenericEpisodes(
             episode.is_paid ||
             episode.isPaid ||
             episode.need_unlock ||
-            episode.needUnlock,
+            episode.needUnlock ||
+            episode.is_lock ||
+            episode.lock,
         ),
       });
     });
@@ -1144,7 +1471,23 @@ function placeholderEpisodes(
     ]) || 0;
   const safeCount = Math.max(0, Math.min(count, 300));
   return Array.from({ length: safeCount }, (_, index) =>
-    createEpisode({ dramaId, episode: index + 1 }),
+    createEpisode({
+      dramaId,
+      sourceId: pickString(detail, ["chapter_id", "chapterId", "first_chapter_id"]),
+      episode: index + 1,
+      videoUrl: index === 0 ? pickString(detail, ["play_url", "stream_url", "video_url"]) : null,
+      qualities:
+        index === 0
+          ? qualityMapFromList(toArray(detail.funi)) ||
+            qualityMapFromList(toArray(detail.ffile)) ||
+            qualityMapFromList(toArray(detail.ppoem)) ||
+            objectQualityMap(detail.videoUrl) ||
+            objectQualityMap(detail.m3u8s)
+          : null,
+      subtitles: index === 0 ? subtitleList(toArray(detail.sublist)) || subtitleList(toArray(detail.subtitles)) : null,
+      coverUrl: pickString(detail, ["first_frame", "cover", "cover_url", "video_pic"]),
+      duration: pickNumber(detail, ["chapter_duration", "duration", "Dissue", "Dcol"]),
+    }),
   );
 }
 
@@ -1159,8 +1502,19 @@ async function fetchGenericShordramaDetail(
     `/api/v1/drama/${encodedId}?lang=${language}`,
     `/api/v1/dramas/${encodedId}?lang=${language}`,
     `/api/v1/book/${encodedId}?lang=${language}`,
+    `/api/v1/book/${encodedId}/chapters?lang=${language}`,
+    `/api/v1/dramas/${encodedId}/episodes?limit=300&lang=${language}`,
     `/api/v1/series?id=${encodedId}&lang=${language}`,
     `/api/detail/${encodedId}?lang=${language}`,
+    `/api/book/${encodedId}?lang=${language}`,
+    `/api/book/${encodedId}/episodes?lang=${language}`,
+    `/api/drama/${encodedId}?lang=${language}`,
+    `/api/drama/${encodedId}?languages=${language}`,
+    `/api/detail/${encodedId}?languages=${language}`,
+    `/api/episodes/${encodedId}?index=1&count=300&languages=${language}`,
+    `/api/v1/play/${encodedId}?page=1&size=300&lang=${language}`,
+    `/api/v1/drama/${encodedId}/episodes?lang=${language}`,
+    `/api/v1/drama/${encodedId}/episodes?limit=300&lang=${language}`,
   ];
 
   for (const path of paths) {
@@ -1267,7 +1621,7 @@ async function fetchMeloloDetail(
     `${platform.apiBase}/api/v1/series?id=${encodeURIComponent(dramaId)}&lang=${platform.language}`,
   );
   const series = isRecord(detail.series) ? detail.series : {};
-  const episodes = toArray(detail.episodes).map((episode, index) =>
+  const explicitEpisodes = toArray(detail.episodes).map((episode, index) =>
     createEpisode({
       dramaId,
       sourceId: pickString(episode, ["vid"]) || String(pickNumber(episode, ["vid"]) || index + 1),
@@ -1277,6 +1631,19 @@ async function fetchMeloloDetail(
       duration: pickNumber(episode, ["duration"]),
     }),
   );
+  const episodes =
+    explicitEpisodes.length > 0
+      ? explicitEpisodes
+      : Array.from({ length: pickNumber(series, ["episode_count"]) ?? 0 }, (_, index) =>
+          createEpisode({
+            dramaId,
+            sourceId:
+              index === 0
+                ? pickString(series, ["first_chapter_item_id"]) || `${dramaId}:${index + 1}`
+                : `${dramaId}:${index + 1}`,
+            episode: index + 1,
+          }),
+        );
   return detailFromParts(
     platform,
     dramaId,
@@ -1397,28 +1764,55 @@ function normalizeVideoResponse(
   res: unknown,
 ): ShordramaVideo {
   const payload = isRecord(res) && isRecord(res.data) ? res.data : res;
-  const record = isRecord(payload) ? payload : {};
+  const record = isRecord(payload)
+    ? primaryShordramaRecord(
+        isRecord(payload.payload) ? payload.payload : isRecord(payload.jieguo) ? payload.jieguo : payload,
+      )
+    : {};
   const videos = toArray(record.videos);
   const qualities =
     qualityMapFromList(videos) ||
     qualityMapFromList(toArray(record.videoPathList)) ||
+    qualityMapFromList(toArray(record.play_info_list)) ||
+    qualityMapFromList(toArray(record.playInfoList)) ||
+    qualityMapFromList(toArray(record.qualities)) ||
+    qualityMapFromList(toArray(record.episMedia)) ||
+    objectQualityMap(isRecord(record.parsed) ? record.parsed.videos : undefined) ||
+    objectQualityMap(record.videoUrl) ||
+    objectQualityMap(record.m3u8s) ||
     episode.qualities;
   const subtitles = subtitleList(toArray(record.subtitles)) || episode.subtitles;
   const videoUrl =
-    pickString(record, ["play_url", "video_url", "url", "main_url", "mp4", "m3u8Url"]) ||
+    pickString(record, [
+      "play_url",
+      "video_url",
+      "url",
+      "main_url",
+      "mp4",
+      "m3u8Url",
+      "stream_url",
+      "mediaUrl",
+      "signPlayUrl",
+      "signPlayUrlH264",
+      "Mopp",
+      "Bcold",
+      "Mcurr",
+      "Bdesi",
+    ]) ||
+    (isRecord(record.parsed) ? pickString(record.parsed, ["main_url", "url", "video_url"]) : null) ||
     (qualities ? Object.values(qualities)[0] : null) ||
     episode.video_url;
   return {
     episode: {
       ...episode,
       id: Math.abs(hashId(`${dramaId}:${episode.source_id || episode.episode_index}:video`)),
-      video_url: videoUrl,
+      video_url: normalizeRelativeVideoUrl(videoUrl),
       qualities,
       subtitles,
       subtitle_url: subtitles?.[0]?.url || episode.subtitle_url,
     },
     qualities,
-    video_url: videoUrl,
+    video_url: normalizeRelativeVideoUrl(videoUrl),
     subtitle_url: subtitles?.[0]?.url || episode.subtitle_url,
     subtitles,
   };
@@ -1467,6 +1861,45 @@ export async function fetchShordramaVideo(
       `${platform.apiBase}/api/video?id=${encodeURIComponent(sourceId)}`,
     );
     return normalizeVideoResponse(dramaId, episode, res);
+  }
+
+  if (platform.slug === "melolo" && episode.source_id && !episode.source_id.includes(":")) {
+    const res = await apiFetch<unknown>(
+      `${platform.apiBase}/api/v1/video?id=${encodeURIComponent(episode.source_id)}&lang=${platform.language}`,
+    );
+    return normalizeVideoResponse(dramaId, episode, res);
+  }
+
+  if (episode.video_url || episode.qualities) {
+    return normalizeVideoResponse(dramaId, episode, episode);
+  }
+
+  const sourceId = episode.source_id ? encodeURIComponent(episode.source_id) : "";
+  const encodedId = encodeURIComponent(dramaId);
+  const language = encodeURIComponent(platform.language);
+  const videoPaths = [
+    `/api/v1/dramas/${encodedId}/episodes/${sourceId}?lang=${language}`,
+    `/api/v1/videos/${encodedId}?source=${sourceId || "1001"}`,
+    `/api/book/${encodedId}/chapter/${sourceId}?lang=${language}`,
+    `/api/drama/${encodedId}/episode/${episodeIndex}?lang=${language}`,
+    `/api/v1/drama/${encodedId}/episode/${episodeIndex}/video?lang=${language}&quality=720p`,
+    `/api/v1/drama/${encodedId}/episode/${episodeIndex}?lang=${language}&quality=720P`,
+    `/api/v1/book/${encodedId}/chapter/${sourceId}/video?lang=${language}`,
+    `/api/stream/${encodedId}/${sourceId}?lang=${language}`,
+    `/api/stream/${encodedId}/${episodeIndex}?quality=high&languages=${language}`,
+    `/api/v1/play/${encodedId}/${episodeIndex}?lang=${language}`,
+    `/api/v1/video/${sourceId}/${encodedId}?lang=${language}`,
+    `/api/video?seriesId=${encodedId}&episNum=${episodeIndex}&langId=11`,
+  ].filter((path) => !path.includes("//?") && !path.includes("/undefined"));
+
+  for (const path of videoPaths) {
+    try {
+      const res = await apiFetch<unknown>(`${platform.apiBase}${path}`);
+      const video = normalizeVideoResponse(dramaId, episode, res);
+      if (video.video_url || video.qualities) return video;
+    } catch {
+      continue;
+    }
   }
 
   return normalizeVideoResponse(dramaId, episode, episode);
