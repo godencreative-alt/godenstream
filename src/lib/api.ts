@@ -135,12 +135,14 @@ const SHORDRAMA_COVER_KEYS = [
   "poster",
   "posterSmall",
   "book_pic",
-  "thumb_url",
   "first_chapter_cover",
+  "thumb_url",
   "drama_cover",
   "drama_cover_h",
+  "ptear",
   "first_frame",
   "fileUrl",
+  "seriesPosterFileUrl",
   "picUrl",
   "horizontalCoverId",
   "bannerImage",
@@ -149,6 +151,7 @@ const SHORDRAMA_COVER_KEYS = [
   "titleImage",
   "icon",
   "img",
+  "images",
   "pday",
   "pbat",
   "fdar",
@@ -211,7 +214,7 @@ function firstStringFromRecord(source: Record<string, unknown>, keys: string[]):
   for (const key of keys) {
     const value = source[key];
     if (isRecord(value)) {
-      const nested = pickString(value, ["url", "thumb", "src", "image", "cover"]);
+      const nested = pickString(value, ["url", "thumb", "src", "image", "web_image", "thumbnail", "cover"]);
       if (nested) return nested;
     }
   }
@@ -287,11 +290,23 @@ function firstShordramaId(item: Record<string, unknown>): string | undefined {
 }
 
 function firstShordramaCover(item: Record<string, unknown>): string | undefined {
-  return (
+  const cover =
     firstStringFromRecord(item, SHORDRAMA_COVER_KEYS) ||
     firstStringFromArrays(item, ["thumbnails", "images", "posters"], ["url", "thumb", "src"]) ||
-    undefined
-  );
+    undefined;
+  return normalizeShordramaImageUrl(cover);
+}
+
+function normalizeShordramaImageUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.includes("sign") && url.includes(".heic")) return url;
+  if (url.includes("~tplv-") && url.endsWith(".heic")) {
+    return `${url.slice(0, -".heic".length)}.jpeg`;
+  }
+  if (url.includes("~tplv-") && url.includes(".heic?")) {
+    return url.replace(".heic?", ".jpeg?");
+  }
+  return url;
 }
 
 function shordramaMeta(page: number, perPage: number, total?: number): Meta {
@@ -413,6 +428,7 @@ function extractDataBooks(data: unknown): Record<string, unknown>[] {
   if (isRecord(data.data)) {
     const nestedKeys = [
       ...directKeys,
+      "data",
       "rankList",
       "searchList",
       "homeList",
@@ -430,10 +446,16 @@ function extractDataBooks(data: unknown): Record<string, unknown>[] {
       toArray(section.books).concat(toArray(section.list), toArray(section.items)),
     );
     if (sections.length > 0) return sections;
+    const playSections = toArray(data.data).flatMap((section) => toArray(section.plays));
+    if (playSections.length > 0) return playSections;
   }
 
   const dataArray = toArray(data.data);
-  if (dataArray.length > 0) return dataArray;
+  if (dataArray.length > 0) {
+    const plays = dataArray.flatMap((section) => toArray(section.plays));
+    if (plays.length > 0) return plays;
+    return dataArray;
+  }
   return collectShordramaRecords(data).slice(0, 80);
 }
 
