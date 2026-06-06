@@ -5,17 +5,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Bars3Icon,
-  FireIcon,
+  FilmIcon,
   MagnifyingGlassIcon,
   PlayCircleIcon,
   SparklesIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useAuthStore } from "@/store/auth";
+import { getGoogleLoginUrl } from "@/lib/api";
 
 const navLinks = [
-  { href: "/trending", label: "Trending", icon: FireIcon },
-  { href: "/popular", label: "Popular", icon: SparklesIcon },
-  { href: "/terbaru", label: "Terbaru", icon: PlayCircleIcon },
+  { href: "/drama/browse", label: "Drama", icon: PlayCircleIcon },
+  { href: "/anime", label: "Anime", icon: SparklesIcon },
+  { href: "/moviebox", label: "Movie", icon: FilmIcon },
 ];
 
 export default function Navbar() {
@@ -23,11 +25,20 @@ export default function Navbar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const q = query.trim();
-    if (q) router.push(`/drama/search?q=${encodeURIComponent(q)}`);
+    if (q) {
+      const section = pathname.startsWith("/anime")
+        ? "anime"
+        : pathname.startsWith("/moviebox")
+          ? "moviebox"
+          : "drama";
+      router.push(`/${section}/search?q=${encodeURIComponent(q)}`);
+    }
   }
 
   return (
@@ -71,11 +82,33 @@ export default function Navbar() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari shordrama..."
+              placeholder="Cari drama, anime…"
               className="h-10 w-full rounded-xl border border-white/[0.06] bg-white/[0.03] pl-9 pr-3 text-sm text-white placeholder:text-white/25 focus:border-[var(--dc-gold)]/40 focus:outline-none"
             />
           </div>
         </form>
+
+        {user ? (
+          <div className="hidden items-center gap-2 md:flex">
+            <span className="max-w-40 truncate text-xs text-white/55">
+              {user.full_name || user.email}
+            </span>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-xl border border-white/[0.08] px-3 py-2 text-xs font-semibold text-white/60 hover:text-white"
+            >
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <a
+            href={getGoogleLoginUrl()}
+            className="hidden rounded-xl bg-[var(--dc-gold)]/15 px-3 py-2 text-xs font-bold text-[var(--dc-gold)] hover:bg-[var(--dc-gold)]/25 md:block"
+          >
+            Sign in
+          </a>
+        )}
 
         <button
           type="button"
@@ -93,7 +126,7 @@ export default function Navbar() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari shordrama..."
+              placeholder="Cari drama, anime…"
               className="h-10 w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 text-sm text-white placeholder:text-white/25 focus:border-[var(--dc-gold)]/40 focus:outline-none"
             />
           </form>
@@ -114,6 +147,28 @@ export default function Navbar() {
               </Link>
             ))}
           </nav>
+
+          <div className="mt-3 flex gap-2">
+            {user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  setMobileOpen(false);
+                }}
+                className="rounded-xl border border-white/[0.08] px-3 py-2 text-xs font-semibold text-white/60 hover:text-white"
+              >
+                Sign out
+              </button>
+            ) : (
+              <a
+                href={getGoogleLoginUrl()}
+                className="rounded-xl bg-[var(--dc-gold)]/15 px-3 py-2 text-xs font-bold text-[var(--dc-gold)] hover:bg-[var(--dc-gold)]/25"
+              >
+                Sign in
+              </a>
+            )}
+          </div>
         </div>
       )}
     </header>

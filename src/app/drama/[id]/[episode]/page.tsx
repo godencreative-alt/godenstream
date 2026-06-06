@@ -3,8 +3,17 @@
 import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { fetchDramaDetail, fetchDramaEpisodes } from "@/lib/api";
+import {
+  ArrowLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
+import {
+  fetchDracinDetail,
+  fetchDracinEpisodeSources,
+  pickBestVideoUrl,
+  pickEmbedUrl,
+} from "@/lib/api";
 import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import { Spinner } from "@/components/ui/Spinner";
@@ -15,21 +24,23 @@ export default function DramaEpisodePage({
   params: Promise<{ id: string; episode: string }>;
 }) {
   const { id, episode } = use(params);
-  const epIndex = parseInt(episode, 10);
 
-  const { data: drama } = useQuery({
-    queryKey: ["drama-detail", id],
-    queryFn: () => fetchDramaDetail(id),
+  const { data: detailData } = useQuery({
+    queryKey: ["dracin-detail", id],
+    queryFn: () => fetchDracinDetail(id),
   });
 
-  const { data: episodes, isLoading } = useQuery({
-    queryKey: ["drama-episodes", id],
-    queryFn: () => fetchDramaEpisodes(id),
+  const { data: sourceData, isLoading } = useQuery({
+    queryKey: ["dracin-episode-sources", episode],
+    queryFn: () => fetchDracinEpisodeSources(episode),
   });
 
-  const currentEp = episodes?.data?.find((e) => e.episode_index === epIndex);
-  const prevEp = episodes?.data?.find((e) => e.episode_index === epIndex - 1);
-  const nextEp = episodes?.data?.find((e) => e.episode_index === epIndex + 1);
+  const drama = detailData?.data;
+  const sources = sourceData?.data.sources ?? [];
+  const currentIndex = drama?.episodes?.findIndex((e) => e.slug === episode) ?? -1;
+  const prevEp = currentIndex > 0 ? drama?.episodes?.[currentIndex - 1] : null;
+  const nextEp = currentIndex >= 0 ? drama?.episodes?.[currentIndex + 1] : null;
+  const currentEp = currentIndex >= 0 ? drama?.episodes?.[currentIndex] : null;
 
   if (isLoading) {
     return (
@@ -39,15 +50,19 @@ export default function DramaEpisodePage({
     );
   }
 
-  const videoSrc =
-    currentEp?.video_url || Object.values(currentEp?.qualities || {})[0] || "";
+  const videoUrl = pickBestVideoUrl(sources);
+  const embedUrl = pickEmbedUrl(sources);
+  const qualities = Object.fromEntries(
+    sources
+      .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
+      .map((s) => [s.quality || s.type, s.url]),
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-6">
-      {/* Top bar */}
       <div className="mb-4 flex items-center justify-between">
         <Link
-          href={`/drama/${id}`}
+          href={`/drama/${encodeURIComponent(id)}`}
           className="flex items-center gap-2 text-sm text-white/50 hover:text-white"
         >
           <ArrowLeftIcon className="h-4 w-4" />
@@ -56,16 +71,16 @@ export default function DramaEpisodePage({
         <div className="flex items-center gap-2">
           {prevEp && (
             <Link
-              href={`/drama/${id}/${prevEp.episode_index}`}
+              href={`/drama/${encodeURIComponent(id)}/${encodeURIComponent(prevEp.slug)}`}
               className="rounded-lg p-2 text-white/40 hover:bg-white/[0.05] hover:text-white"
             >
               <ChevronLeftIcon className="h-4 w-4" />
             </Link>
           )}
-          <span className="text-sm text-white/60">EP {epIndex}</span>
+          <span className="text-sm text-white/60">Episode</span>
           {nextEp && (
             <Link
-              href={`/drama/${id}/${nextEp.episode_index}`}
+              href={`/drama/${encodeURIComponent(id)}/${encodeURIComponent(nextEp.slug)}`}
               className="rounded-lg p-2 text-white/40 hover:bg-white/[0.05] hover:text-white"
             >
               <ChevronRightIcon className="h-4 w-4" />
@@ -74,68 +89,77 @@ export default function DramaEpisodePage({
         </div>
       </div>
 
-      {/* Player */}
-      {videoSrc ? (
+      {videoUrl ? (
         <VideoPlayer
-          src={videoSrc}
-          qualities={currentEp?.qualities}
-          subtitleUrl={currentEp?.subtitle_url}
-          subtitles={currentEp?.subtitles}
+          src={videoUrl}
+          qualities={Object.keys(qualities).length > 0 ? qualities : null}
           isLandscape={false}
           accentColor="var(--dc-gold)"
           onProgress={(progress, duration) => {
             saveLocalProgress({
               content_id: id,
-              content_name: drama?.title || "",
-              cover_url: drama?.cover_url || null,
-              episode_number: epIndex,
+              content_name: drama?.title || sourceData?.data.title || "",
+              cover_url: drama?.thumbnail || null,
+              episode_number: Math.max(currentIndex + 1, 1),
+              episode_slug: episode,
               progress_seconds: progress,
               duration_seconds: duration,
-              completed: progress / duration > 0.9,
+              completed: duration > 0 ? progress / duration > 0.9 : false,
             });
           }}
           onEnded={() => {
             if (nextEp) {
-              window.location.href = `/drama/${id}/${nextEp.episode_index}`;
+              window.location.href = `/drama/${encodeURIComponent(id)}/${encodeURIComponent(nextEp.slug)}`;
             }
           }}
         />
+      ) : embedUrl ? (
+        <div className="overflow-hidden rounded-2xl bg-black aspect-[9/16]">
+          <iframe
+            src={embedUrl}
+            className="h-full w-full border-0"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            title={sourceData?.data.title || "Drama player"}
+          />
+        </div>
       ) : (
         <div className="flex aspect-video items-center justify-center rounded-2xl bg-[var(--dc-elevated)]">
           <p className="text-sm text-white/30">Video not available</p>
         </div>
       )}
 
-      {/* Episode info */}
       <div className="mt-4">
         <h1 className="text-lg font-bold">
-          {drama?.title} — EP {epIndex}
+          {drama?.title || sourceData?.data.title || "Drama"}
         </h1>
-        {currentEp?.episode_name && (
-          <p className="mt-1 text-sm text-white/50">{currentEp.episode_name}</p>
+        {currentEp?.title && (
+          <p className="mt-1 text-sm text-white/50">{currentEp.title}</p>
         )}
       </div>
 
-      {/* Episode list */}
-      {episodes?.data && episodes.data.length > 1 && (
+      {drama?.episodes && drama.episodes.length > 1 && (
         <div className="mt-6">
           <h3 className="mb-3 text-sm font-semibold text-white/60">
             All Episodes
           </h3>
-          <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8 md:grid-cols-10">
-            {episodes.data.map((ep) => (
-              <Link
-                key={ep.id}
-                href={`/drama/${id}/${ep.episode_index}`}
-                className={`flex items-center justify-center rounded-lg py-2 text-[12px] font-medium transition-colors ${
-                  ep.episode_index === epIndex
-                    ? "bg-[var(--dc-gold)]/15 text-[var(--dc-gold)]"
-                    : "border border-white/[0.06] text-white/40 hover:text-white/60"
-                }`}
-              >
-                {ep.episode_index}
-              </Link>
-            ))}
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+            {drama.episodes.map((ep) => {
+              const active = ep.slug === episode;
+              return (
+                <Link
+                  key={ep.slug}
+                  href={`/drama/${encodeURIComponent(id)}/${encodeURIComponent(ep.slug)}`}
+                  className={`rounded-lg px-3 py-2 text-[12px] font-medium transition-colors ${
+                    active
+                      ? "bg-[var(--dc-gold)]/15 text-[var(--dc-gold)]"
+                      : "border border-white/[0.06] text-white/40 hover:text-white/60"
+                  }`}
+                >
+                  {ep.title}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

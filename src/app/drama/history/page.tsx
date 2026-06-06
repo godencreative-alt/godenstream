@@ -25,7 +25,7 @@ export default function DramaHistoryPage() {
           {history.map((entry, i) => (
             <Link
               key={`${entry.content_id}-${entry.episode_number}-${i}`}
-              href={`/drama/${entry.content_id}/${entry.episode_number}`}
+              href={`/drama/${entry.content_id}`}
               className="flex items-center gap-4 rounded-xl border border-white/[0.06] p-3 transition-colors hover:bg-white/[0.03]"
             >
               <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg">

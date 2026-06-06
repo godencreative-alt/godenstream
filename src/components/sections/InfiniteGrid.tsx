@@ -82,13 +82,17 @@ export default function InfiniteGrid({
   return (
     <>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-        {items.map((item) => (
-          <ContentCard
-            key={item.id}
-            item={item}
-            href={`${hrefPrefix}/${item.id}`}
-          />
-        ))}
+        {items.map((item) => {
+          const key =
+            (item as { slug?: string }).slug ?? String(item.id ?? "");
+          return (
+            <ContentCard
+              key={key}
+              item={item}
+              href={`${hrefPrefix}/${encodeURIComponent(key)}`}
+            />
+          );
+        })}
       </div>
       <div ref={sentinelRef} className="flex justify-center py-8">
         {isFetchingNextPage && <Spinner />}

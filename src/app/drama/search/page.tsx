@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSearch } from "@/lib/api";
+import { fetchDracinSearch } from "@/lib/api";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import ContentCard from "@/components/sections/ContentCard";
 import { GridSkeleton } from "@/components/ui/Skeleton";
@@ -13,23 +13,26 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
   const [query, setQuery] = useState(q);
-  const [debouncedQuery, setDebouncedQuery] = useState(q);
+  const [debounced, setDebounced] = useState(q);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query), 400);
+    const t = setTimeout(() => setDebounced(query), 400);
     return () => clearTimeout(t);
   }, [query]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["drama-search", debouncedQuery],
-    queryFn: () => fetchSearch(debouncedQuery),
-    enabled: debouncedQuery.length >= 2,
+    queryKey: ["dracin-search", debounced],
+    queryFn: () => fetchDracinSearch(debounced),
+    enabled: debounced.length >= 2,
   });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-      <h1 className="mb-6 text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>
-        Search Dramas
+      <h1
+        className="mb-6 text-2xl font-bold"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        Search Drama
       </h1>
 
       <div className="relative mb-6 max-w-lg">
@@ -37,24 +40,30 @@ function SearchContent() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="h-12 w-full rounded-xl bg-white/[0.04] border border-white/[0.08] pl-12 pr-4 text-sm text-white placeholder:text-white/25 focus:border-white/20 focus:outline-none"
-          placeholder="Search dramas..."
+          className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-12 pr-4 text-sm text-white placeholder:text-white/25 focus:border-white/20 focus:outline-none"
+          placeholder="Cari drama…"
           autoFocus
         />
       </div>
 
-      {debouncedQuery.length < 2 ? (
-        <p className="text-sm text-white/30">Type at least 2 characters to search</p>
+      {debounced.length < 2 ? (
+        <p className="text-sm text-white/30">Ketik minimal 2 karakter</p>
       ) : isLoading ? (
         <GridSkeleton />
       ) : data?.data?.length ? (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
           {data.data.map((item) => (
-            <ContentCard key={item.id} item={item} href={`/drama/${item.id}`} />
+            <ContentCard
+              key={item.slug}
+              item={item}
+              href={`/drama/${encodeURIComponent(item.slug ?? "")}`}
+            />
           ))}
         </div>
       ) : (
-        <p className="text-sm text-white/30">No results found for &quot;{debouncedQuery}&quot;</p>
+        <p className="text-sm text-white/30">
+          Tidak ada hasil untuk &quot;{debounced}&quot;
+        </p>
       )}
     </div>
   );
@@ -62,7 +71,13 @@ function SearchContent() {
 
 export default function DramaSearchPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center py-20"><Spinner size="lg" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-20">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
       <SearchContent />
     </Suspense>
   );

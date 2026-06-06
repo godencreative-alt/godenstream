@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { fetchShordramaHome } from "@/lib/api";
+import {
+  fetchDracinLatest,
+  fetchAnimeLatest,
+  fetchMovieLatest,
+} from "@/lib/api";
 import ContentCard from "@/components/sections/ContentCard";
+import type { GodenListItem } from "@/types";
 
 function SectionSkeleton() {
   return (
@@ -18,10 +23,80 @@ function SectionSkeleton() {
   );
 }
 
+interface HomeSectionProps {
+  title: string;
+  eyebrow: string;
+  href: string;
+  hrefPrefix: string;
+  items?: GodenListItem[];
+  isLoading: boolean;
+}
+
+function HomeSection({
+  title,
+  eyebrow,
+  href,
+  hrefPrefix,
+  items,
+  isLoading,
+}: HomeSectionProps) {
+  return (
+    <section>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/25">
+            {eyebrow}
+          </p>
+          <h2
+            className="text-2xl font-bold text-white"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {title}
+          </h2>
+        </div>
+        <Link
+          href={href}
+          className="shrink-0 rounded-full border border-[var(--dc-gold)]/25 px-3 py-1.5 text-xs font-bold text-[var(--dc-gold)] hover:bg-[var(--dc-gold)]/10"
+        >
+          Selengkapnya
+        </Link>
+      </div>
+
+      {isLoading ? (
+        <SectionSkeleton />
+      ) : items && items.length > 0 ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+          {items.slice(0, 10).map((item) => (
+            <ContentCard
+              key={`${hrefPrefix}-${item.slug ?? item.video_id}`}
+              item={item}
+              href={`${hrefPrefix}/${encodeURIComponent(item.slug ?? item.video_id ?? "")}`}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-white/[0.06] p-8 text-center text-sm text-white/35">
+          Konten {title} belum tersedia dari API.
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function HomePage() {
-  const { data: sections, isLoading } = useQuery({
-    queryKey: ["shordrama-home"],
-    queryFn: fetchShordramaHome,
+  const dracin = useQuery({
+    queryKey: ["dracin-latest", 1],
+    queryFn: () => fetchDracinLatest(1),
+  });
+
+  const anime = useQuery({
+    queryKey: ["anime-latest", 1],
+    queryFn: () => fetchAnimeLatest(1),
+  });
+
+  const movie = useQuery({
+    queryKey: ["movie-latest", 1],
+    queryFn: () => fetchMovieLatest(1),
   });
 
   return (
@@ -34,83 +109,59 @@ export default function HomePage() {
       <div className="relative mx-auto max-w-7xl px-4 py-10 md:px-6">
         <section className="mb-10 rounded-3xl border border-white/[0.06] bg-white/[0.03] p-6 md:p-10">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.35em] text-[var(--dc-gold)]">
-            Shordrama Platform
+            goden.store
           </p>
           <h1
             className="max-w-3xl text-4xl font-bold leading-tight text-white md:text-6xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Goden<span className="gradient-text-gold">Stream</span> untuk short
-            drama pilihan.
+            Goden<span className="gradient-text-gold">Stream</span> untuk drama,
+            anime, dan film.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">
-            Fokus pada drama pendek dari Drama-ID, DramaBox, Melolo, NetShort,
-            dan FreeReels. Setiap platform tampil 5 kolom x 2 baris di halaman
-            awal.
+            Streaming drama, anime, dan film terbaru langsung dari goden.store.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Link
-              href="/trending"
+              href="/drama/browse"
               className="rounded-full bg-[var(--dc-gold)] px-4 py-2 text-sm font-bold text-black"
             >
-              Lihat Trending
+              Jelajah Drama
             </Link>
             <Link
-              href="/terbaru"
+              href="/anime"
               className="rounded-full border border-white/[0.08] px-4 py-2 text-sm font-semibold text-white/70 hover:text-white"
             >
-              Drama Terbaru
+              Anime
             </Link>
           </div>
         </section>
 
         <div className="space-y-12">
-          {isLoading && (
-            <>
-              <SectionSkeleton />
-              <SectionSkeleton />
-            </>
-          )}
-
-          {sections?.map(({ platform, dramas }) => (
-            <section key={platform.slug}>
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/25">
-                    Platform
-                  </p>
-                  <h2
-                    className="text-2xl font-bold text-white"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {platform.name}
-                  </h2>
-                </div>
-                <Link
-                  href={`/platform/${platform.slug}`}
-                  className="shrink-0 rounded-full border border-[var(--dc-gold)]/25 px-3 py-1.5 text-xs font-bold text-[var(--dc-gold)] hover:bg-[var(--dc-gold)]/10"
-                >
-                  Selengkapnya
-                </Link>
-              </div>
-
-              {dramas.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-                  {dramas.slice(0, 10).map((drama) => (
-                    <ContentCard
-                      key={`${platform.slug}-${drama.id}`}
-                      item={drama}
-                      href={`/platform/${platform.slug}`}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-white/[0.06] p-8 text-center text-sm text-white/35">
-                  Konten {platform.name} belum tersedia dari API.
-                </div>
-              )}
-            </section>
-          ))}
+          <HomeSection
+            title="Drama Terbaru"
+            eyebrow="Dracin"
+            href="/drama/browse"
+            hrefPrefix="/drama"
+            items={dracin.data?.data}
+            isLoading={dracin.isLoading}
+          />
+          <HomeSection
+            title="Anime Terbaru"
+            eyebrow="Anime"
+            href="/anime"
+            hrefPrefix="/anime"
+            items={anime.data?.data}
+            isLoading={anime.isLoading}
+          />
+          <HomeSection
+            title="Film Terbaru"
+            eyebrow="Movie"
+            href="/moviebox"
+            hrefPrefix="/moviebox"
+            items={movie.data?.data}
+            isLoading={movie.isLoading}
+          />
         </div>
       </div>
     </div>

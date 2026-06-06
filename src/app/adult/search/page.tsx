@@ -3,17 +3,23 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAnimeSearch } from "@/lib/api";
+import { fetchAdultSearch } from "@/lib/api";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import ContentCard from "@/components/sections/ContentCard";
 import { GridSkeleton } from "@/components/ui/Skeleton";
 import { Spinner } from "@/components/ui/Spinner";
 
+const AGE_KEY = "godenstream_age_ok";
+
 function SearchContent() {
-  const searchParams = useSearchParams();
-  const q = searchParams.get("q") || "";
-  const [query, setQuery] = useState(q);
-  const [debounced, setDebounced] = useState(q);
+  const sp = useSearchParams();
+  const [ok, setOk] = useState<boolean | null>(null);
+  const [query, setQuery] = useState(sp.get("q") || "");
+  const [debounced, setDebounced] = useState(sp.get("q") || "");
+
+  useEffect(() => {
+    setOk(localStorage.getItem(AGE_KEY) === "1");
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query), 400);
@@ -21,10 +27,19 @@ function SearchContent() {
   }, [query]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["anime-search", debounced],
-    queryFn: () => fetchAnimeSearch(debounced),
-    enabled: debounced.length >= 2,
+    queryKey: ["adult-search", debounced],
+    queryFn: () => fetchAdultSearch(debounced),
+    enabled: ok === true && debounced.length >= 2,
   });
+
+  if (ok === null) return null;
+  if (!ok) {
+    return (
+      <p className="mx-auto max-w-md py-20 text-center text-sm text-white/50">
+        Sahkan umur 18+ di /adult dahulu.
+      </p>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
@@ -32,7 +47,7 @@ function SearchContent() {
         className="mb-6 text-2xl font-bold"
         style={{ fontFamily: "var(--font-display)" }}
       >
-        Search Anime
+        Search Adult
       </h1>
 
       <div className="relative mb-6 max-w-lg">
@@ -41,7 +56,7 @@ function SearchContent() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-12 pr-4 text-sm text-white placeholder:text-white/25 focus:border-white/20 focus:outline-none"
-          placeholder="Cari anime…"
+          placeholder="Cari…"
           autoFocus
         />
       </div>
@@ -51,12 +66,12 @@ function SearchContent() {
       ) : isLoading ? (
         <GridSkeleton />
       ) : data?.data?.length ? (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
           {data.data.map((item) => (
             <ContentCard
-              key={item.slug}
+              key={item.video_id ?? item.slug}
               item={item}
-              href={`/anime/${encodeURIComponent(item.slug ?? "")}`}
+              href={`/adult/${encodeURIComponent(item.video_id ?? "")}`}
             />
           ))}
         </div>
@@ -69,7 +84,7 @@ function SearchContent() {
   );
 }
 
-export default function AnimeSearchPage() {
+export default function AdultSearchPage() {
   return (
     <Suspense
       fallback={

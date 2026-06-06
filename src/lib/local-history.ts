@@ -7,6 +7,7 @@ export interface LocalHistoryEntry {
   content_name: string;
   cover_url: string | null;
   episode_number: number;
+  episode_slug?: string;
   progress_seconds: number;
   duration_seconds: number;
   completed: boolean;
@@ -29,7 +30,9 @@ export function saveLocalProgress(
   const idx = history.findIndex(
     (h) =>
       h.content_id === entry.content_id &&
-      h.episode_number === entry.episode_number,
+      (entry.episode_slug
+        ? h.episode_slug === entry.episode_slug
+        : h.episode_number === entry.episode_number),
   );
   const newEntry = { ...entry, updated_at: Date.now() };
 

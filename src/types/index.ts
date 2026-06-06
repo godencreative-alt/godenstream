@@ -1,7 +1,130 @@
-// -- Drama ----------------------------------------------------------------
+// goden.store API contract — see /www/wwwroot/goden.store/app/api/v1/endpoints/*
+
+// -- Envelopes -----------------------------------------------------------
+
+export interface GodenCacheInfo {
+  cached: boolean;
+  ttl?: number;
+}
+
+export interface GodenListMeta {
+  page?: number;
+  total_items?: number;
+  query?: string;
+  source?: string;
+}
+
+export interface GodenEnvelope<T> {
+  status: "success" | string;
+  data: T;
+  cache?: GodenCacheInfo;
+}
+
+export interface GodenListEnvelope<T> {
+  status: "success" | string;
+  data: T[];
+  cache?: GodenCacheInfo;
+  meta?: GodenListMeta;
+}
+
+// -- Content list/detail items ------------------------------------------
+
+export interface GodenListItem {
+  title: string;
+  slug?: string;
+  video_id?: string; // adult endpoints use video_id instead of slug
+  url: string;
+  thumbnail: string;
+  source?: string;
+  type?: string; // anime: "ongoing"
+}
+
+export interface GodenEpisode {
+  title: string;
+  slug: string;
+  url: string;
+  date?: string;
+}
+
+export interface DracinDetail {
+  title: string;
+  slug: string;
+  url: string;
+  thumbnail: string;
+  description?: string | null;
+  info: Record<string, string>;
+  episodes: GodenEpisode[];
+  source?: string;
+}
+
+export interface AnimeDetail {
+  title: string;
+  slug: string;
+  thumbnail: string;
+  synopsis?: string;
+  info: Record<string, string>;
+}
+
+export interface MovieDetail {
+  title: string;
+  slug: string;
+  url: string;
+  thumbnail: string;
+  description?: string | null;
+  info: Record<string, string>;
+  sources: GodenSource[];
+  source?: string;
+}
+
+export interface AdultDetail {
+  title: string;
+  video_id: string;
+  thumbnail: string;
+  video_sources?: unknown[];
+  sources?: GodenSource[] | null;
+  playback?: GodenPlayback | null;
+}
+
+// -- Playback sources ----------------------------------------------------
+
+export type GodenSourceType = "embed" | "hls" | "mp4" | "download" | string;
+
+export interface GodenSource {
+  type: GodenSourceType;
+  url: string;
+  quality?: string;
+  recommended?: boolean;
+  note?: string;
+  requires_player?: string | null;
+  host?: string;
+}
+
+export interface GodenPlayback {
+  preferred?: "embed" | "hls" | string;
+  note?: string;
+}
+
+export interface DracinSourcesData {
+  title: string;
+  slug: string;
+  sources: GodenSource[];
+  source?: string;
+}
+
+export interface AnimeSourcesData {
+  title: string;
+  episode_slug: string;
+  thumbnail?: string;
+  sources: GodenSource[];
+  playback?: GodenPlayback;
+}
+
+export type AnimeDownloadData = Record<string, { host: string; url: string }[]>;
+
+// -- UI compatibility models ---------------------------------------------
 
 export interface Drama {
-  id: number;
+  id: string;
   title: string;
   cover_url: string | null;
   provider_id: number;
@@ -12,72 +135,14 @@ export interface Drama {
   introduction: string | null;
   language: string | null;
   is_dubbed: boolean;
-  created_at?: string;
-  updated_at?: string;
-  raw_data?: {
-    release_year?: number;
-    subject?: { releaseDate?: string };
-    tmdb?: {
-      id?: number;
-      imdb_id?: string;
-      original_title?: string;
-      original_language?: string;
-      overview?: string;
-      tagline?: string;
-      status?: string;
-      popularity?: number;
-      release_date?: string;
-      runtime?: number;
-      vote_average?: number;
-      vote_count?: number;
-      certification?: string;
-      genres?: { id?: number; name: string }[];
-      keywords?: { id?: number; name: string }[];
-      cast?: {
-        name: string;
-        character?: string;
-        profile_path?: string;
-        order?: number;
-      }[];
-      directors?: { name: string; profile_path?: string }[];
-      poster_path?: string;
-      backdrop_path?: string;
-      backdrops?: {
-        file_path: string;
-        width?: number;
-        height?: number;
-      }[];
-      trailers?: {
-        key: string;
-        site: string;
-        type: string;
-        name?: string;
-      }[];
-      number_of_seasons?: number;
-      number_of_episodes?: number;
-    };
-  } | null;
-}
-
-export interface Tag {
-  id: number;
-  name: string;
-  en_name?: string | null;
-  drama_count?: number;
-}
-
-export interface Provider {
-  id: number;
-  name: string;
-  slug: string;
-  base_url: string | null;
-  drama_count?: number;
-  episode_count?: number;
+  slug?: string;
+  source_url?: string;
+  raw_data?: Record<string, unknown> | null;
 }
 
 export interface Episode {
-  id: number;
-  drama_id: number;
+  id: string;
+  drama_id: string;
   episode_index: number;
   episode_name: string | null;
   video_url: string | null;
@@ -86,12 +151,14 @@ export interface Episode {
   qualities: Record<string, string> | null;
   status: string;
   duration_seconds?: number | null;
+  slug?: string;
+  sources?: GodenSource[];
 }
 
-export interface DramaDetail extends Drama {
-  tags?: Tag[];
+export interface DramaDetailCompat extends Drama {
   episodes?: Episode[];
   episode_count?: number;
+  info?: Record<string, string>;
 }
 
 export interface PaginatedResponse<T> {
@@ -104,32 +171,6 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// -- Anime ----------------------------------------------------------------
-
-export interface AnilistTitle {
-  romaji?: string | null;
-  english?: string | null;
-  native?: string | null;
-}
-
-export interface AnilistData {
-  title?: AnilistTitle | null;
-  episodes?: number | null;
-  averageScore?: number | null;
-  status?: string | null;
-  season?: string | null;
-  seasonYear?: number | null;
-  format?: string | null;
-  countryOfOrigin?: string | null;
-  popularity?: number | null;
-  coverImage?: {
-    large?: string | null;
-    medium?: string | null;
-    color?: string | null;
-  } | null;
-  bannerImage?: string | null;
-}
-
 export interface AnimeItem {
   id: string;
   name: string;
@@ -140,10 +181,28 @@ export interface AnimeItem {
   available_episodes: number;
   stats?: { sub?: number | null; dub?: number | null } | null;
   updated_at?: string | null;
-  anilist_data?: AnilistData | null;
+  anilist_data?: {
+    title?: {
+      romaji?: string | null;
+      english?: string | null;
+      native?: string | null;
+    } | null;
+    episodes?: number | null;
+    averageScore?: number | null;
+    status?: string | null;
+    season?: string | null;
+    seasonYear?: number | null;
+    format?: string | null;
+    countryOfOrigin?: string | null;
+    popularity?: number | null;
+    coverImage?: {
+      large?: string | null;
+      medium?: string | null;
+      color?: string | null;
+    } | null;
+    bannerImage?: string | null;
+  } | null;
 }
-
-export type AnimeDetail = AnimeItem;
 
 export interface EpisodeListItem {
   id: string;
@@ -175,18 +234,27 @@ export interface AnimeEpisodeResponse {
   url_expires_at?: string | null;
 }
 
-export interface AnimePaginatedResponse<T> {
-  data: T[];
-  meta: { page: number; per_page: number; total: number; total_pages: number };
+export interface Provider {
+  id: number;
+  name: string;
+  slug: string;
+  base_url: string | null;
+  drama_count?: number;
+  episode_count?: number;
 }
 
-// -- Watch History & Bookmarks --------------------------------------------
+export interface Tag {
+  id: number;
+  name: string;
+  en_name?: string | null;
+  drama_count?: number;
+}
 
 export interface WatchHistoryEntry {
   id: string;
   device_id: string;
-  drama_id: number;
-  episode_id: number;
+  drama_id: string;
+  episode_id: string;
   episode_index: number;
   progress_seconds: number;
   duration_seconds: number;
@@ -202,7 +270,7 @@ export interface WatchHistoryEntry {
 
 export interface BookmarkEntry {
   id: string;
-  drama_id: number;
+  drama_id: string;
   created_at: string;
   title: string;
   cover_url: string | null;
@@ -211,21 +279,6 @@ export interface BookmarkEntry {
   chapter_count: number | null;
   is_dubbed: boolean;
 }
-
-// -- Auth -----------------------------------------------------------------
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  email_verified: boolean;
-  is_admin: boolean;
-  subscription_tier?: string;
-  subscription_expires_at?: string | null;
-  avatar_url?: string | null;
-}
-
-// -- Comments -------------------------------------------------------------
 
 export interface Comment {
   id: string;
@@ -240,4 +293,17 @@ export interface Comment {
   user_liked: boolean;
   is_deleted: boolean;
   created_at: string;
+}
+
+// -- Auth ----------------------------------------------------------------
+
+export type SubscriptionPlan = "free" | "starter" | "pro" | "enterprise" | string;
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  full_name: string;
+  avatar_url: string;
+  subscription_plan: SubscriptionPlan;
+  is_active: boolean;
 }

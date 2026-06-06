@@ -3,15 +3,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PlayIcon, FilmIcon } from "@heroicons/react/24/solid";
-import { providerBadgeColor, formatPlayCount } from "@/lib/utils";
+import { providerBadgeColor } from "@/lib/utils";
 
 interface ContentCardProps {
   item: {
-    id: number | string;
+    id?: number | string;
+    slug?: string;
     title?: string;
     name?: string;
     cover_url?: string | null;
+    thumbnail?: string | null;
     provider_name?: string;
+    source?: string;
     chapter_count?: number | null;
     available_episodes?: number;
     play_count?: number;
@@ -22,14 +25,16 @@ interface ContentCardProps {
 
 export default function ContentCard({ item, href }: ContentCardProps) {
   const title = item.title || item.name || "Untitled";
+  const coverUrl = item.thumbnail || item.cover_url || null;
+  const badge = item.source || item.provider_name;
   const episodeCount = item.chapter_count || item.available_episodes;
 
   return (
     <Link href={href} className="group block">
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-[var(--dc-elevated)]">
-        {item.cover_url ? (
+        {coverUrl ? (
           <Image
-            src={item.cover_url}
+            src={coverUrl}
             alt={title}
             fill
             sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 16vw"
@@ -41,11 +46,11 @@ export default function ContentCard({ item, href }: ContentCardProps) {
           </div>
         )}
 
-        {item.provider_name && (
+        {badge && (
           <span
-            className={`absolute left-1.5 top-1.5 rounded-md border px-1.5 py-0.5 text-[9px] font-medium ${providerBadgeColor(item.provider_name)}`}
+            className={`absolute left-1.5 top-1.5 rounded-md border px-1.5 py-0.5 text-[9px] font-medium ${providerBadgeColor(badge)}`}
           >
-            {item.provider_name}
+            {badge}
           </span>
         )}
 
@@ -63,12 +68,6 @@ export default function ContentCard({ item, href }: ContentCardProps) {
       <p className="mt-1.5 truncate text-[12px] font-medium text-white/80 group-hover:text-white">
         {title}
       </p>
-
-      {item.play_count && item.play_count > 0 && (
-        <p className="text-[10px] text-white/30">
-          {formatPlayCount(item.play_count)} views
-        </p>
-      )}
     </Link>
   );
 }

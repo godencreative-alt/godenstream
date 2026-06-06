@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SHORDRAMA_PLATFORMS } from "@/lib/api";
+
+const sections = [
+  { href: "/", label: "Home" },
+  { href: "/drama/browse", label: "Drama" },
+  { href: "/anime", label: "Anime" },
+  { href: "/moviebox", label: "Movie" },
+  { href: "/adult", label: "18+" },
+];
 
 export default function SectionNav() {
   const pathname = usePathname();
@@ -10,22 +17,12 @@ export default function SectionNav() {
   return (
     <div className="border-b border-white/[0.06] bg-[var(--dc-base)]/95 backdrop-blur-md">
       <div className="no-scrollbar mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 md:px-6">
-        <Link
-          href="/"
-          className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold ${
-            pathname === "/"
-              ? "bg-[var(--dc-gold)]/15 text-[var(--dc-gold)]"
-              : "text-white/45 hover:text-white/70"
-          }`}
-        >
-          Semua Platform
-        </Link>
-        {SHORDRAMA_PLATFORMS.map((platform) => {
-          const href = `/platform/${platform.slug}`;
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+        {sections.map(({ href, label }) => {
+          const active =
+            href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
             <Link
-              key={platform.slug}
+              key={href}
               href={href}
               className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold ${
                 active
@@ -33,7 +30,7 @@ export default function SectionNav() {
                   : "text-white/45 hover:text-white/70"
               }`}
             >
-              {platform.name}
+              {label}
             </Link>
           );
         })}

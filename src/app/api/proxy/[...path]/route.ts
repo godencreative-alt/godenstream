@@ -1,26 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const UPSTREAM = process.env.UPSTREAM_API_URL || "https://captain.sapimu.au";
-const DEFAULT_API_KEY = process.env.API_KEY || process.env.NEXT_PUBLIC_API_TOKEN;
+const UPSTREAM = process.env.UPSTREAM_API_URL || "https://goden.store";
+const GODEN_API_KEY = process.env.GODEN_API_KEY || process.env.API_KEY;
 
-const ALLOWED_PREFIXES = [
-  "/api/dramas",
-  "/api/search",
-  "/api/providers",
-  "/api/tags",
-  "/api/anime",
-  "/api/moviebox",
-  "/api/iqiyi",
-  "/api/wetv",
-  "/api/auth",
-  "/api/user",
-  "/api/comments",
-  "/idrama",
-  "/dramaboxv4",
-  "/melolo",
-  "/netshort",
-  "/freereels",
-];
+const CONTENT_PREFIXES = [
+  "/api/v1/anime",
+  "/api/v1/adult",
+  "/api/v1/movie",
+  "/api/v1/dracin",
+] as const;
+
+const AUTH_PREFIX = "/api/v1/auth";
+
+const ALLOWED_PREFIXES = [...CONTENT_PREFIXES, AUTH_PREFIX];
+
+function isContentPath(path: string): boolean {
+  return CONTENT_PREFIXES.some((p) => path.startsWith(p));
+}
+
+function isAuthPath(path: string): boolean {
+  return path.startsWith(AUTH_PREFIX);
+}
 
 const RL_MAP = new Map<string, { count: number; reset: number }>();
 
@@ -83,21 +83,29 @@ async function handler(
   const url = new URL(req.url);
   const upstreamUrl = `${UPSTREAM}${upstreamPath}${url.search}`;
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
 
-  const authHeader = req.headers.get("authorization");
-  if (authHeader) {
-    headers["Authorization"] = authHeader;
+  const incomingContentType = req.headers.get("content-type");
+  const hasBody = req.method !== "GET" && req.method !== "HEAD";
+  if (hasBody && incomingContentType) {
+    headers["Content-Type"] = incomingContentType;
   }
 
-  if (DEFAULT_API_KEY && !authHeader) {
-    headers["Authorization"] = `Bearer ${DEFAULT_API_KEY}`;
+  if (isContentPath(upstreamPath)) {
+    if (!GODEN_API_KEY) {
+      return NextResponse.json(
+        { error: "Server is missing GODEN_API_KEY" },
+        { status: 503 },
+      );
+    }
+    headers["X-API-Key"] = GODEN_API_KEY;
   }
 
-  if (DEFAULT_API_KEY) {
-    headers["Cookie"] = `auth_token=${DEFAULT_API_KEY}`;
+  if (isAuthPath(upstreamPath)) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader) {
+      headers["Authorization"] = authHeader;
+    }
   }
 
   const deviceId = req.headers.get("x-device-id");
@@ -107,7 +115,7 @@ async function handler(
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15_000);
+    const timeout = setTimeout(() => controller.abort(), 30_000);
 
     const upstream = await fetch(upstreamUrl, {
       method: req.method,
