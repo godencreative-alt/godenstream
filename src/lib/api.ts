@@ -175,7 +175,7 @@ export async function fetchAnimeEpisodeDownloads(
 
 export async function fetchMovieLatest(
   page = 1,
-  source = "lk21",
+  source = "rebahan",
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page), source });
   return apiFetch<GodenListEnvelope<GodenListItem>>(
@@ -186,7 +186,7 @@ export async function fetchMovieLatest(
 export async function fetchMovieSearch(
   query: string,
   page = 1,
-  source = "lk21",
+  source = "rebahan",
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ q: query, page: String(page), source });
   return apiFetch<GodenListEnvelope<GodenListItem>>(
@@ -196,7 +196,7 @@ export async function fetchMovieSearch(
 
 export async function fetchMovieDetail(
   slug: string,
-  source = "lk21",
+  source = "rebahan",
 ): Promise<GodenEnvelope<MovieDetail>> {
   return apiFetch<GodenEnvelope<MovieDetail>>(
     `/api/v1/movie/${encodeURIComponent(slug)}?source=${source}`,
@@ -205,7 +205,7 @@ export async function fetchMovieDetail(
 
 export async function fetchMovieSources(
   slug: string,
-  source = "lk21",
+  source = "rebahan",
 ): Promise<GodenEnvelope<{ title: string; slug: string; sources: GodenSource[]; source: string }>> {
   return apiFetch(
     `/api/v1/movie/${encodeURIComponent(slug)}/sources?source=${source}`,
