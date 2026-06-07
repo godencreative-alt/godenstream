@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { fetchAdultLatest } from "@/lib/api";
-import ContentCard from "@/components/sections/ContentCard";
-import { GridSkeleton } from "@/components/ui/Skeleton";
+import InfiniteGrid from "@/components/sections/InfiniteGrid";
+import { fetchAdultLatest, toPaginated } from "@/lib/api";
 
 const AGE_KEY = "godenstream_age_ok";
 
@@ -19,8 +17,8 @@ function AgeGate({ onConfirm }: { onConfirm: () => void }) {
         Konten 18+
       </h1>
       <p className="text-sm text-white/55">
-        Bahagian ini mengandungi kandungan dewasa. Anda mesti berumur 18 tahun
-        ke atas untuk meneruskan.
+        Bagian ini mengandung konten dewasa. Anda harus berusia 18 tahun ke
+        atas untuk melanjutkan.
       </p>
       <div className="mt-2 flex gap-3">
         <button
@@ -28,7 +26,7 @@ function AgeGate({ onConfirm }: { onConfirm: () => void }) {
           onClick={onConfirm}
           className="rounded-xl bg-[var(--dc-rose)] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110"
         >
-          Saya 18+, Teruskan
+          Saya 18+, Lanjutkan
         </button>
         <Link
           href="/"
@@ -48,18 +46,6 @@ export default function AdultHomePage() {
     setOk(localStorage.getItem(AGE_KEY) === "1");
   }, []);
 
-  const { data: p1, isLoading } = useQuery({
-    queryKey: ["adult-latest", 1],
-    queryFn: () => fetchAdultLatest(1),
-    enabled: ok === true,
-  });
-
-  const { data: p2 } = useQuery({
-    queryKey: ["adult-latest", 2],
-    queryFn: () => fetchAdultLatest(2),
-    enabled: ok === true,
-  });
-
   if (ok === null) return null;
   if (!ok) {
     return (
@@ -71,8 +57,6 @@ export default function AdultHomePage() {
       />
     );
   }
-
-  const grid = [...(p1?.data ?? []), ...(p2?.data ?? [])];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
@@ -96,23 +80,21 @@ export default function AdultHomePage() {
         </Link>
       </header>
 
-      {isLoading ? (
-        <GridSkeleton />
-      ) : grid.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
-          {grid.map((item) => (
-            <ContentCard
-              key={item.video_id ?? item.slug}
-              item={item}
-              href={`/adult/${encodeURIComponent(item.video_id ?? "")}`}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="flex min-h-[40vh] items-center justify-center rounded-2xl border border-white/[0.06]">
-          <p className="text-sm text-white/35">Tidak ada konten</p>
-        </div>
-      )}
+      <InfiniteGrid
+        queryKey={["adult-latest-infinite"]}
+        queryFn={(page) =>
+          fetchAdultLatest(page).then((r) => ({
+            ...toPaginated(r, page),
+            data: r.data.map((item) => ({
+              ...item,
+              id: item.video_id ?? "",
+              cover_url: item.thumbnail,
+            })),
+          }))
+        }
+        hrefPrefix="/adult"
+        emptyMessage="Tidak ada konten"
+      />
     </div>
   );
 }

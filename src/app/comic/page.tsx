@@ -1,64 +1,38 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchComicLatest } from "@/lib/api";
-import ContentCard from "@/components/sections/ContentCard";
-import SwipeCarousel from "@/components/sections/SwipeCarousel";
-import { GridSkeleton } from "@/components/ui/Skeleton";
+import InfiniteGrid from "@/components/sections/InfiniteGrid";
+import { fetchComicLatest, toPaginated } from "@/lib/api";
 
 export default function ComicHomePage() {
-  const { data: p1, isLoading } = useQuery({
-    queryKey: ["comic-latest", 1],
-    queryFn: () => fetchComicLatest(1),
-  });
-
-  const { data: p2 } = useQuery({
-    queryKey: ["comic-latest", 2],
-    queryFn: () => fetchComicLatest(2),
-  });
-
-  const carousel = p1?.data ?? [];
-  const grid = [...(p1?.data ?? []), ...(p2?.data ?? [])];
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-      <SwipeCarousel
-        title="Komik Terbaru"
-        viewAllHref="/comic/browse"
-        accentColor="rose"
-      >
-        {isLoading
-          ? Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="w-28 shrink-0 sm:w-32">
-                <div className="skeleton aspect-[3/4] rounded-xl" />
-              </div>
-            ))
-          : carousel.map((item) => (
-              <div key={item.slug} className="w-28 shrink-0 sm:w-32">
-                <ContentCard
-                  item={item}
-                  href={`/comic/${encodeURIComponent(item.slug ?? "")}`}
-                />
-              </div>
-            ))}
-      </SwipeCarousel>
+      <header className="mb-6">
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--dc-rose)]">
+          Comic
+        </p>
+        <h1
+          className="text-3xl font-bold text-white md:text-4xl"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Komik Terbaru
+        </h1>
+      </header>
 
-      <section className="mt-8">
-        <h2 className="mb-4 text-base font-semibold text-white">Latest</h2>
-        {isLoading ? (
-          <GridSkeleton />
-        ) : (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-            {grid.map((item) => (
-              <ContentCard
-                key={item.slug}
-                item={item}
-                href={`/comic/${encodeURIComponent(item.slug ?? "")}`}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+      <InfiniteGrid
+        queryKey={["comic-latest-infinite"]}
+        queryFn={(page) =>
+          fetchComicLatest(page).then((r) => ({
+            ...toPaginated(r, page),
+            data: r.data.map((item) => ({
+              ...item,
+              id: item.slug ?? "",
+              cover_url: item.thumbnail,
+            })),
+          }))
+        }
+        hrefPrefix="/comic"
+        emptyMessage="Konten komik belum tersedia"
+      />
     </div>
   );
 }
