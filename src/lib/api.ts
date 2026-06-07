@@ -212,6 +212,105 @@ export async function fetchMovieSources(
   );
 }
 
+// ─── Comic ────────────────────────────────────────────────────────
+
+export async function fetchComicLatest(
+  page = 1,
+  source = "auto",
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), source });
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/comic/latest?${qs}`,
+  );
+}
+
+export async function fetchComicSearch(
+  query: string,
+  page = 1,
+  source = "auto",
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ q: query, page: String(page), source });
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/comic/search?${qs}`,
+  );
+}
+
+export async function fetchComicDetail(
+  slug: string,
+  source = "auto",
+): Promise<GodenEnvelope<import("@/types").ComicDetail>> {
+  return apiFetch<GodenEnvelope<import("@/types").ComicDetail>>(
+    `/api/v1/comic/${encodeURIComponent(slug)}?source=${source}`,
+  );
+}
+
+export async function fetchComicChapters(
+  slug: string,
+  source = "auto",
+): Promise<GodenEnvelope<GodenEpisode[]>> {
+  return apiFetch<GodenEnvelope<GodenEpisode[]>>(
+    `/api/v1/comic/${encodeURIComponent(slug)}/chapters?source=${source}`,
+  );
+}
+
+export async function fetchComicChapterImages(
+  chapterSlug: string,
+  source = "auto",
+): Promise<GodenEnvelope<string[]>> {
+  return apiFetch<GodenEnvelope<string[]>>(
+    `/api/v1/comic/chapter/${encodeURIComponent(chapterSlug)}/images?source=${source}`,
+  );
+}
+
+// ─── Donghua ──────────────────────────────────────────────────────
+
+export async function fetchDonghuaLatest(
+  page = 1,
+  source = "auto",
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), source });
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/donghua/latest?${qs}`,
+  );
+}
+
+export async function fetchDonghuaSearch(
+  query: string,
+  page = 1,
+  source = "auto",
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ q: query, page: String(page), source });
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/donghua/search?${qs}`,
+  );
+}
+
+export async function fetchDonghuaDetail(
+  slug: string,
+  source = "auto",
+): Promise<GodenEnvelope<import("@/types").DonghuaDetail>> {
+  return apiFetch<GodenEnvelope<import("@/types").DonghuaDetail>>(
+    `/api/v1/donghua/${encodeURIComponent(slug)}?source=${source}`,
+  );
+}
+
+export async function fetchDonghuaEpisodes(
+  slug: string,
+): Promise<GodenEnvelope<GodenEpisode[]>> {
+  return apiFetch<GodenEnvelope<GodenEpisode[]>>(
+    `/api/v1/donghua/${encodeURIComponent(slug)}/episodes`,
+  );
+}
+
+export async function fetchDonghuaEpisodeSources(
+  episodeSlug: string,
+  source = "auto",
+): Promise<GodenEnvelope<AnimeSourcesData>> {
+  return apiFetch<GodenEnvelope<AnimeSourcesData>>(
+    `/api/v1/donghua/episode/${encodeURIComponent(episodeSlug)}?source=${source}`,
+  );
+}
+
 // ─── Adult ────────────────────────────────────────────────────────
 
 export async function fetchAdultLatest(

@@ -8,6 +8,8 @@ const CONTENT_PREFIXES = [
   "/api/v1/adult",
   "/api/v1/movie",
   "/api/v1/dracin",
+  "/api/v1/comic",
+  "/api/v1/donghua",
 ] as const;
 
 const AUTH_PREFIX = "/api/v1/auth";

@@ -7,7 +7,9 @@ const sections = [
   { href: "/", label: "Home" },
   { href: "/drama/browse", label: "Drama" },
   { href: "/anime", label: "Anime" },
+  { href: "/donghua", label: "Donghua" },
   { href: "/moviebox", label: "Movie" },
+  { href: "/comic", label: "Comic" },
   { href: "/adult", label: "18+" },
 ];
 

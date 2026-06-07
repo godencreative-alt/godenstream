@@ -85,6 +85,29 @@ export interface AdultDetail {
   playback?: GodenPlayback | null;
 }
 
+export interface ComicDetail {
+  title: string;
+  slug: string;
+  url: string;
+  thumbnail: string;
+  description?: string | null;
+  info: Record<string, string>;
+  chapters: GodenEpisode[];
+  source?: string;
+  type?: string;
+}
+
+export interface DonghuaDetail {
+  title: string;
+  slug: string;
+  url: string;
+  thumbnail: string;
+  description?: string | null;
+  info: Record<string, string>;
+  episodes: GodenEpisode[];
+  source?: string;
+}
+
 // -- Playback sources ----------------------------------------------------
 
 export type GodenSourceType = "embed" | "hls" | "mp4" | "download" | string;
