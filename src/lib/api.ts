@@ -254,15 +254,6 @@ export async function fetchComicDetail(
   );
 }
 
-export async function fetchComicChapters(
-  slug: string,
-  source = "auto",
-): Promise<GodenEnvelope<GodenEpisode[]>> {
-  return apiFetch<GodenEnvelope<GodenEpisode[]>>(
-    `/api/v1/comic/${encodeURIComponent(slug)}/chapters?source=${source}`,
-  );
-}
-
 export async function fetchComicChapterImages(
   chapterSlug: string,
   source = "auto",

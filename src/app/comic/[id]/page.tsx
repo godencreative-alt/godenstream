@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
 import { BookOpenIcon, FilmIcon } from "@heroicons/react/24/solid";
-import { fetchComicDetail, fetchComicChapters } from "@/lib/api";
+import { fetchComicDetail } from "@/lib/api";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function ComicDetailPage({
@@ -20,13 +20,8 @@ export default function ComicDetailPage({
     queryFn: () => fetchComicDetail(id),
   });
 
-  const { data: chList } = useQuery({
-    queryKey: ["comic-chapters", id],
-    queryFn: () => fetchComicChapters(id),
-  });
-
   const item = detail?.data;
-  const chapters = chList?.data ?? item?.chapters ?? [];
+  const chapters = item?.chapters ?? [];
 
   if (isLoading) {
     return (
