@@ -1,12 +1,38 @@
-import UnsupportedSection from "@/components/shared/UnsupportedSection";
+"use client";
+
+import InfiniteGrid from "@/components/sections/InfiniteGrid";
+import { fetchAnimePopular, toPaginated } from "@/lib/api";
 
 export default function AnimePopularPage() {
   return (
-    <UnsupportedSection
-      name="Anime Popular"
-      reason="goden.store anime only exposes latest and search."
-      primaryHref="/anime"
-      primaryLabel="Browse Anime"
-    />
+    <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
+      <header className="mb-6">
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--dc-violet)]">
+          Anime
+        </p>
+        <h1
+          className="text-3xl font-bold text-white md:text-4xl"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Anime Populer
+        </h1>
+      </header>
+
+      <InfiniteGrid
+        queryKey={["anime-popular-infinite"]}
+        queryFn={(page) =>
+          fetchAnimePopular(page).then((r) => ({
+            ...toPaginated(r, page),
+            data: r.data.map((item) => ({
+              ...item,
+              id: item.slug ?? "",
+              cover_url: item.thumbnail,
+            })),
+          }))
+        }
+        hrefPrefix="/anime"
+        emptyMessage="Konten anime belum tersedia"
+      />
+    </div>
   );
 }

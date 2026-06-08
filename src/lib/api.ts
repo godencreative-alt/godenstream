@@ -87,6 +87,14 @@ export async function fetchDracinLatest(
   );
 }
 
+export async function fetchDracinPopular(
+  page = 1,
+): Promise<GodenListEnvelope<GodenListItem>> {
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/drama/popular?page=${page}`,
+  );
+}
+
 export async function fetchDracinSearch(
   query: string,
   page = 1,
@@ -129,6 +137,18 @@ export async function fetchAnimeLatest(
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/anime/latest?page=${page}`,
   );
+}
+
+export async function fetchAnimePopular(
+  page = 1,
+): Promise<GodenListEnvelope<GodenListItem>> {
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/anime/popular?page=${page}`,
+  );
+}
+
+export async function fetchAnimeGenres(): Promise<GodenListEnvelope<string>> {
+  return apiFetch<GodenListEnvelope<string>>(`/api/v1/anime/genres`);
 }
 
 export async function fetchAnimeSearch(
@@ -188,6 +208,17 @@ export async function fetchMovieLatest(
   );
 }
 
+export async function fetchMoviePopular(
+  page = 1,
+  source?: string,
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), category: "movie" });
+  if (source) qs.set("source", source);
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/entertainment/popular?${qs}`,
+  );
+}
+
 export async function fetchMovieSearch(
   query: string,
   page = 1,
@@ -234,6 +265,20 @@ export async function fetchComicLatest(
   );
 }
 
+export async function fetchComicPopular(
+  page = 1,
+  source = "auto",
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), source });
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/comic/popular?${qs}`,
+  );
+}
+
+export async function fetchComicGenres(): Promise<GodenListEnvelope<string>> {
+  return apiFetch<GodenListEnvelope<string>>(`/api/v1/comic/genres`);
+}
+
 export async function fetchComicSearch(
   query: string,
   page = 1,
@@ -273,6 +318,20 @@ export async function fetchDonghuaLatest(
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/donghua/latest?${qs}`,
   );
+}
+
+export async function fetchDonghuaPopular(
+  page = 1,
+  source = "auto",
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), source });
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/donghua/popular?${qs}`,
+  );
+}
+
+export async function fetchDonghuaGenres(): Promise<GodenListEnvelope<string>> {
+  return apiFetch<GodenListEnvelope<string>>(`/api/v1/donghua/genres`);
 }
 
 export async function fetchDonghuaSearch(

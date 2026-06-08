@@ -4,7 +4,7 @@ export default function MovieboxPopularPage() {
   return (
     <UnsupportedSection
       name="Movie Popular"
-      reason="goden.store movie only exposes latest and search."
+      reason="goden.store entertainment endpoint hanya mendukung latest dan search."
       primaryHref="/moviebox"
       primaryLabel="Browse Movie"
     />
