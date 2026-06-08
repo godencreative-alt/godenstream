@@ -75,13 +75,15 @@ export function pickEmbedUrl(sources: GodenSource[]): string | null {
   return sources.find((s) => s.type === "embed")?.url ?? null;
 }
 
-// ─── Dracin (short drama) ─────────────────────────────────────────
+// ─── Drama (short drama, formerly "dracin") ───────────────────────
+// Backend renamed /api/v1/dracin/* → /api/v1/drama/* (2026-06-08).
+// Function names kept as fetchDracin* so callers stay unchanged.
 
 export async function fetchDracinLatest(
   page = 1,
 ): Promise<GodenListEnvelope<GodenListItem>> {
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/dracin/latest?page=${page}`,
+    `/api/v1/drama/latest?page=${page}`,
   );
 }
 
@@ -91,7 +93,7 @@ export async function fetchDracinSearch(
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ q: query, page: String(page) });
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/dracin/search?${qs}`,
+    `/api/v1/drama/search?${qs}`,
   );
 }
 
@@ -99,7 +101,7 @@ export async function fetchDracinDetail(
   slug: string,
 ): Promise<GodenEnvelope<DracinDetail>> {
   return apiFetch<GodenEnvelope<DracinDetail>>(
-    `/api/v1/dracin/${encodeURIComponent(slug)}`,
+    `/api/v1/drama/${encodeURIComponent(slug)}`,
   );
 }
 
@@ -107,7 +109,7 @@ export async function fetchDracinEpisodes(
   slug: string,
 ): Promise<GodenEnvelope<GodenEpisode[]>> {
   return apiFetch<GodenEnvelope<GodenEpisode[]>>(
-    `/api/v1/dracin/${encodeURIComponent(slug)}/episodes`,
+    `/api/v1/drama/${encodeURIComponent(slug)}/episodes`,
   );
 }
 
@@ -115,7 +117,7 @@ export async function fetchDracinEpisodeSources(
   episodeSlug: string,
 ): Promise<GodenEnvelope<DracinSourcesData>> {
   return apiFetch<GodenEnvelope<DracinSourcesData>>(
-    `/api/v1/dracin/episode/${encodeURIComponent(episodeSlug)}/sources`,
+    `/api/v1/drama/episode/${encodeURIComponent(episodeSlug)}/sources`,
   );
 }
 
@@ -171,44 +173,52 @@ export async function fetchAnimeEpisodeDownloads(
   );
 }
 
-// ─── Movie ────────────────────────────────────────────────────────
+// ─── Movie (entertainment, category=movie) ────────────────────────
+// Backend merged /api/v1/movie/* + /api/v1/adult/* → /api/v1/entertainment/*
+// with a `category` param (movie | adult | semi) (2026-06-08).
 
 export async function fetchMovieLatest(
   page = 1,
-  source = "rebahan",
+  source?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page), source });
+  const qs = new URLSearchParams({ page: String(page), category: "movie" });
+  if (source) qs.set("source", source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/movie/latest?${qs}`,
+    `/api/v1/entertainment/latest?${qs}`,
   );
 }
 
 export async function fetchMovieSearch(
   query: string,
   page = 1,
-  source = "rebahan",
+  source?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ q: query, page: String(page), source });
+  const qs = new URLSearchParams({ q: query, page: String(page), category: "movie" });
+  if (source) qs.set("source", source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/movie/search?${qs}`,
+    `/api/v1/entertainment/search?${qs}`,
   );
 }
 
 export async function fetchMovieDetail(
   slug: string,
-  source = "rebahan",
+  source?: string,
 ): Promise<GodenEnvelope<MovieDetail>> {
+  const qs = new URLSearchParams({ category: "movie" });
+  if (source) qs.set("source", source);
   return apiFetch<GodenEnvelope<MovieDetail>>(
-    `/api/v1/movie/${encodeURIComponent(slug)}?source=${source}`,
+    `/api/v1/entertainment/${encodeURIComponent(slug)}?${qs}`,
   );
 }
 
 export async function fetchMovieSources(
   slug: string,
-  source = "rebahan",
-): Promise<GodenEnvelope<{ title: string; slug: string; sources: GodenSource[]; source: string }>> {
+  source?: string,
+): Promise<GodenEnvelope<{ title: string; slug: string; sources: GodenSource[]; source?: string }>> {
+  const qs = new URLSearchParams({ category: "movie" });
+  if (source) qs.set("source", source);
   return apiFetch(
-    `/api/v1/movie/${encodeURIComponent(slug)}/sources?source=${source}`,
+    `/api/v1/entertainment/${encodeURIComponent(slug)}/sources?${qs}`,
   );
 }
 
@@ -311,30 +321,32 @@ export async function fetchDonghuaEpisodeSources(
   );
 }
 
-// ─── Adult ────────────────────────────────────────────────────────
+// ─── Adult (entertainment, category=adult) ────────────────────────
 
 export async function fetchAdultLatest(
   page = 1,
 ): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), category: "adult" });
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/adult/latest?page=${page}`,
+    `/api/v1/entertainment/latest?${qs}`,
   );
 }
 
 export async function fetchAdultSearch(
   query: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ q: query });
+  const qs = new URLSearchParams({ q: query, category: "adult" });
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/adult/search?${qs}`,
+    `/api/v1/entertainment/search?${qs}`,
   );
 }
 
 export async function fetchAdultDetail(
   videoId: string,
 ): Promise<GodenEnvelope<import("@/types").AdultDetail>> {
+  const qs = new URLSearchParams({ category: "adult" });
   return apiFetch<GodenEnvelope<import("@/types").AdultDetail>>(
-    `/api/v1/adult/${encodeURIComponent(videoId)}`,
+    `/api/v1/entertainment/${encodeURIComponent(videoId)}?${qs}`,
   );
 }
 
