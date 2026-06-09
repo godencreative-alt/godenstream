@@ -1,4 +1,4 @@
-// goden.store API contract — see /www/wwwroot/goden.store/app/api/v1/endpoints/*
+// api.godenpg.dev contract — see /www/wwwroot/godenpg.dev/backend/app/api/v1/endpoints/*
 
 // -- Envelopes -----------------------------------------------------------
 
@@ -9,9 +9,16 @@ export interface GodenCacheInfo {
 
 export interface GodenListMeta {
   page?: number;
+  total?: number;
   total_items?: number;
   query?: string;
   source?: string;
+  category?: string;
+  genre?: string;
+  type?: string;
+  failover?: boolean;
+  is_fallback?: boolean;
+  has_next_page?: boolean;
 }
 
 export interface GodenEnvelope<T> {
@@ -36,7 +43,10 @@ export interface GodenListItem {
   url: string;
   thumbnail: string;
   source?: string;
-  type?: string; // anime: "ongoing"
+  type?: string; // anime: "ongoing"; donghua: "Donghua"; etc.
+  category?: string; // entertainment: "movie" | "adult"
+  episode?: string; // donghua latest carries "Ep N"
+  latest_chapter?: string; // comic carries chapter label
 }
 
 export interface GodenEpisode {
@@ -92,7 +102,9 @@ export interface ComicDetail {
   thumbnail: string;
   description?: string | null;
   info: Record<string, string>;
-  chapters: GodenEpisode[];
+  genres?: string[];
+  chapters?: GodenEpisode[];
+  chapter_count?: number;
   source?: string;
   type?: string;
 }

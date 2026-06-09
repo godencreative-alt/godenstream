@@ -12,7 +12,7 @@ interface UnsupportedSectionProps {
 
 export default function UnsupportedSection({
   name,
-  reason = "This section is not available on goden.store.",
+  reason = "This section is not available.",
   primaryHref = "/",
   primaryLabel = "Back to Home",
 }: UnsupportedSectionProps) {

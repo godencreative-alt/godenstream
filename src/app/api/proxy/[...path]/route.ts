@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const UPSTREAM = process.env.UPSTREAM_API_URL || "https://goden.store";
+const UPSTREAM = process.env.UPSTREAM_API_URL || "https://api.godenpg.dev";
 const GODEN_API_KEY = process.env.GODEN_API_KEY || process.env.API_KEY;
 
 const CONTENT_PREFIXES = [

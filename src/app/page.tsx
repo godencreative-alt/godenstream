@@ -109,7 +109,7 @@ export default function HomePage() {
       <div className="relative mx-auto max-w-7xl px-4 py-10 md:px-6">
         <section className="mb-10 rounded-3xl border border-white/[0.06] bg-white/[0.03] p-6 md:p-10">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.35em] text-[var(--dc-gold)]">
-            goden.store
+            api.godenpg.dev
           </p>
           <h1
             className="max-w-3xl text-4xl font-bold leading-tight text-white md:text-6xl"
@@ -119,7 +119,7 @@ export default function HomePage() {
             anime, dan film.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">
-            Streaming drama, anime, dan film terbaru langsung dari goden.store.
+            Streaming drama, anime, dan film terbaru langsung dari api.godenpg.dev.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Link

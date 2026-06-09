@@ -20,7 +20,7 @@ interface AuthState {
 }
 
 const OAUTH_ONLY_ERROR =
-  "Password auth is disabled. Use Google sign-in via goden.store.";
+  "Password auth is disabled. Use Google sign-in.";
 
 export const useAuthStore = create<AuthState>()(
   persist(
