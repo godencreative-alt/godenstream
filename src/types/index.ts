@@ -88,8 +88,11 @@ export interface MovieDetail {
 
 export interface AdultDetail {
   title: string;
-  video_id: string;
+  video_id?: string;
+  slug?: string;
   thumbnail: string;
+  source?: string;
+  type?: string;
   video_sources?: unknown[];
   sources?: GodenSource[] | null;
   playback?: GodenPlayback | null;

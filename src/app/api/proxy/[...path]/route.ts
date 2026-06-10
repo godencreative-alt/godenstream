@@ -5,6 +5,8 @@ const GODEN_API_KEY = process.env.GODEN_API_KEY || process.env.API_KEY;
 
 const CONTENT_PREFIXES = [
   "/api/v1/anime",
+  "/api/v1/movie",
+  "/api/v1/adult",
   "/api/v1/entertainment",
   "/api/v1/drama",
   "/api/v1/comic",

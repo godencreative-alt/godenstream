@@ -87,51 +87,89 @@ export function pickEmbedUrl(sources: GodenSource[]): string | null {
 
 export async function fetchDracinLatest(
   page = 1,
+  type = "drakor",
+  genre?: string,
+  source?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), type });
+  if (genre && genre !== "all") qs.set("genre", genre);
+  setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/drama/latest?page=${page}`,
+    `/api/v1/drama/latest?${qs}`,
   );
 }
 
 export async function fetchDracinPopular(
   page = 1,
+  type = "drakor",
+  genre?: string,
+  source?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), type });
+  if (genre && genre !== "all") qs.set("genre", genre);
+  setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/drama/popular?page=${page}`,
+    `/api/v1/drama/popular?${qs}`,
   );
 }
 
 export async function fetchDracinSearch(
   query: string,
   page = 1,
+  type = "drakor",
+  genre?: string,
+  source?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ q: query, page: String(page) });
+  const qs = new URLSearchParams({ q: query, page: String(page), type });
+  if (genre && genre !== "all") qs.set("genre", genre);
+  setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/drama/search?${qs}`,
   );
 }
 
+export async function fetchDracinGenres(
+  type = "drakor",
+  source?: string,
+): Promise<GodenListEnvelope<string>> {
+  const qs = new URLSearchParams({ type });
+  setSource(qs, source);
+  return apiFetch<GodenListEnvelope<string>>(`/api/v1/drama/genres?${qs}`);
+}
+
 export async function fetchDracinDetail(
   slug: string,
+  type = "drakor",
+  source?: string,
 ): Promise<GodenEnvelope<DracinDetail>> {
+  const qs = new URLSearchParams({ type });
+  setSource(qs, source);
   return apiFetch<GodenEnvelope<DracinDetail>>(
-    `/api/v1/drama/${encodeURIComponent(slug)}`,
+    `/api/v1/drama/${encodeURIComponent(slug)}?${qs}`,
   );
 }
 
 export async function fetchDracinEpisodes(
   slug: string,
+  type = "drakor",
+  source?: string,
 ): Promise<GodenEnvelope<GodenEpisode[]>> {
+  const qs = new URLSearchParams({ type });
+  setSource(qs, source);
   return apiFetch<GodenEnvelope<GodenEpisode[]>>(
-    `/api/v1/drama/${encodeURIComponent(slug)}/episodes`,
+    `/api/v1/drama/${encodeURIComponent(slug)}/episodes?${qs}`,
   );
 }
 
 export async function fetchDracinEpisodeSources(
   episodeSlug: string,
+  type = "drakor",
+  source?: string,
 ): Promise<GodenEnvelope<DracinSourcesData>> {
+  const qs = new URLSearchParams({ type });
+  setSource(qs, source);
   return apiFetch<GodenEnvelope<DracinSourcesData>>(
-    `/api/v1/drama/episode/${encodeURIComponent(episodeSlug)}/sources`,
+    `/api/v1/drama/episode/${encodeURIComponent(episodeSlug)}/sources?${qs}`,
   );
 }
 
@@ -199,18 +237,16 @@ export async function fetchAnimeEpisodeDownloads(
   );
 }
 
-// ─── Movie (entertainment, category=movie) ────────────────────────
-// Backend merged /api/v1/movie/* + /api/v1/adult/* → /api/v1/entertainment/*
-// with a `category` param (movie | adult | semi).
+// ─── Movie ────────────────────────────────────────────────────────
 
 export async function fetchMovieLatest(
   page = 1,
   source?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page), category: "movie" });
-  if (source) qs.set("source", source);
+  const qs = new URLSearchParams({ page: String(page) });
+  setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/latest?${qs}`,
+    `/api/v1/movie/latest?${qs}`,
   );
 }
 
@@ -218,10 +254,10 @@ export async function fetchMoviePopular(
   page = 1,
   source?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page), category: "movie" });
-  if (source) qs.set("source", source);
+  const qs = new URLSearchParams({ page: String(page) });
+  setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/popular?${qs}`,
+    `/api/v1/movie/popular?${qs}`,
   );
 }
 
@@ -230,10 +266,10 @@ export async function fetchMovieSearch(
   page = 1,
   source?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ q: query, page: String(page), category: "movie" });
-  if (source) qs.set("source", source);
+  const qs = new URLSearchParams({ q: query, page: String(page) });
+  setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/search?${qs}`,
+    `/api/v1/movie/search?${qs}`,
   );
 }
 
@@ -241,10 +277,11 @@ export async function fetchMovieDetail(
   slug: string,
   source?: string,
 ): Promise<GodenEnvelope<MovieDetail>> {
-  const qs = new URLSearchParams({ category: "movie" });
-  if (source) qs.set("source", source);
+  const qs = new URLSearchParams();
+  setSource(qs, source);
+  const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<MovieDetail>>(
-    `/api/v1/entertainment/${encodeURIComponent(slug)}?${qs}`,
+    `/api/v1/movie/${encodeURIComponent(slug)}${suffix}`,
   );
 }
 
@@ -252,10 +289,11 @@ export async function fetchMovieSources(
   slug: string,
   source?: string,
 ): Promise<GodenEnvelope<{ title: string; slug: string; sources: GodenSource[]; source?: string }>> {
-  const qs = new URLSearchParams({ category: "movie" });
-  if (source) qs.set("source", source);
+  const qs = new URLSearchParams();
+  setSource(qs, source);
+  const suffix = qs.size ? `?${qs}` : "";
   return apiFetch(
-    `/api/v1/entertainment/${encodeURIComponent(slug)}/sources?${qs}`,
+    `/api/v1/movie/${encodeURIComponent(slug)}/sources${suffix}`,
   );
 }
 
@@ -263,10 +301,12 @@ export async function fetchMovieSources(
 
 export async function fetchComicLatest(
   page = 1,
-  source = "auto",
+  opts?: { source?: string; type?: string; genre?: string },
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
-  setSource(qs, source);
+  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
+  setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/comic/latest?${qs}`,
   );
@@ -274,26 +314,36 @@ export async function fetchComicLatest(
 
 export async function fetchComicPopular(
   page = 1,
-  source = "auto",
+  opts?: { source?: string; type?: string; genre?: string },
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
-  setSource(qs, source);
+  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
+  setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/comic/popular?${qs}`,
   );
 }
 
-export async function fetchComicGenres(): Promise<GodenListEnvelope<string>> {
-  return apiFetch<GodenListEnvelope<string>>(`/api/v1/comic/genres`);
+export async function fetchComicGenres(
+  opts?: { source?: string; type?: string },
+): Promise<GodenListEnvelope<string>> {
+  const qs = new URLSearchParams();
+  if (opts?.type) qs.set("type", opts.type);
+  setSource(qs, opts?.source ?? "auto");
+  const suffix = qs.size ? `?${qs}` : "";
+  return apiFetch<GodenListEnvelope<string>>(`/api/v1/comic/genres${suffix}`);
 }
 
 export async function fetchComicSearch(
   query: string,
   page = 1,
-  source = "auto",
+  opts?: { source?: string; type?: string; genre?: string },
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ q: query, page: String(page) });
-  setSource(qs, source);
+  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
+  setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/comic/search?${qs}`,
   );
@@ -301,10 +351,11 @@ export async function fetchComicSearch(
 
 export async function fetchComicChapters(
   slug: string,
-  source = "auto",
+  opts?: { source?: string; type?: string },
 ): Promise<GodenEnvelope<GodenEpisode[]>> {
   const qs = new URLSearchParams();
-  setSource(qs, source);
+  if (opts?.type) qs.set("type", opts.type);
+  setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<GodenEpisode[]>>(
     `/api/v1/comic/${encodeURIComponent(slug)}/chapters${suffix}`,
@@ -313,16 +364,17 @@ export async function fetchComicChapters(
 
 export async function fetchComicDetail(
   slug: string,
-  source = "auto",
+  opts?: { source?: string; type?: string },
 ): Promise<GodenEnvelope<import("@/types").ComicDetail>> {
   const qs = new URLSearchParams();
-  setSource(qs, source);
+  if (opts?.type) qs.set("type", opts.type);
+  setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   const detail = await apiFetch<GodenEnvelope<import("@/types").ComicDetail>>(
     `/api/v1/comic/${encodeURIComponent(slug)}${suffix}`,
   );
 
-  const chapters = await fetchComicChapters(slug, source).catch(() => null);
+  const chapters = await fetchComicChapters(slug, opts).catch(() => null);
   return {
     ...detail,
     data: {
@@ -334,10 +386,11 @@ export async function fetchComicDetail(
 
 export async function fetchComicChapterImages(
   chapterSlug: string,
-  source = "auto",
+  opts?: { source?: string; type?: string },
 ): Promise<GodenEnvelope<string[]>> {
   const qs = new URLSearchParams();
-  setSource(qs, source);
+  if (opts?.type) qs.set("type", opts.type);
+  setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<string[]>>(
     `/api/v1/comic/chapter/${encodeURIComponent(chapterSlug)}/images${suffix}`,
@@ -416,32 +469,46 @@ export async function fetchDonghuaEpisodeSources(
   );
 }
 
-// ─── Adult (entertainment, category=adult) ────────────────────────
+// ─── Adult ────────────────────────────────────────────────────────
 
 export async function fetchAdultLatest(
   page = 1,
+  type = "jav",
+  source?: string,
+  genre?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page), category: "adult" });
+  const qs = new URLSearchParams({ page: String(page), type });
+  setSource(qs, source);
+  if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/latest?${qs}`,
+    `/api/v1/adult/latest?${qs}`,
   );
 }
 
 export async function fetchAdultSearch(
   query: string,
+  page = 1,
+  type = "jav",
+  source?: string,
+  genre?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ q: query, category: "adult" });
+  const qs = new URLSearchParams({ q: query, page: String(page), type });
+  setSource(qs, source);
+  if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/search?${qs}`,
+    `/api/v1/adult/search?${qs}`,
   );
 }
 
 export async function fetchAdultDetail(
   videoId: string,
+  type = "jav",
+  source?: string,
 ): Promise<GodenEnvelope<import("@/types").AdultDetail>> {
-  const qs = new URLSearchParams({ category: "adult" });
+  const qs = new URLSearchParams({ type });
+  setSource(qs, source);
   return apiFetch<GodenEnvelope<import("@/types").AdultDetail>>(
-    `/api/v1/entertainment/${encodeURIComponent(videoId)}?${qs}`,
+    `/api/v1/adult/${encodeURIComponent(videoId)}?${qs}`,
   );
 }
 
