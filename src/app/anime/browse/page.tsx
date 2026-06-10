@@ -1,13 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import InfiniteGrid from "@/components/sections/InfiniteGrid";
-import { fetchAnimeLatest, fetchAnimeSearch, toPaginated } from "@/lib/api";
+import GenreChips from "@/components/sections/GenreChips";
+import {
+  fetchAnimeLatest,
+  fetchAnimeSearch,
+  fetchAnimeGenres,
+  toPaginated,
+} from "@/lib/api";
 
 export default function AnimeBrowsePage() {
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
+  const [genre, setGenre] = useState("");
+
+  const { data: genreData } = useQuery({
+    queryKey: ["anime-genres"],
+    queryFn: () => fetchAnimeGenres(),
+    staleTime: 1000 * 60 * 60,
+  });
+  const genres = genreData?.data ?? [];
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +38,7 @@ export default function AnimeBrowsePage() {
         Browse Anime
       </h1>
 
-      <form onSubmit={handleSearch} className="mb-6">
+      <form onSubmit={handleSearch} className="mb-5">
         <div className="relative max-w-lg">
           <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
           <input
@@ -35,12 +50,14 @@ export default function AnimeBrowsePage() {
         </div>
       </form>
 
+      <GenreChips genres={genres} selected={genre} onSelect={setGenre} />
+
       <InfiniteGrid
-        queryKey={["anime-browse", search]}
+        queryKey={["anime-browse", search, genre]}
         queryFn={(page) => {
           const req = search
-            ? fetchAnimeSearch(search, page)
-            : fetchAnimeLatest(page);
+            ? fetchAnimeSearch(search, page, genre || undefined)
+            : fetchAnimeLatest(page, genre || undefined);
           return req.then((r) => ({
             ...toPaginated(r, page),
             data: r.data.map((item) => ({

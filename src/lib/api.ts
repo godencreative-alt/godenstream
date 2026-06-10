@@ -177,9 +177,12 @@ export async function fetchDracinEpisodeSources(
 
 export async function fetchAnimeLatest(
   page = 1,
+  genre?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page) });
+  if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/anime/latest?page=${page}`,
+    `/api/v1/anime/latest?${qs}`,
   );
 }
 
@@ -198,8 +201,10 @@ export async function fetchAnimeGenres(): Promise<GodenListEnvelope<string>> {
 export async function fetchAnimeSearch(
   query: string,
   page = 1,
+  genre?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ q: query, page: String(page) });
+  if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/anime/search?${qs}`,
   );
@@ -242,9 +247,11 @@ export async function fetchAnimeEpisodeDownloads(
 export async function fetchMovieLatest(
   page = 1,
   source?: string,
+  genre?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
   setSource(qs, source);
+  if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/movie/latest?${qs}`,
   );
@@ -265,12 +272,18 @@ export async function fetchMovieSearch(
   query: string,
   page = 1,
   source?: string,
+  genre?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ q: query, page: String(page) });
   setSource(qs, source);
+  if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/movie/search?${qs}`,
   );
+}
+
+export async function fetchMovieGenres(): Promise<GodenListEnvelope<string>> {
+  return apiFetch<GodenListEnvelope<string>>(`/api/v1/movie/genres`);
 }
 
 export async function fetchMovieDetail(

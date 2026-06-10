@@ -6,11 +6,11 @@ import { usePathname } from "next/navigation";
 const sections = [
   { href: "/", label: "Home" },
   { href: "/drama/browse", label: "Drama" },
-  { href: "/anime", label: "Anime" },
+  { href: "/anime/browse", label: "Anime" },
   { href: "/donghua/browse", label: "Donghua" },
-  { href: "/moviebox", label: "Movie" },
-  { href: "/comic", label: "Comic" },
-  { href: "/adult", label: "18+" },
+  { href: "/moviebox/browse", label: "Movie" },
+  { href: "/comic/browse", label: "Comic" },
+  { href: "/adult/browse", label: "18+" },
 ];
 
 export default function SectionNav() {
