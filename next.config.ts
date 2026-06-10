@@ -8,10 +8,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
     remotePatterns: [
-      { protocol: "https", hostname: "image.tmdb.org" },
-      { protocol: "https", hostname: "s4.anilist.co" },
-      { protocol: "https", hostname: "**.cdnpk.net" },
-      { protocol: "https", hostname: "**.cloudfront.net" },
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
     ],
   },
   async headers() {
