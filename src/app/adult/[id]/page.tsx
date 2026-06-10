@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
+import SafeEmbed from "@/components/player/SafeEmbed";
 import { Spinner } from "@/components/ui/Spinner";
 import type { GodenSource } from "@/types";
 
@@ -112,15 +113,7 @@ export default function AdultDetailPage({
           }}
         />
       ) : embedUrl ? (
-        <div className="aspect-video overflow-hidden rounded-2xl bg-black">
-          <iframe
-            src={embedUrl}
-            className="h-full w-full border-0"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-            title={item.title}
-          />
-        </div>
+        <SafeEmbed src={embedUrl} title={item.title} />
       ) : (
         <div className="flex aspect-video items-center justify-center rounded-2xl bg-[var(--dc-elevated)]">
           <p className="text-sm text-white/30">Video tidak tersedia</p>

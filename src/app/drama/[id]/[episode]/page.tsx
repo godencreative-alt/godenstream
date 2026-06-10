@@ -16,6 +16,7 @@ import {
 } from "@/lib/api";
 import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
+import SafeEmbed from "@/components/player/SafeEmbed";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function DramaEpisodePage({
@@ -114,15 +115,11 @@ export default function DramaEpisodePage({
           }}
         />
       ) : embedUrl ? (
-        <div className="overflow-hidden rounded-2xl bg-black aspect-[9/16]">
-          <iframe
-            src={embedUrl}
-            className="h-full w-full border-0"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-            title={sourceData?.data.title || "Drama player"}
-          />
-        </div>
+        <SafeEmbed
+          src={embedUrl}
+          title={sourceData?.data.title || "Drama player"}
+          aspectClass="aspect-[9/16]"
+        />
       ) : (
         <div className="flex aspect-video items-center justify-center rounded-2xl bg-[var(--dc-elevated)]">
           <p className="text-sm text-white/30">Video not available</p>
