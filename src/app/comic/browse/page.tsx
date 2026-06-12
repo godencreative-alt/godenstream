@@ -12,22 +12,21 @@ import {
   toPaginated,
 } from "@/lib/api";
 
-const TYPES = [
-  { value: "manga", label: "Manga" },
-  { value: "manhwa", label: "Manhwa" },
-  { value: "manhua", label: "Manhua" },
-  { value: "adult", label: "18+" },
+const SOURCES = [
+  { value: "auto", label: "Semua" },
+  { value: "bacakomik", label: "Bacakomik" },
+  { value: "komikindo", label: "Komikindo" },
 ];
 
 export default function ComicBrowsePage() {
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
-  const [type, setType] = useState("manga");
+  const [source, setSource] = useState("auto");
   const [genre, setGenre] = useState("");
 
   const { data: genreData } = useQuery({
-    queryKey: ["comic-genres", type],
-    queryFn: () => fetchComicGenres({ type }),
+    queryKey: ["comic-genres", source],
+    queryFn: () => fetchComicGenres({ source }),
     staleTime: 1000 * 60 * 60,
   });
   const genres = genreData?.data ?? [];
@@ -59,21 +58,21 @@ export default function ComicBrowsePage() {
       </form>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {TYPES.map((t) => (
+        {SOURCES.map((s) => (
           <button
-            key={t.value}
+            key={s.value}
             type="button"
             onClick={() => {
-              setType(t.value);
+              setSource(s.value);
               setGenre("");
             }}
             className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
-              type === t.value
+              source === s.value
                 ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
                 : "border border-white/[0.08] text-white/45 hover:text-white/70"
             }`}
           >
-            {t.label}
+            {s.label}
           </button>
         ))}
       </div>
@@ -86,9 +85,9 @@ export default function ComicBrowsePage() {
       />
 
       <InfiniteGrid
-        queryKey={["comic-browse", search, type, genre]}
+        queryKey={["comic-browse", search, source, genre]}
         queryFn={(page) => {
-          const opts = { type, genre: genre || undefined };
+          const opts = { source, genre: genre || undefined };
           const req = search
             ? fetchComicSearch(search, page, opts)
             : fetchComicLatest(page, opts);

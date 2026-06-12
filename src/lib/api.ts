@@ -414,7 +414,7 @@ export async function fetchComicChapterImages(
 
 export async function fetchDonghuaLatest(
   page = 1,
-  source = "auto",
+  source = "anichin",
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
   setSource(qs, source);
@@ -425,7 +425,7 @@ export async function fetchDonghuaLatest(
 
 export async function fetchDonghuaPopular(
   page = 1,
-  source = "auto",
+  source = "anichin",
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
   setSource(qs, source);
@@ -441,7 +441,7 @@ export async function fetchDonghuaGenres(): Promise<GodenListEnvelope<string>> {
 export async function fetchDonghuaSearch(
   query: string,
   page = 1,
-  source = "auto",
+  source = "anichin",
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ q: query, page: String(page) });
   setSource(qs, source);
@@ -452,7 +452,7 @@ export async function fetchDonghuaSearch(
 
 export async function fetchDonghuaDetail(
   slug: string,
-  source = "auto",
+  source = "anichin",
 ): Promise<GodenEnvelope<import("@/types").DonghuaDetail>> {
   const qs = new URLSearchParams();
   setSource(qs, source);
@@ -472,7 +472,7 @@ export async function fetchDonghuaEpisodes(
 
 export async function fetchDonghuaEpisodeSources(
   episodeSlug: string,
-  source = "auto",
+  source = "anichin",
 ): Promise<GodenEnvelope<AnimeSourcesData>> {
   const qs = new URLSearchParams();
   setSource(qs, source);

@@ -8,6 +8,14 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { fetchComicChapterImages, fetchComicDetail } from "@/lib/api";
 import { Spinner } from "@/components/ui/Spinner";
 
+// Comic page images (komiku) require a Referer matching their own origin or
+// the host returns 403. Route every page image through our /api/img proxy,
+// which injects the correct Referer per-host. Different semantics from
+// proxyThumbnail (which only proxies hotlink-blocked hosts), so inline it.
+function proxyPage(url: string): string {
+  return `/api/img?url=${encodeURIComponent(url)}`;
+}
+
 export default function ComicChapterPage({
   params,
 }: {
@@ -79,7 +87,7 @@ export default function ComicChapterPage({
           {images.map((url, i) => (
             <div key={i} className="relative w-full">
               <Image
-                src={url}
+                src={proxyPage(url)}
                 alt={`Page ${i + 1}`}
                 width={900}
                 height={1300}
