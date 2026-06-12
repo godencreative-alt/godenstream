@@ -15,7 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { fetchDracinDetail } from "@/lib/api";
 import { isLocalBookmarked, toggleLocalBookmark } from "@/lib/local-history";
-import { truncateText, providerBadgeColor } from "@/lib/utils";
+import { truncateText, providerBadgeColor, proxyThumbnail } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function DramaDetailClient({ id }: { id: string }) {
@@ -71,7 +71,7 @@ export default function DramaDetailClient({ id }: { id: string }) {
             <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl">
               {drama.thumbnail ? (
                 <Image
-                  src={drama.thumbnail}
+                  src={proxyThumbnail(drama.thumbnail) ?? drama.thumbnail}
                   alt={drama.title}
                   fill
                   className="object-cover"

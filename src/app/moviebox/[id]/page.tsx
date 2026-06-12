@@ -9,7 +9,7 @@ import {
   pickBestVideoUrl,
   pickEmbedUrl,
 } from "@/lib/api";
-import { providerBadgeColor } from "@/lib/utils";
+import { providerBadgeColor, proxyThumbnail } from "@/lib/utils";
 import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import SafeEmbed from "@/components/player/SafeEmbed";
@@ -91,7 +91,7 @@ export default function MovieboxDetailPage({
           <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl">
             {movie.thumbnail ? (
               <Image
-                src={movie.thumbnail}
+                src={proxyThumbnail(movie.thumbnail) ?? movie.thumbnail}
                 alt={movie.title}
                 fill
                 className="object-cover"

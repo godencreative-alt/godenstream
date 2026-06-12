@@ -56,3 +56,28 @@ export function providerBadgeColor(name: string): string {
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
   return BADGE_PALETTE[Math.abs(hash) % BADGE_PALETTE.length];
 }
+
+// Hosts that block hotlinking and must be served via /api/img.
+// Keep in sync with the whitelist in src/app/api/img/route.ts.
+const HOTLINK_BLOCKED_HOSTS = ["donghuastream.org"];
+
+/**
+ * Returns a thumbnail URL safe to use in <Image>. Hosts known to block
+ * hotlinking are routed through the /api/img proxy; everything else is
+ * returned untouched to avoid unnecessary bandwidth through our server.
+ */
+export function proxyThumbnail(
+  url: string | null | undefined,
+): string | null {
+  if (!url) return null;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    const blocked = HOTLINK_BLOCKED_HOSTS.some(
+      (h) => host === h || host.endsWith(`.${h}`),
+    );
+    if (blocked) return `/api/img?url=${encodeURIComponent(url)}`;
+  } catch {
+    return url;
+  }
+  return url;
+}

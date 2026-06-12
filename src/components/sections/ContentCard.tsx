@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PlayIcon, FilmIcon } from "@heroicons/react/24/solid";
-import { providerBadgeColor } from "@/lib/utils";
+import { providerBadgeColor, proxyThumbnail } from "@/lib/utils";
 
 interface ContentCardProps {
   item: {
@@ -25,7 +25,7 @@ interface ContentCardProps {
 
 export default function ContentCard({ item, href }: ContentCardProps) {
   const title = item.title || item.name || "Untitled";
-  const coverUrl = item.thumbnail || item.cover_url || null;
+  const coverUrl = proxyThumbnail(item.thumbnail || item.cover_url || null);
   const badge = item.source || item.provider_name;
   const episodeCount = item.chapter_count || item.available_episodes;
 

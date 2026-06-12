@@ -15,6 +15,7 @@ import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import SafeEmbed from "@/components/player/SafeEmbed";
 import { Spinner } from "@/components/ui/Spinner";
+import { proxyThumbnail } from "@/lib/utils";
 import type { GodenSource } from "@/types";
 
 const AGE_KEY = "godenstream_age_ok";
@@ -125,7 +126,7 @@ export default function AdultDetailPage({
           <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
             {item.thumbnail ? (
               <Image
-                src={item.thumbnail}
+                src={proxyThumbnail(item.thumbnail) ?? item.thumbnail}
                 alt={item.title}
                 fill
                 className="object-cover"

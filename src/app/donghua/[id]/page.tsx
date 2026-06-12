@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PlayIcon, FilmIcon } from "@heroicons/react/24/solid";
 import { fetchDonghuaDetail, fetchDonghuaEpisodes } from "@/lib/api";
+import { proxyThumbnail } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function DonghuaDetailPage({
@@ -54,7 +55,7 @@ export default function DonghuaDetailPage({
           <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl">
             {item.thumbnail ? (
               <Image
-                src={item.thumbnail}
+                src={proxyThumbnail(item.thumbnail) ?? item.thumbnail}
                 alt={item.title}
                 fill
                 className="object-cover"

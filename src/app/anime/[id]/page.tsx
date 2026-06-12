@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PlayIcon, FilmIcon } from "@heroicons/react/24/solid";
 import { fetchAnimeDetail, fetchAnimeEpisodes } from "@/lib/api";
+import { proxyThumbnail } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function AnimeDetailPage({
@@ -54,7 +55,7 @@ export default function AnimeDetailPage({
           <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl">
             {anime.thumbnail ? (
               <Image
-                src={anime.thumbnail}
+                src={proxyThumbnail(anime.thumbnail) ?? anime.thumbnail}
                 alt={anime.title}
                 fill
                 className="object-cover"
