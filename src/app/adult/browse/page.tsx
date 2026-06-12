@@ -15,7 +15,6 @@ const TYPES = [
   { value: "jav", label: "JAV" },
   { value: "korea", label: "Korea" },
   { value: "indonesia", label: "Indonesia" },
-  { value: "west", label: "West" },
 ];
 
 // Static per-type genres (backend adult /genres is type-aware but small;
@@ -24,7 +23,6 @@ const GENRES: Record<string, string[]> = {
   jav: ["JAV", "Amateur", "Big Tits", "Censored", "Uncensored", "Cosplay", "Hardcore", "MILF", "Schoolgirl"],
   korea: ["Korean", "Romance", "Drama", "Amateur"],
   indonesia: [],
-  west: ["Amateur", "Blonde", "Brunette", "Hardcore", "MILF", "Teen"],
 };
 
 export default function AdultBrowsePage() {
@@ -98,12 +96,15 @@ export default function AdultBrowsePage() {
             ...toPaginated(r, page),
             data: r.data.map((item) => ({
               ...item,
-              id: item.video_id ?? item.slug ?? "",
+              id: item.slug ?? item.video_id ?? "",
               cover_url: item.thumbnail,
             })),
           }));
         }}
         hrefPrefix="/adult"
+        buildHref={(key) =>
+          `/adult/${encodeURIComponent(key)}?type=${encodeURIComponent(type)}`
+        }
         emptyMessage="Konten belum tersedia"
       />
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,6 +20,8 @@ import { proxyThumbnail } from "@/lib/utils";
 import type { GodenSource } from "@/types";
 
 const AGE_KEY = "godenstream_age_ok";
+const VALID_TYPES = ["jav", "korea", "indonesia"] as const;
+type AdultType = (typeof VALID_TYPES)[number];
 
 export default function AdultDetailPage({
   params,
@@ -26,6 +29,11 @@ export default function AdultDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const sp = useSearchParams();
+  const rawType = sp.get("type") ?? "jav";
+  const type: AdultType = (VALID_TYPES as readonly string[]).includes(rawType)
+    ? (rawType as AdultType)
+    : "jav";
   const [ok, setOk] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -33,8 +41,8 @@ export default function AdultDetailPage({
   }, []);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["adult-detail", id],
-    queryFn: () => fetchAdultDetail(id),
+    queryKey: ["adult-detail", id, type],
+    queryFn: () => fetchAdultDetail(id, type),
     enabled: ok === true,
   });
 
@@ -86,7 +94,7 @@ export default function AdultDetailPage({
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-6">
       <div className="mb-4 flex items-center justify-between">
         <Link
-          href="/adult"
+          href={`/adult/browse?type=${encodeURIComponent(type)}`}
           className="flex items-center gap-2 text-sm text-white/50 hover:text-white"
         >
           <ArrowLeftIcon className="h-4 w-4" />

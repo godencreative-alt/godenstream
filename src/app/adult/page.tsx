@@ -87,12 +87,15 @@ export default function AdultHomePage() {
             ...toPaginated(r, page),
             data: r.data.map((item) => ({
               ...item,
-              id: item.video_id ?? "",
+              id: item.slug ?? item.video_id ?? "",
               cover_url: item.thumbnail,
             })),
           }))
         }
         hrefPrefix="/adult"
+        buildHref={(key) =>
+          `/adult/${encodeURIComponent(key)}?type=jav`
+        }
         emptyMessage="Tidak ada konten"
       />
     </div>

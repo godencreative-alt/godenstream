@@ -11,11 +11,18 @@ import { Spinner } from "@/components/ui/Spinner";
 
 const AGE_KEY = "godenstream_age_ok";
 
+const TYPES = [
+  { value: "jav", label: "JAV" },
+  { value: "korea", label: "Korea" },
+  { value: "indonesia", label: "Indonesia" },
+];
+
 function SearchContent() {
   const sp = useSearchParams();
   const [ok, setOk] = useState<boolean | null>(null);
   const [query, setQuery] = useState(sp.get("q") || "");
   const [debounced, setDebounced] = useState(sp.get("q") || "");
+  const [type, setType] = useState("jav");
 
   useEffect(() => {
     setOk(localStorage.getItem(AGE_KEY) === "1");
@@ -27,8 +34,8 @@ function SearchContent() {
   }, [query]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["adult-search", debounced],
-    queryFn: () => fetchAdultSearch(debounced),
+    queryKey: ["adult-search", debounced, type],
+    queryFn: () => fetchAdultSearch(debounced, 1, type),
     enabled: ok === true && debounced.length >= 2,
   });
 
@@ -61,19 +68,39 @@ function SearchContent() {
         />
       </div>
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        {TYPES.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            onClick={() => setType(t.value)}
+            className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
+              type === t.value
+                ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
+                : "border border-white/[0.08] text-white/45 hover:text-white/70"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {debounced.length < 2 ? (
         <p className="text-sm text-white/30">Ketik minimal 2 karakter</p>
       ) : isLoading ? (
         <GridSkeleton />
       ) : data?.data?.length ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
-          {data.data.map((item) => (
-            <ContentCard
-              key={item.video_id ?? item.slug}
-              item={item}
-              href={`/adult/${encodeURIComponent(item.video_id ?? "")}`}
-            />
-          ))}
+          {data.data.map((item) => {
+            const key = item.slug ?? item.video_id ?? "";
+            return (
+              <ContentCard
+                key={key}
+                item={item}
+                href={`/adult/${encodeURIComponent(key)}?type=${encodeURIComponent(type)}`}
+              />
+            );
+          })}
         </div>
       ) : (
         <p className="text-sm text-white/30">

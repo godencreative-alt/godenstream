@@ -20,6 +20,8 @@ interface InfiniteGridProps {
     play_count?: number;
   }>>;
   hrefPrefix: string;
+  /** Optional override for building the per-card href (e.g. to add ?type=). */
+  buildHref?: (key: string, item: unknown) => string;
   enabled?: boolean;
   emptyMessage?: string;
 }
@@ -28,6 +30,7 @@ export default function InfiniteGrid({
   queryKey,
   queryFn,
   hrefPrefix,
+  buildHref,
   enabled = true,
   emptyMessage = "No content found",
 }: InfiniteGridProps) {
@@ -85,11 +88,14 @@ export default function InfiniteGrid({
         {items.map((item) => {
           const key =
             (item as { slug?: string }).slug ?? String(item.id ?? "");
+          const href = buildHref
+            ? buildHref(key, item)
+            : `${hrefPrefix}/${encodeURIComponent(key)}`;
           return (
             <ContentCard
               key={key}
               item={item}
-              href={`${hrefPrefix}/${encodeURIComponent(key)}`}
+              href={href}
             />
           );
         })}
