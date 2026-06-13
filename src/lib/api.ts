@@ -464,9 +464,13 @@ export async function fetchDonghuaDetail(
 
 export async function fetchDonghuaEpisodes(
   slug: string,
+  source = "anichin",
 ): Promise<GodenEnvelope<GodenEpisode[]>> {
+  const qs = new URLSearchParams();
+  setSource(qs, source);
+  const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<GodenEpisode[]>>(
-    `/api/v1/donghua/${encodeURIComponent(slug)}/episodes`,
+    `/api/v1/donghua/${encodeURIComponent(slug)}/episodes${suffix}`,
   );
 }
 
@@ -531,16 +535,19 @@ export async function fetchAuthMe(token: string): Promise<AuthUser> {
   return userFetch<AuthUser>("/api/v1/auth/me", token);
 }
 
-/** Google OAuth login — redirect the browser to this URL */
+/** Google OAuth login — redirect the browser to this URL.
+ *  Points directly at the upstream so the 307 → Google redirect runs in
+ *  the browser, not server-side inside the Next proxy fetch(). */
 export function getGoogleLoginUrl(returnTo?: string): string {
+  const upstream = process.env.NEXT_PUBLIC_API_BASE || "https://api.godenpg.dev";
   const target = returnTo
     ? returnTo
     : typeof window !== "undefined"
       ? `${window.location.origin}/auth/callback`
       : "";
-  if (!target) return `${API_PROXY}/api/v1/auth/google/login`;
+  if (!target) return `${upstream}/api/v1/auth/google/login`;
   const qs = new URLSearchParams({ return_to: target });
-  return `${API_PROXY}/api/v1/auth/google/login?${qs}`;
+  return `${upstream}/api/v1/auth/google/login?${qs}`;
 }
 
 // ─── InfiniteGrid adapter ─────────────────────────────────────────
@@ -552,8 +559,13 @@ export function toPaginated<T>(
   envelope: GodenListEnvelope<T>,
   page: number,
 ): PaginatedResponse<T> {
-  const hasMore = envelope.data.length > 0;
-  const perPage = Math.max(envelope.data.length, 20);
+  const count = envelope.data.length;
+  const perPage = Math.max(count, 20);
+  // The backend reports items-on-page, not a total. Prefer an explicit
+  // has_next_page flag when present; otherwise assume a full page means
+  // there's likely another. A short/empty page is treated as the last one,
+  // which avoids the wasted round-trip of fetching an empty page+1.
+  const hasMore = envelope.meta?.has_next_page ?? count >= perPage;
   return {
     data: envelope.data,
     meta: {

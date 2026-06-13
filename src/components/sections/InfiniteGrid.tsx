@@ -5,6 +5,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import type { PaginatedResponse } from "@/types";
 import { GridSkeleton } from "@/components/ui/Skeleton";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 import ContentCard from "./ContentCard";
 
 interface InfiniteGridProps {
@@ -42,6 +43,9 @@ export default function InfiniteGrid({
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
+    error,
+    refetch,
   } = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam = 1 }) => queryFn(pageParam),
@@ -71,6 +75,15 @@ export default function InfiniteGrid({
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   if (isLoading) return <GridSkeleton />;
+
+  if (isError) {
+    return (
+      <ErrorState
+        message={error?.message || "Gagal memuat data."}
+        retry={() => refetch()}
+      />
+    );
+  }
 
   const items = data?.pages.flatMap((p) => p.data) ?? [];
 

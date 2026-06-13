@@ -19,6 +19,7 @@ import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import SafeEmbed from "@/components/player/SafeEmbed";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function AnimeEpisodePage({
   params,
@@ -37,7 +38,7 @@ export default function AnimeEpisodePage({
     queryFn: () => fetchAnimeEpisodes(id),
   });
 
-  const { data: sourceData, isLoading, error } = useQuery({
+  const { data: sourceData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["anime-episode-sources", episode],
     queryFn: () => fetchAnimeEpisodeSources(episode),
     retry: 1,
@@ -59,8 +60,11 @@ export default function AnimeEpisodePage({
     );
   }
 
+  if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
+
   const videoUrl = pickBestVideoUrl(sources);
   const embedUrl = pickEmbedUrl(sources);
+  const videoType = sources.find((s) => s.url === videoUrl)?.type;
   const qualities = Object.fromEntries(
     sources
       .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
@@ -101,6 +105,7 @@ export default function AnimeEpisodePage({
       {videoUrl ? (
         <VideoPlayer
           src={videoUrl}
+          sourceType={videoType}
           qualities={Object.keys(qualities).length > 0 ? qualities : null}
           isLandscape
           accentColor="var(--dc-violet)"

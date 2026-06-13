@@ -14,6 +14,7 @@ import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import SafeEmbed from "@/components/player/SafeEmbed";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function MovieboxDetailPage({
   params,
@@ -22,7 +23,7 @@ export default function MovieboxDetailPage({
 }) {
   const { id } = use(params);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["movie-detail", id],
     queryFn: () => fetchMovieDetail(id),
   });
@@ -37,6 +38,8 @@ export default function MovieboxDetailPage({
     );
   }
 
+  if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
+
   if (!movie) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -48,6 +51,7 @@ export default function MovieboxDetailPage({
   const sources = movie.sources ?? [];
   const videoUrl = pickBestVideoUrl(sources);
   const embedUrl = pickEmbedUrl(sources);
+  const videoType = sources.find((s) => s.url === videoUrl)?.type;
   const qualities = Object.fromEntries(
     sources
       .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
@@ -61,6 +65,7 @@ export default function MovieboxDetailPage({
         {videoUrl ? (
           <VideoPlayer
             src={videoUrl}
+            sourceType={videoType}
             qualities={Object.keys(qualities).length > 0 ? qualities : null}
             isLandscape
             accentColor="var(--dc-orange)"

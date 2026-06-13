@@ -25,7 +25,13 @@ function CallbackHandler() {
     }
 
     setSession(token)
-      .then(() => router.replace("/"))
+      .then(() => {
+        // Scrub token from URL/history before redirecting away
+        if (typeof window !== "undefined") {
+          window.history.replaceState({}, "", "/auth/callback");
+        }
+        router.replace("/");
+      })
       .catch(() => router.replace("/?auth_error=session_failed"));
   }, [searchParams, setSession, router]);
 

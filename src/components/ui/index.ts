@@ -3,3 +3,4 @@ export { default as Input } from "./Input";
 export { default as Badge } from "./Badge";
 export { Spinner } from "./Spinner";
 export { Skeleton, CardSkeleton, GridSkeleton } from "./Skeleton";
+export { ErrorState } from "./ErrorState";

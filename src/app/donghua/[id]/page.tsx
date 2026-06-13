@@ -8,6 +8,7 @@ import { PlayIcon, FilmIcon } from "@heroicons/react/24/solid";
 import { fetchDonghuaDetail, fetchDonghuaEpisodes } from "@/lib/api";
 import { proxyThumbnail } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function DonghuaDetailPage({
   params,
@@ -16,7 +17,7 @@ export default function DonghuaDetailPage({
 }) {
   const { id } = use(params);
 
-  const { data: detail, isLoading } = useQuery({
+  const { data: detail, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["donghua-detail", id],
     queryFn: () => fetchDonghuaDetail(id),
   });
@@ -36,6 +37,8 @@ export default function DonghuaDetailPage({
       </div>
     );
   }
+
+  if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
 
   if (!item) {
     return (

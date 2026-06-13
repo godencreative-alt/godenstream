@@ -58,8 +58,14 @@ export function providerBadgeColor(name: string): string {
 }
 
 // Hosts that block hotlinking and must be served via /api/img.
-// Keep in sync with the whitelist in src/app/api/img/route.ts.
-const HOTLINK_BLOCKED_HOSTS = ["donghuastream.org"];
+// Keep in sync with REFERER_BY_HOST_SUFFIX in src/app/api/img/route.ts —
+// any host that requires a Referer override is, by definition, blocking
+// hotlinking and must be proxied.
+const HOTLINK_BLOCKED_HOSTS = [
+  "donghuastream.org",
+  "komiku.org",
+  "komiku.id",
+];
 
 /**
  * Returns a thumbnail URL safe to use in <Image>. Hosts known to block
@@ -70,6 +76,12 @@ export function proxyThumbnail(
   url: string | null | undefined,
 ): string | null {
   if (!url) return null;
+  // Backend now serves thumbnails via relative /api/v1/asset/<base64>.
+  // Route those through our same-origin proxy so the API key is attached
+  // and the asset is reachable from the browser.
+  if (url.startsWith("/api/v1/")) {
+    return `/api/proxy${url}`;
+  }
   try {
     const host = new URL(url).hostname.toLowerCase();
     const blocked = HOTLINK_BLOCKED_HOSTS.some(

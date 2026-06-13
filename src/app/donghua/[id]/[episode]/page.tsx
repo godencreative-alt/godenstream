@@ -19,6 +19,7 @@ import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import SafeEmbed from "@/components/player/SafeEmbed";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function DonghuaEpisodePage({
   params,
@@ -35,7 +36,7 @@ export default function DonghuaEpisodePage({
     queryKey: ["donghua-episodes", id],
     queryFn: () => fetchDonghuaEpisodes(id),
   });
-  const { data: sourceData, isLoading, error } = useQuery({
+  const { data: sourceData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["donghua-episode-sources", episode],
     queryFn: () => fetchDonghuaEpisodeSources(episode),
     retry: 1,
@@ -57,8 +58,11 @@ export default function DonghuaEpisodePage({
     );
   }
 
+  if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
+
   const videoUrl = pickBestVideoUrl(sources);
   const embedUrl = pickEmbedUrl(sources);
+  const videoType = sources.find((s) => s.url === videoUrl)?.type;
   const qualities = Object.fromEntries(
     sources
       .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
@@ -99,6 +103,7 @@ export default function DonghuaEpisodePage({
       {videoUrl ? (
         <VideoPlayer
           src={videoUrl}
+          sourceType={videoType}
           qualities={Object.keys(qualities).length > 0 ? qualities : null}
           isLandscape
           accentColor="var(--dc-cyan)"

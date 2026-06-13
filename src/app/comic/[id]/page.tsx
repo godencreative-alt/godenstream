@@ -8,6 +8,7 @@ import { BookOpenIcon, FilmIcon } from "@heroicons/react/24/solid";
 import { fetchComicDetail } from "@/lib/api";
 import { proxyThumbnail } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function ComicDetailPage({
   params,
@@ -16,7 +17,7 @@ export default function ComicDetailPage({
 }) {
   const { id } = use(params);
 
-  const { data: detail, isLoading } = useQuery({
+  const { data: detail, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["comic-detail", id],
     queryFn: () => fetchComicDetail(id),
   });
@@ -31,6 +32,8 @@ export default function ComicDetailPage({
       </div>
     );
   }
+
+  if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
 
   if (!item) {
     return (

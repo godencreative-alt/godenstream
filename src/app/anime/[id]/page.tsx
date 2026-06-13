@@ -8,6 +8,7 @@ import { PlayIcon, FilmIcon } from "@heroicons/react/24/solid";
 import { fetchAnimeDetail, fetchAnimeEpisodes } from "@/lib/api";
 import { proxyThumbnail } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function AnimeDetailPage({
   params,
@@ -16,7 +17,7 @@ export default function AnimeDetailPage({
 }) {
   const { id } = use(params);
 
-  const { data: animeData, isLoading } = useQuery({
+  const { data: animeData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["anime-detail", id],
     queryFn: () => fetchAnimeDetail(id),
   });
@@ -36,6 +37,8 @@ export default function AnimeDetailPage({
       </div>
     );
   }
+
+  if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
 
   if (!anime) {
     return (

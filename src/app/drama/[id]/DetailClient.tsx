@@ -17,6 +17,7 @@ import { fetchDracinDetail } from "@/lib/api";
 import { isLocalBookmarked, toggleLocalBookmark } from "@/lib/local-history";
 import { truncateText, providerBadgeColor, proxyThumbnail } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function DramaDetailClient({ id }: { id: string }) {
   const [bookmarked, setBookmarked] = useState(() =>
@@ -24,7 +25,7 @@ export default function DramaDetailClient({ id }: { id: string }) {
   );
   const [showFullDesc, setShowFullDesc] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["dracin-detail", id],
     queryFn: () => fetchDracinDetail(id),
   });
@@ -38,6 +39,8 @@ export default function DramaDetailClient({ id }: { id: string }) {
       </div>
     );
   }
+
+  if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
 
   if (!drama) {
     return (

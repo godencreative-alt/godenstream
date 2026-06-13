@@ -3,22 +3,22 @@ import { PlayCircleIcon } from "@heroicons/react/24/outline";
 
 const columns = [
   {
-    title: "Platform",
+    title: "Sections",
     links: [
-      { href: "/platform/drama-id", label: "Drama-ID" },
-      { href: "/platform/dramabox", label: "DramaBox" },
-      { href: "/platform/melolo", label: "Melolo" },
-      { href: "/platform/netshort", label: "NetShort" },
-      { href: "/platform/freereels", label: "FreeReels" },
+      { href: "/drama", label: "Drama" },
+      { href: "/anime", label: "Anime" },
+      { href: "/donghua", label: "Donghua" },
+      { href: "/moviebox", label: "Movies" },
+      { href: "/comic", label: "Comics" },
     ],
   },
   {
     title: "Browse",
     links: [
-      { href: "/trending", label: "Trending" },
-      { href: "/popular", label: "Popular" },
-      { href: "/terbaru", label: "Terbaru" },
-      { href: "/", label: "Semua Platform" },
+      { href: "/drama/browse", label: "Browse Drama" },
+      { href: "/anime/browse", label: "Browse Anime" },
+      { href: "/drama/popular", label: "Popular" },
+      { href: "/", label: "Home" },
     ],
   },
   {
@@ -50,7 +50,7 @@ export default function Footer() {
               <span className="text-sm font-bold text-white">GodenStream</span>
             </Link>
             <p className="mt-3 text-[12px] leading-relaxed text-white/30">
-              Platform streaming shordrama dari 5 provider pilihan.
+              Streaming drama, anime, donghua, film, dan komik dalam satu tempat.
             </p>
           </div>
 

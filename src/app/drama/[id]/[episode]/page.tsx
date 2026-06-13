@@ -18,6 +18,7 @@ import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import SafeEmbed from "@/components/player/SafeEmbed";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function DramaEpisodePage({
   params,
@@ -31,7 +32,7 @@ export default function DramaEpisodePage({
     queryFn: () => fetchDracinDetail(id),
   });
 
-  const { data: sourceData, isLoading } = useQuery({
+  const { data: sourceData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["dracin-episode-sources", episode],
     queryFn: () => fetchDracinEpisodeSources(episode),
   });
@@ -51,8 +52,11 @@ export default function DramaEpisodePage({
     );
   }
 
+  if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
+
   const videoUrl = pickBestVideoUrl(sources);
   const embedUrl = pickEmbedUrl(sources);
+  const videoType = sources.find((s) => s.url === videoUrl)?.type;
   const qualities = Object.fromEntries(
     sources
       .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
@@ -93,6 +97,7 @@ export default function DramaEpisodePage({
       {videoUrl ? (
         <VideoPlayer
           src={videoUrl}
+          sourceType={videoType}
           qualities={Object.keys(qualities).length > 0 ? qualities : null}
           isLandscape={false}
           accentColor="var(--dc-gold)"

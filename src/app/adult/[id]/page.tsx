@@ -84,6 +84,7 @@ export default function AdultDetailPage({
   const sources: GodenSource[] = item.sources ?? [];
   const videoUrl = pickBestVideoUrl(sources);
   const embedUrl = pickEmbedUrl(sources);
+  const videoType = sources.find((s) => s.url === videoUrl)?.type;
   const qualities = Object.fromEntries(
     sources
       .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
@@ -105,6 +106,7 @@ export default function AdultDetailPage({
       {videoUrl ? (
         <VideoPlayer
           src={videoUrl}
+          sourceType={videoType}
           qualities={Object.keys(qualities).length > 0 ? qualities : null}
           isLandscape
           accentColor="var(--dc-rose)"

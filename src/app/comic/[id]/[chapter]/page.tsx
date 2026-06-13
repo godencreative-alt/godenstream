@@ -36,8 +36,11 @@ export default function ComicChapterPage({
 
   const chapters = detailData?.data?.chapters ?? [];
   const idx = chapters.findIndex((c) => c.slug === chapter);
-  const prev = idx > 0 ? chapters[idx - 1] : null;
-  const next = idx >= 0 ? chapters[idx + 1] : null;
+  // Backend returns chapters newest-first, so the older chapter (reading
+  // "prev") is at idx+1 and the newer one (reading "next") is at idx-1.
+  // Detail page mirrors this: chapters[length-1] is treated as Chapter 1.
+  const prev = idx >= 0 && idx + 1 < chapters.length ? chapters[idx + 1] : null;
+  const next = idx > 0 ? chapters[idx - 1] : null;
   const images = imgs?.data ?? [];
 
   return (

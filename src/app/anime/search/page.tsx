@@ -8,6 +8,7 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import ContentCard from "@/components/sections/ContentCard";
 import { GridSkeleton } from "@/components/ui/Skeleton";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -20,7 +21,7 @@ function SearchContent() {
     return () => clearTimeout(t);
   }, [query]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["anime-search", debounced],
     queryFn: () => fetchAnimeSearch(debounced),
     enabled: debounced.length >= 2,
@@ -50,6 +51,8 @@ function SearchContent() {
         <p className="text-sm text-white/30">Ketik minimal 2 karakter</p>
       ) : isLoading ? (
         <GridSkeleton />
+      ) : isError ? (
+        <ErrorState message={error?.message} retry={() => refetch()} />
       ) : data?.data?.length ? (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
           {data.data.map((item) => (

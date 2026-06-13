@@ -15,6 +15,9 @@ import { STORAGE_KEYS } from "@/lib/constants";
 
 interface VideoPlayerProps {
   src: string;
+  /** Declared source type from the API (e.g. "hls"). Used to pick the
+   *  HLS engine even when the URL path has no .m3u8 extension. */
+  sourceType?: string;
   qualities?: Record<string, string> | null;
   subtitleUrl?: string | null;
   subtitles?: { lang: string; url: string }[] | null;
@@ -88,6 +91,7 @@ function formatTime(seconds: number): string {
 
 export default function VideoPlayer({
   src,
+  sourceType,
   qualities,
   subtitleUrl,
   subtitles,
@@ -142,7 +146,14 @@ export default function VideoPlayer({
     const video = videoRef.current;
     if (!video || !activeSrc) return;
 
-    if (activeSrc.endsWith(".m3u8") || activeSrc.includes(".m3u8?")) {
+    // Trust the source's declared type when present (HLS URLs from CDNs
+    // often don't carry .m3u8 in the path, e.g. signed/tokenized paths).
+    const isHls =
+      sourceType === "hls" ||
+      activeSrc.endsWith(".m3u8") ||
+      activeSrc.includes(".m3u8?");
+
+    if (isHls) {
       if (Hls.isSupported()) {
         hlsRef.current?.destroy();
         const hls = new Hls({
@@ -164,7 +175,7 @@ export default function VideoPlayer({
     return () => {
       hlsRef.current?.destroy();
     };
-  }, [activeSrc]);
+  }, [activeSrc, sourceType]);
 
   useEffect(() => {
     const video = videoRef.current;
