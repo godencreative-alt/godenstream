@@ -1,0 +1,47 @@
+location / {
+    proxy_pass http://127.0.0.1:3001;
+    # Dynamic Next.js app — never cache HTML at the nginx layer. The global
+    # `proxy_cache cache_one` (nginx.conf → proxy.conf) otherwise stores stale
+    # prerenders keyed differently for direct vs CF requests.
+    proxy_cache off;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120;
+    proxy_connect_timeout 10;
+
+    # Next.js prerender emits `Cache-Control: s-maxage=31536000` for the
+    # static homepage, which makes Cloudflare cache HTML for a year and
+    # serve stale chunk references long after redeploy. Strip the upstream
+    # header and tell CF to keep it briefly + always revalidate.
+    proxy_hide_header Cache-Control;
+    add_header Cache-Control "no-store, must-revalidate" always;
+}
+
+# Override the panel's regex /\.(js|css)$/ block (which would 404 these
+# as static files). ^~ on a prefix match beats any regex location.
+location ^~ /_next/ {
+    proxy_pass http://127.0.0.1:3001;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120;
+}
+
+# Same reasoning for the app's own /api routes (proxy + img endpoints).
+location ^~ /api/ {
+    proxy_pass http://127.0.0.1:3001;
+    proxy_cache off;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120;
+}
