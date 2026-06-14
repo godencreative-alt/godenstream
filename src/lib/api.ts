@@ -65,20 +65,29 @@ async function userFetch<T>(path: string, token: string, init?: RequestInit): Pr
 
 // ─── Source selector helpers ──────────────────────────────────────
 
+/** Rewrite a relative backend asset path (/api/v1/...) to go through our
+ *  same-origin proxy so the API key is attached and the URL is reachable
+ *  from the browser. Absolute URLs are returned untouched. */
+export function proxyAssetUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("/api/v1/")) return `/api/proxy${url}`;
+  return url;
+}
+
 /** Returns the best direct-playback URL (HLS preferred, then MP4). Returns null if only embed. */
 export function pickBestVideoUrl(sources: GodenSource[]): string | null {
   const hls = sources.find(
     (s) => s.type === "hls" || s.url?.endsWith(".m3u8"),
   );
-  if (hls) return hls.url;
+  if (hls) return proxyAssetUrl(hls.url);
   const mp4 = sources.find((s) => s.type === "mp4");
-  if (mp4) return mp4.url;
+  if (mp4) return proxyAssetUrl(mp4.url);
   return null;
 }
 
 /** Returns the embed URL if only iframe-based playback is available. */
 export function pickEmbedUrl(sources: GodenSource[]): string | null {
-  return sources.find((s) => s.type === "embed")?.url ?? null;
+  return proxyAssetUrl(sources.find((s) => s.type === "embed")?.url ?? null);
 }
 
 // ─── Drama (short drama, formerly "dracin") ───────────────────────
