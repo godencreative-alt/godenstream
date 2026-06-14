@@ -6,7 +6,7 @@ import Image from "next/image";
 import { FilmIcon } from "@heroicons/react/24/solid";
 import {
   fetchMovieDetail,
-  pickBestVideoUrl,
+  pickPlayback,
   pickEmbedUrl,
 } from "@/lib/api";
 import { providerBadgeColor, proxyThumbnail } from "@/lib/utils";
@@ -49,14 +49,8 @@ export default function MovieboxDetailPage({
   }
 
   const sources = movie.sources ?? [];
-  const videoUrl = pickBestVideoUrl(sources);
+  const { src: videoUrl, sourceType: videoType, qualities } = pickPlayback(sources);
   const embedUrl = pickEmbedUrl(sources);
-  const videoType = sources.find((s) => s.url === videoUrl)?.type;
-  const qualities = Object.fromEntries(
-    sources
-      .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
-      .map((s) => [s.quality || s.type, s.url]),
-  );
   const infoEntries = Object.entries(movie.info || {});
 
   return (

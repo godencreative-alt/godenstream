@@ -12,7 +12,7 @@ import {
   fetchDonghuaDetail,
   fetchDonghuaEpisodes,
   fetchDonghuaEpisodeSources,
-  pickBestVideoUrl,
+  pickPlayback,
   pickEmbedUrl,
 } from "@/lib/api";
 import { saveLocalProgress } from "@/lib/local-history";
@@ -60,14 +60,8 @@ export default function DonghuaEpisodePage({
 
   if (isError) return <ErrorState message={error?.message} retry={() => refetch()} />;
 
-  const videoUrl = pickBestVideoUrl(sources);
+  const { src: videoUrl, sourceType: videoType, qualities } = pickPlayback(sources);
   const embedUrl = pickEmbedUrl(sources);
-  const videoType = sources.find((s) => s.url === videoUrl)?.type;
-  const qualities = Object.fromEntries(
-    sources
-      .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
-      .map((s) => [s.quality || s.type, s.url]),
-  );
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-6">

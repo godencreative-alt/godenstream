@@ -107,6 +107,31 @@ export function pickBestVideoUrl(sources: GodenSource[]): string | null {
   return null;
 }
 
+/** Combined playback picker: returns the proxied best-src, its declared type,
+ *  and a quality→proxied-url map all in one go. Lets watch pages avoid
+ *  hand-rolling the same logic + the URL-comparison bug for sourceType. */
+export function pickPlayback(sources: GodenSource[]): {
+  src: string | null;
+  sourceType: string | undefined;
+  qualities: Record<string, string>;
+} {
+  const hls = sources.find(
+    (s) => s.type === "hls" || s.url?.endsWith(".m3u8"),
+  );
+  const mp4 = sources.find((s) => s.type === "mp4");
+  const best = hls ?? mp4;
+  const qualities = Object.fromEntries(
+    sources
+      .filter((s) => (s.type === "hls" || s.type === "mp4") && s.url)
+      .map((s) => [s.quality || s.type, proxyAssetUrl(s.url)!] as [string, string]),
+  );
+  return {
+    src: best ? proxyAssetUrl(best.url) : null,
+    sourceType: best?.type,
+    qualities,
+  };
+}
+
 /** Returns the embed URL if only iframe-based playback is available. */
 export function pickEmbedUrl(sources: GodenSource[]): string | null {
   return unwrapAssetUrl(sources.find((s) => s.type === "embed")?.url ?? null);
