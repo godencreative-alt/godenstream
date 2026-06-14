@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { PlayIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
+
 interface SafeEmbedProps {
   src: string;
   title?: string;
@@ -10,20 +13,17 @@ interface SafeEmbedProps {
 /**
  * Iframe wrapper for third-party embed players.
  *
- * No `sandbox` attribute: several players (streamv.site, hydrax, etc.) fail
- * to initialize their <video> element under sandbox restrictions, so we drop
- * it to keep every source playable. Ad mitigation without sandbox relies on:
- *   - referrerPolicy=no-referrer   → hides the parent URL from ad networks
- *   - narrow `allow=` permissions  → only autoplay/fullscreen/pip/encrypted
- *   - browser defaults             → modern browsers block auto-popups and
- *                                     gate top-navigation behind a user gesture
- *
- * Trade-off: popup-on-click ads triggered by a real user click can still get
- * through. This is the cost of guaranteeing playback for every embed host.
+ * No `sandbox` attribute (several players fail to init <video> under it).
+ * Ads are mitigated with a click-trap overlay: first user click is consumed
+ * by the overlay (kills popup-on-click ad networks that register on the
+ * first user gesture), subsequent clicks reach the iframe normally. A small
+ * shield button in the corner lets the user re-arm the trap after dismissal.
  */
 export default function SafeEmbed({ src, title, aspectClass = "aspect-video" }: SafeEmbedProps) {
+  const [armed, setArmed] = useState(true);
+
   return (
-    <div className={`${aspectClass} overflow-hidden rounded-2xl bg-black`}>
+    <div className={`${aspectClass} relative overflow-hidden rounded-2xl bg-black`}>
       <iframe
         src={src}
         className="h-full w-full border-0"
@@ -32,6 +32,31 @@ export default function SafeEmbed({ src, title, aspectClass = "aspect-video" }: 
         referrerPolicy="no-referrer"
         title={title ?? "Player"}
       />
+
+      {armed && (
+        <button
+          type="button"
+          onClick={() => setArmed(false)}
+          aria-label="Tap to play (ad block active)"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 text-white backdrop-blur-sm transition hover:bg-black/50"
+        >
+          <PlayIcon className="h-16 w-16 text-white drop-shadow-lg" />
+          <span className="text-sm font-semibold tracking-wide">Tap to Play</span>
+          <span className="text-[11px] text-white/60">Ad-click block active</span>
+        </button>
+      )}
+
+      {!armed && (
+        <button
+          type="button"
+          onClick={() => setArmed(true)}
+          aria-label="Re-arm ad-click block"
+          title="Re-arm ad-click block"
+          className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white/80 backdrop-blur transition hover:bg-black/80 hover:text-white"
+        >
+          <ShieldCheckIcon className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
