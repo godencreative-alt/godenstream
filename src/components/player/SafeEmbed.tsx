@@ -10,17 +10,16 @@ interface SafeEmbedProps {
 /**
  * Iframe wrapper for third-party embed players.
  *
- * sandbox combo (balanced — players need popups to function):
- *   - allow-scripts                    → player JS works (HLS.js, controls)
- *   - allow-same-origin                → required by most embed players for cookies
- *   - allow-presentation               → fullscreen / cast
- *   - allow-forms                      → some players gate playback behind a form click
- *   - allow-popups                     → many players open quality/source pickers as popup
- *   - allow-popups-to-escape-sandbox   → so opened popups aren't crippled
- *   - (no allow-top-navigation)        → kills window.top.location ad redirects on parent
- *   - (no allow-modals)                → kills alert/confirm spam
+ * No `sandbox` attribute: several players (streamv.site, hydrax, etc.) fail
+ * to initialize their <video> element under sandbox restrictions, so we drop
+ * it to keep every source playable. Ad mitigation without sandbox relies on:
+ *   - referrerPolicy=no-referrer   → hides the parent URL from ad networks
+ *   - narrow `allow=` permissions  → only autoplay/fullscreen/pip/encrypted
+ *   - browser defaults             → modern browsers block auto-popups and
+ *                                     gate top-navigation behind a user gesture
  *
- * referrerPolicy=no-referrer also hides the parent URL from ad networks.
+ * Trade-off: popup-on-click ads triggered by a real user click can still get
+ * through. This is the cost of guaranteeing playback for every embed host.
  */
 export default function SafeEmbed({ src, title, aspectClass = "aspect-video" }: SafeEmbedProps) {
   return (
@@ -30,7 +29,6 @@ export default function SafeEmbed({ src, title, aspectClass = "aspect-video" }: 
         className="h-full w-full border-0"
         allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
         allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-popups-to-escape-sandbox"
         referrerPolicy="no-referrer"
         title={title ?? "Player"}
       />
