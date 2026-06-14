@@ -481,12 +481,11 @@ export async function fetchDonghuaLatest(
 
 export async function fetchDonghuaPopular(
   page = 1,
-  source = "anichin",
 ): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page) });
-  setSource(qs, source);
+  // Backend popular endpoint hardcodes anichin and ignores `source`, so
+  // don't bother sending it. (latest/search/detail still use it.)
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/donghua/popular?${qs}`,
+    `/api/v1/donghua/popular?page=${page}`,
   );
 }
 
