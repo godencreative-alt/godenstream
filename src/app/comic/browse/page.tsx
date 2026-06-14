@@ -12,21 +12,25 @@ import {
   toPaginated,
 } from "@/lib/api";
 
-const SOURCES = [
-  { value: "auto", label: "Semua" },
-  { value: "bacakomik", label: "Bacakomik" },
-  { value: "komikindo", label: "Komikindo" },
+// Comic "type" is the content category the backend scrapes (manga vs
+// manhua vs manhwa vs adult), NOT the scrape source. This is the primary
+// filter users care about.
+const TYPES = [
+  { value: "manga", label: "Manga" },
+  { value: "manhua", label: "Manhua" },
+  { value: "manhwa", label: "Manhwa" },
+  { value: "adult", label: "Adult" },
 ];
 
 export default function ComicBrowsePage() {
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
-  const [source, setSource] = useState("auto");
+  const [type, setType] = useState("manga");
   const [genre, setGenre] = useState("");
 
   const { data: genreData } = useQuery({
-    queryKey: ["comic-genres", source],
-    queryFn: () => fetchComicGenres({ source }),
+    queryKey: ["comic-genres", type],
+    queryFn: () => fetchComicGenres({ type }),
     staleTime: 1000 * 60 * 60,
   });
   const genres = genreData?.data ?? [];
@@ -58,21 +62,21 @@ export default function ComicBrowsePage() {
       </form>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {SOURCES.map((s) => (
+        {TYPES.map((t) => (
           <button
-            key={s.value}
+            key={t.value}
             type="button"
             onClick={() => {
-              setSource(s.value);
+              setType(t.value);
               setGenre("");
             }}
             className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
-              source === s.value
+              type === t.value
                 ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
                 : "border border-white/[0.08] text-white/45 hover:text-white/70"
             }`}
           >
-            {s.label}
+            {t.label}
           </button>
         ))}
       </div>
@@ -85,9 +89,9 @@ export default function ComicBrowsePage() {
       />
 
       <InfiniteGrid
-        queryKey={["comic-browse", search, source, genre]}
+        queryKey={["comic-browse", search, type, genre]}
         queryFn={(page) => {
-          const opts = { source, genre: genre || undefined };
+          const opts = { type, genre: genre || undefined };
           const req = search
             ? fetchComicSearch(search, page, opts)
             : fetchComicLatest(page, opts);

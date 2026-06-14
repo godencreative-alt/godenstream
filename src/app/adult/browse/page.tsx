@@ -13,8 +13,9 @@ import {
 
 const TYPES = [
   { value: "jav", label: "JAV" },
-  { value: "korea", label: "Korea" },
+  { value: "west", label: "West", disabled: true },
   { value: "indonesia", label: "Indonesia" },
+  { value: "korea", label: "Korea" },
 ];
 
 // Static per-type genres (backend adult /genres is type-aware but small;
@@ -23,6 +24,7 @@ const GENRES: Record<string, string[]> = {
   jav: ["JAV", "Amateur", "Big Tits", "Censored", "Uncensored", "Cosplay", "Hardcore", "MILF", "Schoolgirl"],
   korea: ["Korean", "Romance", "Drama", "Amateur"],
   indonesia: [],
+  west: [],
 };
 
 export default function AdultBrowsePage() {
@@ -64,17 +66,23 @@ export default function AdultBrowsePage() {
           <button
             key={t.value}
             type="button"
+            disabled={t.disabled}
+            title={t.disabled ? "Coming soon" : undefined}
             onClick={() => {
+              if (t.disabled) return;
               setType(t.value);
               setGenre("");
             }}
             className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
-              type === t.value
-                ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
-                : "border border-white/[0.08] text-white/45 hover:text-white/70"
+              t.disabled
+                ? "border border-white/[0.04] text-white/20 cursor-not-allowed"
+                : type === t.value
+                  ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
+                  : "border border-white/[0.08] text-white/45 hover:text-white/70"
             }`}
           >
             {t.label}
+            {t.disabled && <span className="ml-1 text-[9px]">(soon)</span>}
           </button>
         ))}
       </div>

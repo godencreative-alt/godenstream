@@ -97,5 +97,8 @@ API key yang dipakai: `gp_lg34sgdouecUFQpGoYYNrw7oyfya3CnJgviafvkQjyI` (producti
 ## Prioritas rekomendasi
 
 1. **Drama populate** — paling user-visible, full section dead.
+2. **Anime `type` param + Hentai scrape** — frontend sudah punya toggle Anime/Hentai (Hentai disabled "soon"). Backend perlu tambah `type` param di `/api/v1/anime/*` dan scraper untuk hentai source. Tanpa ini, toggle Hentai cuma placeholder.
+3. **Adult `type=west`** — backend return 404 "Adult type 'west' is not available yet". Frontend chip West sudah disabled. Aktifkan saat scraper west siap.
+4. **Backend cache** — sekali jadi, semua section jadi snappy.
 2. **Backend cache** — sekali jadi, semua section jadi snappy.
 3. **Anime episode/sources timeout consistency** — lower priority, sudah ter-mitigasi.
