@@ -97,8 +97,11 @@ API key yang dipakai: `gp_lg34sgdouecUFQpGoYYNrw7oyfya3CnJgviafvkQjyI` (producti
 ## Prioritas rekomendasi
 
 1. **Drama populate** — paling user-visible, full section dead.
-2. **Anime `type` param + Hentai scrape** — frontend sudah punya toggle Anime/Hentai (Hentai disabled "soon"). Backend perlu tambah `type` param di `/api/v1/anime/*` dan scraper untuk hentai source. Tanpa ini, toggle Hentai cuma placeholder.
-3. **Adult `type=west`** — backend return 404 "Adult type 'west' is not available yet". Frontend chip West sudah disabled. Aktifkan saat scraper west siap.
-4. **Backend cache** — sekali jadi, semua section jadi snappy.
+2. **Movie embed broken (`rts.gdn`)** — backend kasih URL `https://rts.gdn/s/{slug}/` sebagai embed, tapi body cuma title + loading spinner + tracking pixel, **tidak ada `<iframe>`/`<video>`/`.m3u8`/JS player**. Cek scraper terbit21 — kemungkinan ada step yang harusnya extract URL player asli (CDN host iframe) tapi malah ambil halaman intermediate. Frontend tidak bisa fix.
+3. **Comic `type` param diabaikan** — `/api/v1/comic/latest?type=manga` vs `?type=manhua` vs `?type=manhwa` semua return data identik (item pertama "Magic Emperor" dst). Hanya `type=adult` yang beda. Frontend sudah expose 4 chips type, tapi backend serve sama. Cek scraper bacakomik/komikindo — kemungkinan filter type tidak diterapkan saat query.
+4. **Adult embed `ply.streamv.site` tidak load video** — iframe load OK (200, title "49zc94o - Player"), tapi player JS tidak inisialisasi `<video>` element walau di-test tanpa sandbox sama sekali. Hanya nested tracking iframe (`t.dtscout.com`) yang ter-render. Kemungkinan bot-detection/geo-lock/click-required di streamv.site. Cek apakah ada cara dapat URL m3u8/mp4 langsung (skip player wrapper) untuk JAV section.
+5. **Anime `type` param + Hentai scrape** — frontend sudah punya toggle Anime/Hentai (Hentai disabled "soon"). Backend perlu tambah `type` param di `/api/v1/anime/*` dan scraper untuk hentai source.
+6. **Adult `type=west`** — backend return 404 "Adult type 'west' is not available yet". Frontend chip West sudah disabled. Aktifkan saat scraper west siap.
+7. **Backend cache** — sekali jadi, semua section jadi snappy.
 2. **Backend cache** — sekali jadi, semua section jadi snappy.
 3. **Anime episode/sources timeout consistency** — lower priority, sudah ter-mitigasi.

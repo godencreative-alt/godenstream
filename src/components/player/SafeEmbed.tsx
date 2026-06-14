@@ -28,7 +28,7 @@ export default function SafeEmbed({ src, title, aspectClass = "aspect-video" }: 
       <iframe
         src={src}
         className="h-full w-full border-0"
-        allow="autoplay; fullscreen; picture-in-picture"
+        allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
         allowFullScreen
         sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-popups-to-escape-sandbox"
         referrerPolicy="no-referrer"
