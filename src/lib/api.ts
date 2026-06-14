@@ -74,6 +74,28 @@ export function proxyAssetUrl(url: string | null | undefined): string | null {
   return url;
 }
 
+/** For iframe embeds (dailymotion, blogger, etc.), the backend's
+ *  /api/v1/asset/<base64> wrapper is counterproductive: many embed hosts
+ *  reject server-side fetches (502) but render fine when the browser
+ *  loads them directly. So for type=embed we decode the base64 and use
+ *  the original URL. Falls back to the proxy path on decode failure. */
+function unwrapAssetUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/^\/api\/v1\/asset\/([A-Za-z0-9+/_-]+=*)$/);
+  if (!m) return url;
+  try {
+    let b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    const decoded = typeof atob === "function"
+      ? atob(b64)
+      : Buffer.from(b64, "base64").toString("utf-8");
+    if (/^https?:\/\//i.test(decoded)) return decoded;
+  } catch {
+    /* fall through */
+  }
+  return proxyAssetUrl(url);
+}
+
 /** Returns the best direct-playback URL (HLS preferred, then MP4). Returns null if only embed. */
 export function pickBestVideoUrl(sources: GodenSource[]): string | null {
   const hls = sources.find(
@@ -87,7 +109,7 @@ export function pickBestVideoUrl(sources: GodenSource[]): string | null {
 
 /** Returns the embed URL if only iframe-based playback is available. */
 export function pickEmbedUrl(sources: GodenSource[]): string | null {
-  return proxyAssetUrl(sources.find((s) => s.type === "embed")?.url ?? null);
+  return unwrapAssetUrl(sources.find((s) => s.type === "embed")?.url ?? null);
 }
 
 // ─── Drama (short drama, formerly "dracin") ───────────────────────
