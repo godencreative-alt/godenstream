@@ -14,6 +14,8 @@ import {
 const TYPES = [
   { value: "west", label: "West" },
   { value: "indonesia", label: "Indonesia" },
+  { value: "asian", label: "Asian" },
+  { value: "jav", label: "JAV" },
 ];
 
 const GENRES: Record<string, string[]> = {

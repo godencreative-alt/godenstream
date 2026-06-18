@@ -1,12 +1,15 @@
 "use client";
 
 import { use } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import Image from "next/image";
 import { FilmIcon } from "@heroicons/react/24/solid";
 import {
   fetchEntertainmentDetail,
   fetchEntertainmentSources,
+  fetchEntertainmentGenres,
   fetchVaultResolve,
   pickPlayback,
   pickEmbedUrl,
@@ -25,21 +28,28 @@ export default function EntertainmentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const sp = useSearchParams();
+  const subcategory = sp.get("subcategory") ?? "movie";
+  const type = sp.get("type") ?? undefined;
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["entertainment-detail", id],
-    queryFn: () => fetchEntertainmentDetail(id, "movie"),
+    queryKey: ["entertainment-detail", id, subcategory, type],
+    queryFn: () => fetchEntertainmentDetail(id, subcategory, type),
   });
 
   const { data: sourcesData } = useQuery({
-    queryKey: ["entertainment-sources", id],
-    queryFn: () => fetchEntertainmentSources(id, "movie"),
+    queryKey: ["entertainment-sources", id, subcategory, type],
+    queryFn: () => fetchEntertainmentSources(id, subcategory, type),
     enabled: !!data?.data,
   });
 
   const { data: vaultData } = useQuery({
-    queryKey: ["vault-resolve", "movie", id, "entertainment"],
-    queryFn: () => fetchVaultResolve({ category: "movie", slug: id, kind: "video" }),
+    queryKey: ["vault-resolve", subcategory, id, type],
+    queryFn: () => fetchVaultResolve({
+      category: subcategory === "adult" ? "adult" : subcategory,
+      slug: id,
+      kind: "video"
+    }),
     enabled: data?.data?.in_vault === true,
   });
 
@@ -77,6 +87,15 @@ export default function EntertainmentDetailPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 md:px-6">
+      <div className="mb-4">
+        <Link
+          href={`/entertainment/browse?subcategory=${encodeURIComponent(subcategory)}${type ? `&type=${encodeURIComponent(type)}` : ''}`}
+          className="text-sm text-white/50 hover:text-white"
+        >
+          ← Back to Entertainment
+        </Link>
+      </div>
+
       <div className="mb-6">
         {videoUrl ? (
           <VideoPlayer
