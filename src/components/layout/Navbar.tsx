@@ -15,9 +15,9 @@ import { useAuthStore } from "@/store/auth";
 import { getGoogleLoginUrl } from "@/lib/api";
 
 const navLinks = [
-  { href: "/drama/browse", label: "Drama", icon: PlayCircleIcon },
   { href: "/anime", label: "Anime", icon: SparklesIcon },
   { href: "/moviebox", label: "Movie", icon: FilmIcon },
+  { href: "/entertainment", label: "Entertainment", icon: PlayCircleIcon },
 ];
 
 export default function Navbar() {
@@ -36,7 +36,7 @@ export default function Navbar() {
         ? "anime"
         : pathname.startsWith("/moviebox")
           ? "moviebox"
-          : "drama";
+          : "entertainment";
       router.push(`/${section}/search?q=${encodeURIComponent(q)}`);
     }
   }

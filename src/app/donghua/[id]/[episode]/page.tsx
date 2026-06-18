@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -27,18 +28,21 @@ export default function DonghuaEpisodePage({
   params: Promise<{ id: string; episode: string }>;
 }) {
   const { id, episode } = use(params);
+  const sp = useSearchParams();
+  const source = sp.get("source") ?? undefined;
+
 
   const { data: detail } = useQuery({
     queryKey: ["donghua-detail", id],
-    queryFn: () => fetchDonghuaDetail(id),
+    queryFn: () => fetchDonghuaDetail(id, source),
   });
   const { data: epList } = useQuery({
     queryKey: ["donghua-episodes", id],
-    queryFn: () => fetchDonghuaEpisodes(id),
+    queryFn: () => fetchDonghuaEpisodes(id, source),
   });
   const { data: sourceData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["donghua-episode-sources", episode],
-    queryFn: () => fetchDonghuaEpisodeSources(episode),
+    queryFn: () => fetchDonghuaEpisodeSources(episode, source),
     retry: 1,
   });
 
@@ -67,7 +71,7 @@ export default function DonghuaEpisodePage({
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-6">
       <div className="mb-4 flex items-center justify-between">
         <Link
-          href={`/donghua/${encodeURIComponent(id)}`}
+          href={`/donghua/${encodeURIComponent(id)}${source ? `?source=${encodeURIComponent(source)}` : ""}`}
           className="flex items-center gap-2 text-sm text-white/50 hover:text-white"
         >
           <ArrowLeftIcon className="h-4 w-4" />
@@ -76,7 +80,7 @@ export default function DonghuaEpisodePage({
         <div className="flex items-center gap-2">
           {prevEp && (
             <Link
-              href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(prevEp.slug)}`}
+              href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(prevEp.slug)}${source ? `?source=${encodeURIComponent(source)}` : ""}`}
               className="rounded-lg p-2 text-white/40 hover:bg-white/[0.05] hover:text-white"
             >
               <ChevronLeftIcon className="h-4 w-4" />
@@ -85,7 +89,7 @@ export default function DonghuaEpisodePage({
           <span className="text-sm text-white/60">Episode</span>
           {nextEp && (
             <Link
-              href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(nextEp.slug)}`}
+              href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(nextEp.slug)}${source ? `?source=${encodeURIComponent(source)}` : ""}`}
               className="rounded-lg p-2 text-white/40 hover:bg-white/[0.05] hover:text-white"
             >
               <ChevronRightIcon className="h-4 w-4" />
@@ -115,7 +119,7 @@ export default function DonghuaEpisodePage({
           }}
           onEnded={() => {
             if (nextEp) {
-              window.location.href = `/donghua/${encodeURIComponent(id)}/${encodeURIComponent(nextEp.slug)}`;
+              window.location.href = `/donghua/${encodeURIComponent(id)}/${encodeURIComponent(nextEp.slug)}${source ? `?source=${encodeURIComponent(source)}` : ""}`;
             }
           }}
         />
@@ -145,7 +149,7 @@ export default function DonghuaEpisodePage({
             {episodes.map((ep) => (
               <Link
                 key={ep.slug}
-                href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(ep.slug)}`}
+                href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(ep.slug)}${source ? `?source=${encodeURIComponent(source)}` : ""}`}
                 className={`rounded-lg px-3 py-2 text-[12px] font-medium transition-colors ${
                   ep.slug === episode
                     ? "bg-[var(--dc-cyan)]/15 text-[var(--dc-cyan)]"

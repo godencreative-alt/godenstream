@@ -12,6 +12,7 @@ const CONTENT_PREFIXES = [
   "/api/v1/comic",
   "/api/v1/donghua",
   "/api/v1/asset",
+  "/api/v1/vault",
 ] as const;
 
 const AUTH_PREFIX = "/api/v1/auth";

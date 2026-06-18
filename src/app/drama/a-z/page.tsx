@@ -1,12 +1,5 @@
-import UnsupportedSection from "@/components/shared/UnsupportedSection";
+import { redirect } from "next/navigation";
 
-export default function DramaAlphabetPage() {
-  return (
-    <UnsupportedSection
-      name="Drama A–Z"
-      reason="The alphabet index is not exposed by api.godenpg.dev."
-      primaryHref="/drama/browse"
-      primaryLabel="Browse Drama"
-    />
-  );
+export default function DramaAZPage() {
+  redirect("/drama");
 }

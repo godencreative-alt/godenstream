@@ -81,9 +81,9 @@ export default function AdultHomePage() {
       </header>
 
       <InfiniteGrid
-        queryKey={["adult-latest-infinite"]}
+        queryKey={["adult-latest-infinite", "west"]}
         queryFn={(page) =>
-          fetchAdultLatest(page).then((r) => ({
+          fetchAdultLatest(page, "west").then((r) => ({
             ...toPaginated(r, page),
             data: r.data.map((item) => ({
               ...item,
@@ -94,7 +94,7 @@ export default function AdultHomePage() {
         }
         hrefPrefix="/adult"
         buildHref={(key) =>
-          `/adult/${encodeURIComponent(key)}?type=jav`
+          `/adult/${encodeURIComponent(key)}?type=west`
         }
         emptyMessage="Tidak ada konten"
       />

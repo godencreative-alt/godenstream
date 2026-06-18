@@ -5,19 +5,19 @@ const columns = [
   {
     title: "Sections",
     links: [
-      { href: "/drama", label: "Drama" },
       { href: "/anime", label: "Anime" },
       { href: "/donghua", label: "Donghua" },
       { href: "/moviebox", label: "Movies" },
       { href: "/comic", label: "Comics" },
+      { href: "/entertainment", label: "Entertainment" },
     ],
   },
   {
     title: "Browse",
     links: [
-      { href: "/drama/browse", label: "Browse Drama" },
       { href: "/anime/browse", label: "Browse Anime" },
-      { href: "/drama/popular", label: "Popular" },
+      { href: "/moviebox/browse", label: "Browse Movie" },
+      { href: "/entertainment/browse", label: "Browse Entertainment" },
       { href: "/", label: "Home" },
     ],
   },
@@ -25,8 +25,8 @@ const columns = [
     title: "Account",
     links: [
       { href: "/pricing", label: "Pricing" },
-      { href: "/drama/bookmarks", label: "Bookmarks" },
-      { href: "/drama/history", label: "Watch History" },
+      { href: "/anime/bookmarks", label: "Bookmarks" },
+      { href: "/anime/history", label: "Watch History" },
     ],
   },
   {

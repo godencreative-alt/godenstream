@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
-  fetchDracinLatest,
   fetchAnimeLatest,
   fetchMovieLatest,
+  fetchEntertainmentLatest,
 } from "@/lib/api";
 import ContentCard from "@/components/sections/ContentCard";
 import type { GodenListItem } from "@/types";
@@ -84,11 +84,6 @@ function HomeSection({
 }
 
 export default function HomePage() {
-  const dracin = useQuery({
-    queryKey: ["dracin-latest", 1],
-    queryFn: () => fetchDracinLatest(1),
-  });
-
   const anime = useQuery({
     queryKey: ["anime-latest", 1],
     queryFn: () => fetchAnimeLatest(1),
@@ -97,6 +92,11 @@ export default function HomePage() {
   const movie = useQuery({
     queryKey: ["movie-latest", 1],
     queryFn: () => fetchMovieLatest(1),
+  });
+
+  const entertainment = useQuery({
+    queryKey: ["entertainment-latest", 1],
+    queryFn: () => fetchEntertainmentLatest(1, "movie"),
   });
 
   return (
@@ -115,18 +115,18 @@ export default function HomePage() {
             className="max-w-3xl text-4xl font-bold leading-tight text-white md:text-6xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Goden<span className="gradient-text-gold">Stream</span> untuk drama,
-            anime, dan film.
+            Goden<span className="gradient-text-gold">Stream</span> untuk anime,
+            film, dan entertainment.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">
-            Streaming drama, anime, dan film terbaru langsung dari api.godenpg.dev.
+            Streaming anime, film, dan entertainment terbaru langsung dari api.godenpg.dev.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Link
-              href="/drama/browse"
+              href="/entertainment/browse"
               className="rounded-full bg-[var(--dc-gold)] px-4 py-2 text-sm font-bold text-black"
             >
-              Jelajah Drama
+              Jelajah Entertainment
             </Link>
             <Link
               href="/anime"
@@ -138,14 +138,6 @@ export default function HomePage() {
         </section>
 
         <div className="space-y-12">
-          <HomeSection
-            title="Drama Terbaru"
-            eyebrow="Dracin"
-            href="/drama/browse"
-            hrefPrefix="/drama"
-            items={dracin.data?.data}
-            isLoading={dracin.isLoading}
-          />
           <HomeSection
             title="Anime Terbaru"
             eyebrow="Anime"
@@ -161,6 +153,14 @@ export default function HomePage() {
             hrefPrefix="/moviebox"
             items={movie.data?.data}
             isLoading={movie.isLoading}
+          />
+          <HomeSection
+            title="Entertainment Terbaru"
+            eyebrow="Entertainment"
+            href="/entertainment"
+            hrefPrefix="/entertainment"
+            items={entertainment.data?.data}
+            isLoading={entertainment.isLoading}
           />
         </div>
       </div>

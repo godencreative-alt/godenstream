@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 
 const sections = [
   { href: "/", label: "Home" },
-  { href: "/drama/browse", label: "Drama" },
   { href: "/anime/browse", label: "Anime" },
   { href: "/donghua/browse", label: "Donghua" },
   { href: "/moviebox/browse", label: "Movie" },
   { href: "/comic/browse", label: "Comic" },
+  { href: "/entertainment/browse", label: "Entertainment" },
   { href: "/adult/browse", label: "18+" },
 ];
 

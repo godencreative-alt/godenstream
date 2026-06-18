@@ -12,8 +12,7 @@ import { Spinner } from "@/components/ui/Spinner";
 const AGE_KEY = "godenstream_age_ok";
 
 const TYPES = [
-  { value: "jav", label: "JAV" },
-  { value: "korea", label: "Korea" },
+  { value: "west", label: "West" },
   { value: "indonesia", label: "Indonesia" },
 ];
 
@@ -22,7 +21,7 @@ function SearchContent() {
   const [ok, setOk] = useState<boolean | null>(null);
   const [query, setQuery] = useState(sp.get("q") || "");
   const [debounced, setDebounced] = useState(sp.get("q") || "");
-  const [type, setType] = useState("jav");
+  const [type, setType] = useState("west");
 
   useEffect(() => {
     setOk(localStorage.getItem(AGE_KEY) === "1");

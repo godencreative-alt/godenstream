@@ -12,6 +12,8 @@ import type {
   GodenSource,
   AuthUser,
   PaginatedResponse,
+  EntertainmentDetail,
+  VaultResolveResponse,
 } from "@/types";
 
 const IS_BROWSER = typeof window !== "undefined";
@@ -135,6 +137,54 @@ export function pickPlayback(sources: GodenSource[]): {
 /** Returns the embed URL if only iframe-based playback is available. */
 export function pickEmbedUrl(sources: GodenSource[]): string | null {
   return unwrapAssetUrl(sources.find((s) => s.type === "embed")?.url ?? null);
+}
+
+function inferSourceType(url: string, fallback: string = "embed"): string {
+  if (url.includes(".m3u8")) return "hls";
+  if (/\.(mp4|webm|m4v)(\?|$)/i.test(url)) return "mp4";
+  return fallback;
+}
+
+export function normalizeSources(
+  sources: Array<Partial<GodenSource> & { url: string }>,
+  fallbackType = "embed",
+): GodenSource[] {
+  return sources
+    .filter((s) => !!s.url)
+    .map((s) => ({
+      ...s,
+      type: s.type ?? inferSourceType(s.url, fallbackType),
+      url: s.url,
+    }));
+}
+
+function absolutizeVaultUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  const upstream = process.env.NEXT_PUBLIC_API_BASE || "https://api.godenpg.dev";
+  return `${upstream}${url}`;
+}
+
+export function pickVaultPlayback(resolve: VaultResolveResponse | undefined | null): {
+  src: string | null;
+  sourceType: string | undefined;
+  qualities: Record<string, string>;
+} {
+  if (!resolve || resolve.state !== "ready" || !resolve.data || !("files" in resolve.data)) {
+    return { src: null, sourceType: undefined, qualities: {} };
+  }
+  const files = resolve.data.files ?? [];
+  const videoFiles = files.filter((f) => f.kind === "video");
+  const best = videoFiles[0] ?? files[0];
+  const qualities = Object.fromEntries(
+    videoFiles
+      .filter((f) => !!f.stream_url)
+      .map((f) => [f.quality || f.kind, absolutizeVaultUrl(f.stream_url)] as [string, string]),
+  );
+  return {
+    src: best?.stream_url ? absolutizeVaultUrl(best.stream_url) : null,
+    sourceType: best?.stream_url ? inferSourceType(best.stream_url, "mp4") : undefined,
+    qualities,
+  };
 }
 
 // ─── Drama (short drama, formerly "dracin") ───────────────────────
@@ -357,13 +407,20 @@ export async function fetchMovieDetail(
 export async function fetchMovieSources(
   slug: string,
   source?: string,
-): Promise<GodenEnvelope<{ title: string; slug: string; sources: GodenSource[]; source?: string }>> {
+): Promise<GodenEnvelope<{ title?: string; slug?: string; sources: GodenSource[]; source?: string }>> {
   const qs = new URLSearchParams();
   setSource(qs, source);
   const suffix = qs.size ? `?${qs}` : "";
-  return apiFetch(
+  const response = await apiFetch<GodenEnvelope<{ title?: string; slug?: string; sources?: GodenSource[]; source?: string }>>(
     `/api/v1/movie/${encodeURIComponent(slug)}/sources${suffix}`,
   );
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      sources: normalizeSources(response.data.sources ?? []),
+    },
+  };
 }
 
 // ─── Comic ────────────────────────────────────────────────────────
@@ -470,7 +527,7 @@ export async function fetchComicChapterImages(
 
 export async function fetchDonghuaLatest(
   page = 1,
-  source = "anichin",
+  source = "auto",
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
   setSource(qs, source);
@@ -542,8 +599,23 @@ export async function fetchDonghuaEpisodeSources(
 }
 
 // ─── Adult ────────────────────────────────────────────────────────
+// Backend type mapping: korea → asia (alias). Valid types: jav, asia, indonesia, west.
 
 export async function fetchAdultLatest(
+  page = 1,
+  type = "west",
+  source?: string,
+  genre?: string,
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), type });
+  setSource(qs, source);
+  if (genre && genre !== "all") qs.set("genre", genre);
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/adult/latest?${qs}`,
+  );
+}
+
+export async function fetchAdultPopular(
   page = 1,
   type = "jav",
   source?: string,
@@ -553,7 +625,7 @@ export async function fetchAdultLatest(
   setSource(qs, source);
   if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/adult/latest?${qs}`,
+    `/api/v1/adult/popular?${qs}`,
   );
 }
 
@@ -572,6 +644,15 @@ export async function fetchAdultSearch(
   );
 }
 
+export async function fetchAdultGenres(
+  type = "jav",
+  source?: string,
+): Promise<GodenListEnvelope<string>> {
+  const qs = new URLSearchParams({ type });
+  setSource(qs, source);
+  return apiFetch<GodenListEnvelope<string>>(`/api/v1/adult/genres?${qs}`);
+}
+
 export async function fetchAdultDetail(
   videoId: string,
   type = "jav",
@@ -581,6 +662,122 @@ export async function fetchAdultDetail(
   setSource(qs, source);
   return apiFetch<GodenEnvelope<import("@/types").AdultDetail>>(
     `/api/v1/adult/${encodeURIComponent(videoId)}?${qs}`,
+  );
+}
+
+export async function fetchAdultSources(
+  slug: string,
+  type = "jav",
+  source?: string,
+): Promise<GodenEnvelope<GodenSource[]>> {
+  const qs = new URLSearchParams({ type });
+  setSource(qs, source);
+  const response = await apiFetch<GodenEnvelope<Array<{ url: string; quality?: string; label?: string }>>>(
+    `/api/v1/adult/${encodeURIComponent(slug)}/sources?${qs}`,
+  );
+  return {
+    ...response,
+    data: normalizeSources(response.data, "mp4"),
+  };
+}
+
+// ─── Entertainment ────────────────────────────────────────────────
+// Backend /api/v1/entertainment/* — categories: movie, adult, semi
+
+export async function fetchEntertainmentLatest(
+  page = 1,
+  category = "movie",
+  genre?: string,
+  source?: string,
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), category });
+  if (genre && genre !== "all") qs.set("genre", genre);
+  setSource(qs, source);
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/entertainment/latest?${qs}`,
+  );
+}
+
+export async function fetchEntertainmentPopular(
+  page = 1,
+  category = "movie",
+  genre?: string,
+  source?: string,
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), category });
+  if (genre && genre !== "all") qs.set("genre", genre);
+  setSource(qs, source);
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/entertainment/popular?${qs}`,
+  );
+}
+
+export async function fetchEntertainmentSearch(
+  query: string,
+  page = 1,
+  category = "movie",
+  source?: string,
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ q: query, page: String(page), category });
+  setSource(qs, source);
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/entertainment/search?${qs}`,
+  );
+}
+
+export async function fetchEntertainmentGenres(
+  category = "movie",
+): Promise<GodenListEnvelope<string>> {
+  const qs = new URLSearchParams({ category });
+  return apiFetch<GodenListEnvelope<string>>(`/api/v1/entertainment/genres?${qs}`);
+}
+
+export async function fetchEntertainmentDetail(
+  slug: string,
+  category = "movie",
+  source?: string,
+): Promise<GodenEnvelope<import("@/types").EntertainmentDetail>> {
+  const qs = new URLSearchParams({ category });
+  setSource(qs, source);
+  return apiFetch<GodenEnvelope<import("@/types").EntertainmentDetail>>(
+    `/api/v1/entertainment/${encodeURIComponent(slug)}?${qs}`,
+  );
+}
+
+export async function fetchEntertainmentSources(
+  slug: string,
+  category = "movie",
+  source?: string,
+): Promise<GodenEnvelope<{ title?: string; slug?: string; sources: GodenSource[]; source?: string }>> {
+  const qs = new URLSearchParams({ category });
+  setSource(qs, source);
+  const response = await apiFetch<GodenEnvelope<{ title?: string; slug?: string; sources?: GodenSource[]; source?: string }>>(
+    `/api/v1/entertainment/${encodeURIComponent(slug)}/sources?${qs}`,
+  );
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      sources: normalizeSources(response.data.sources ?? []),
+    },
+  };
+}
+
+// ─── Vault ────────────────────────────────────────────────────────
+// Backend /api/v1/vault/* — cached content with signed stream URLs
+
+export async function fetchVaultResolve(
+  opts: { code?: string; title?: string; kind?: "video" | "comic" | "image"; category?: string; slug?: string; ttl?: number },
+): Promise<import("@/types").VaultResolveResponse> {
+  const qs = new URLSearchParams();
+  if (opts.code) qs.set("code", opts.code);
+  if (opts.title) qs.set("title", opts.title);
+  if (opts.kind) qs.set("kind", opts.kind);
+  if (opts.category) qs.set("category", opts.category);
+  if (opts.slug) qs.set("slug", opts.slug);
+  if (opts.ttl) qs.set("ttl", String(opts.ttl));
+  return apiFetch<import("@/types").VaultResolveResponse>(
+    `/api/v1/vault/resolve?${qs}`,
   );
 }
 

@@ -20,6 +20,12 @@ export const SECTION_ACCENTS = {
     bg: "bg-dc-orange",
     dim: "bg-dc-orange/15",
   },
+  entertainment: {
+    color: "#34d399",
+    class: "text-dc-emerald",
+    bg: "bg-dc-emerald",
+    dim: "bg-dc-emerald/15",
+  },
   iqiyi: {
     color: "#22d3ee",
     class: "text-dc-cyan",
@@ -67,6 +73,7 @@ export const SECTION_MIN_PLAN: Record<SectionKey, string> = {
   drama: "free",
   anime: "free",
   moviebox: "free",
+  entertainment: "free",
   iqiyi: "free",
   wetv: "free",
 };

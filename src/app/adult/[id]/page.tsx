@@ -9,8 +9,11 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { FilmIcon } from "@heroicons/react/24/solid";
 import {
   fetchAdultDetail,
+  fetchAdultSources,
+  fetchVaultResolve,
   pickPlayback,
   pickEmbedUrl,
+  pickVaultPlayback,
 } from "@/lib/api";
 import { saveLocalProgress } from "@/lib/local-history";
 import VideoPlayer from "@/components/player/VideoPlayer";
@@ -20,8 +23,19 @@ import { proxyThumbnail } from "@/lib/utils";
 import type { GodenSource } from "@/types";
 
 const AGE_KEY = "godenstream_age_ok";
-const VALID_TYPES = ["jav", "korea", "indonesia"] as const;
+const VALID_TYPES = ["west", "indonesia", "jav", "asia", "korea"] as const;
 type AdultType = (typeof VALID_TYPES)[number];
+
+function normalizeAdultType(type: string | null): AdultType {
+  if (type === "asia" || type === "korea") return "asia";
+  if (type === "indonesia") return "indonesia";
+  if (type === "jav") return "jav";
+  return "west";
+}
+
+function vaultCategoryForAdult(type: AdultType): string {
+  return type === "indonesia" ? "adult-indonesia" : "adult-west";
+}
 
 export default function AdultDetailPage({
   params,
@@ -30,10 +44,8 @@ export default function AdultDetailPage({
 }) {
   const { id } = use(params);
   const sp = useSearchParams();
-  const rawType = sp.get("type") ?? "jav";
-  const type: AdultType = (VALID_TYPES as readonly string[]).includes(rawType)
-    ? (rawType as AdultType)
-    : "jav";
+  const rawType = sp.get("type") ?? "west";
+  const type = normalizeAdultType(rawType);
   const [ok, setOk] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -44,6 +56,18 @@ export default function AdultDetailPage({
     queryKey: ["adult-detail", id, type],
     queryFn: () => fetchAdultDetail(id, type),
     enabled: ok === true,
+  });
+
+  const { data: sourcesData } = useQuery({
+    queryKey: ["adult-sources", id, type],
+    queryFn: () => fetchAdultSources(id, type),
+    enabled: ok === true && !!data?.data,
+  });
+
+  const { data: vaultData } = useQuery({
+    queryKey: ["vault-resolve", vaultCategoryForAdult(type), id],
+    queryFn: () => fetchVaultResolve({ category: vaultCategoryForAdult(type), slug: id, kind: "video" }),
+    enabled: ok === true && data?.data?.in_vault === true,
   });
 
   if (ok === null) return null;
@@ -81,9 +105,19 @@ export default function AdultDetailPage({
     );
   }
 
-  const sources: GodenSource[] = item.sources ?? [];
-  const { src: videoUrl, sourceType: videoType, qualities } = pickPlayback(sources);
-  const embedUrl = pickEmbedUrl(sources);
+  const sources: GodenSource[] = sourcesData?.data?.length
+    ? sourcesData.data
+    : item.sources ?? [];
+  const vaultPlayback = pickVaultPlayback(vaultData);
+  const playback = (item as any).playback;
+  const preferEmbed = playback?.preferred === "embed";
+  const regularPlayback = preferEmbed
+    ? { src: null as string | null, sourceType: undefined, qualities: {} as Record<string, string> }
+    : pickPlayback(sources);
+  const videoUrl = vaultPlayback.src ?? regularPlayback.src;
+  const videoType = vaultPlayback.src ? vaultPlayback.sourceType : regularPlayback.sourceType;
+  const qualities = vaultPlayback.src ? vaultPlayback.qualities : regularPlayback.qualities;
+  const embedUrl = vaultPlayback.src ? null : pickEmbedUrl(sources);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-6">

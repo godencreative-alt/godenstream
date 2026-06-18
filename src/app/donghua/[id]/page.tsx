@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,15 +17,18 @@ export default function DonghuaDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const sp = useSearchParams();
+  const source = sp.get("source") ?? undefined;
+
 
   const { data: detail, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["donghua-detail", id],
-    queryFn: () => fetchDonghuaDetail(id),
+    queryFn: () => fetchDonghuaDetail(id, source),
   });
 
   const { data: epList } = useQuery({
     queryKey: ["donghua-episodes", id],
-    queryFn: () => fetchDonghuaEpisodes(id),
+    queryFn: () => fetchDonghuaEpisodes(id, source),
   });
 
   const item = detail?.data;
@@ -99,7 +103,7 @@ export default function DonghuaDetailPage({
 
           {firstEp && (
             <Link
-              href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(firstEp.slug)}`}
+              href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(firstEp.slug)}${source ? `?source=${encodeURIComponent(source)}` : ""}`}
               className="inline-flex items-center gap-2 rounded-xl bg-[var(--dc-cyan)] px-5 py-2.5 text-sm font-semibold text-zinc-900 hover:brightness-110"
             >
               <PlayIcon className="h-4 w-4" />
@@ -116,7 +120,7 @@ export default function DonghuaDetailPage({
             {episodes.map((ep) => (
               <Link
                 key={ep.slug}
-                href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(ep.slug)}`}
+                href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(ep.slug)}${source ? `?source=${encodeURIComponent(source)}` : ""}`}
                 className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-sm text-white/70 transition-colors hover:border-[var(--dc-cyan)]/30 hover:bg-[var(--dc-cyan)]/5 hover:text-white"
               >
                 {ep.title}

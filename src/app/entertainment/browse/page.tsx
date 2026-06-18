@@ -6,28 +6,29 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import InfiniteGrid from "@/components/sections/InfiniteGrid";
 import GenreChips from "@/components/sections/GenreChips";
 import {
-  fetchAdultLatest,
-  fetchAdultSearch,
+  fetchEntertainmentLatest,
+  fetchEntertainmentSearch,
+  fetchEntertainmentGenres,
   toPaginated,
 } from "@/lib/api";
 
-const TYPES = [
-  { value: "west", label: "West" },
-  { value: "indonesia", label: "Indonesia" },
+const CATEGORIES = [
+  { value: "movie", label: "Movie" },
+  { value: "adult", label: "Adult" },
 ];
 
-const GENRES: Record<string, string[]> = {
-  west: [],
-  indonesia: [],
-};
-
-export default function AdultBrowsePage() {
+export default function EntertainmentBrowsePage() {
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
-  const [type, setType] = useState("west");
+  const [category, setCategory] = useState("movie");
   const [genre, setGenre] = useState("");
 
-  const genres = GENRES[type] ?? [];
+  const { data: genreData } = useQuery({
+    queryKey: ["entertainment-genres", category],
+    queryFn: () => fetchEntertainmentGenres(category),
+    staleTime: 1000 * 60 * 60,
+  });
+  const genres = genreData?.data ?? [];
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -40,7 +41,7 @@ export default function AdultBrowsePage() {
         className="mb-6 text-2xl font-bold"
         style={{ fontFamily: "var(--font-display)" }}
       >
-        Browse 18+
+        Browse Entertainment
       </h1>
 
       <form onSubmit={handleSearch} className="mb-5">
@@ -49,28 +50,29 @@ export default function AdultBrowsePage() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Cari…"
+            placeholder="Cari entertainment…"
             className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-12 pr-4 text-sm text-white placeholder:text-white/25 focus:border-white/20 focus:outline-none"
           />
         </div>
       </form>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {TYPES.map((t) => (
+        {CATEGORIES.map((cat) => (
           <button
-            key={t.value}
+            key={cat.value}
             type="button"
             onClick={() => {
-              setType(t.value);
+              setCategory(cat.value);
               setGenre("");
+              setSearch("");
             }}
             className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
-              type === t.value
-                ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
+              category === cat.value
+                ? "bg-[var(--dc-gold)]/20 text-[var(--dc-gold)]"
                 : "border border-white/[0.08] text-white/45 hover:text-white/70"
             }`}
           >
-            {t.label}
+            {cat.label}
           </button>
         ))}
       </div>
@@ -79,29 +81,27 @@ export default function AdultBrowsePage() {
         genres={genres}
         selected={genre}
         onSelect={setGenre}
-        accentClass="bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
+        accentClass="bg-[var(--dc-gold)]/20 text-[var(--dc-gold)]"
       />
 
       <InfiniteGrid
-        queryKey={["adult-browse", search, type, genre]}
+        queryKey={["entertainment-browse", search, category, genre]}
         queryFn={(page) => {
+          const opts = { page, category, genre: genre || undefined };
           const req = search
-            ? fetchAdultSearch(search, page, type, undefined, genre || undefined)
-            : fetchAdultLatest(page, type, undefined, genre || undefined);
+            ? fetchEntertainmentSearch(search, page, category)
+            : fetchEntertainmentLatest(page, category, genre || undefined);
           return req.then((r) => ({
             ...toPaginated(r, page),
             data: r.data.map((item) => ({
               ...item,
-              id: item.slug ?? item.video_id ?? "",
+              id: item.slug ?? "",
               cover_url: item.thumbnail,
             })),
           }));
         }}
-        hrefPrefix="/adult"
-        buildHref={(key) =>
-          `/adult/${encodeURIComponent(key)}?type=${encodeURIComponent(type)}`
-        }
-        emptyMessage="Konten belum tersedia"
+        hrefPrefix="/entertainment"
+        emptyMessage="Konten entertainment belum tersedia"
       />
     </div>
   );

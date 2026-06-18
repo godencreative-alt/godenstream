@@ -18,6 +18,7 @@ interface ContentCardProps {
     chapter_count?: number | null;
     available_episodes?: number;
     play_count?: number;
+    in_vault?: boolean;
   };
   href: string;
   accentColor?: string;
@@ -51,6 +52,12 @@ export default function ContentCard({ item, href }: ContentCardProps) {
             className={`absolute left-1.5 top-1.5 rounded-md border px-1.5 py-0.5 text-[9px] font-medium ${providerBadgeColor(badge)}`}
           >
             {badge}
+          </span>
+        )}
+
+        {item.in_vault && (
+          <span className="absolute right-1.5 top-1.5 rounded-md bg-emerald-500/85 px-1.5 py-0.5 text-[9px] font-bold text-black">
+            Vault
           </span>
         )}
 

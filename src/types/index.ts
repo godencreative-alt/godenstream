@@ -19,6 +19,7 @@ export interface GodenListMeta {
   failover?: boolean;
   is_fallback?: boolean;
   has_next_page?: boolean;
+  sources?: string[];
 }
 
 export interface GodenEnvelope<T> {
@@ -47,6 +48,7 @@ export interface GodenListItem {
   category?: string; // entertainment: "movie" | "adult"
   episode?: string; // donghua latest carries "Ep N"
   latest_chapter?: string; // comic carries chapter label
+  in_vault?: boolean;
 }
 
 export interface GodenEpisode {
@@ -65,6 +67,7 @@ export interface DracinDetail {
   info: Record<string, string>;
   episodes: GodenEpisode[];
   source?: string;
+  in_vault?: boolean;
 }
 
 export interface AnimeDetail {
@@ -73,6 +76,7 @@ export interface AnimeDetail {
   thumbnail: string;
   synopsis?: string;
   info: Record<string, string>;
+  in_vault?: boolean;
 }
 
 export interface MovieDetail {
@@ -82,8 +86,9 @@ export interface MovieDetail {
   thumbnail: string;
   description?: string | null;
   info: Record<string, string>;
-  sources: GodenSource[];
+  sources?: GodenSource[];
   source?: string;
+  in_vault?: boolean;
 }
 
 export interface AdultDetail {
@@ -96,6 +101,7 @@ export interface AdultDetail {
   video_sources?: unknown[];
   sources?: GodenSource[] | null;
   playback?: GodenPlayback | null;
+  in_vault?: boolean;
 }
 
 export interface ComicDetail {
@@ -110,6 +116,7 @@ export interface ComicDetail {
   chapter_count?: number;
   source?: string;
   type?: string;
+  in_vault?: boolean;
 }
 
 export interface DonghuaDetail {
@@ -121,6 +128,7 @@ export interface DonghuaDetail {
   info: Record<string, string>;
   episodes: GodenEpisode[];
   source?: string;
+  in_vault?: boolean;
 }
 
 // -- Playback sources ----------------------------------------------------
@@ -131,6 +139,7 @@ export interface GodenSource {
   type: GodenSourceType;
   url: string;
   quality?: string;
+  label?: string;
   recommended?: boolean;
   note?: string;
   requires_player?: string | null;
@@ -332,6 +341,49 @@ export interface Comment {
   is_deleted: boolean;
   created_at: string;
 }
+
+export interface EntertainmentDetail {
+  title: string;
+  slug: string;
+  url: string;
+  thumbnail: string;
+  description?: string | null;
+  info: Record<string, string>;
+  sources?: GodenSource[];
+  source?: string;
+  category?: string;
+  in_vault?: boolean;
+}
+
+// -- Vault ---------------------------------------------------------------
+
+export interface VaultStreamRef {
+  artifact_id: string;
+  stream_url: string;
+}
+
+export interface VaultFile extends VaultStreamRef {
+  kind: "video" | "comic" | "image" | string;
+  quality?: string;
+}
+
+export interface VaultReadyData {
+  id: string;
+  title: string;
+  status: "ready" | string;
+  thumbnail?: VaultStreamRef | null;
+  files: VaultFile[];
+}
+
+export interface VaultScrapingData {
+  status: "scraping" | string;
+  content_id?: string;
+}
+
+export type VaultResolveResponse =
+  | { state: "ready"; data: VaultReadyData }
+  | { state: "scraping"; data: VaultScrapingData }
+  | { state: string; data?: VaultReadyData | VaultScrapingData; detail?: string };
 
 // -- Auth ----------------------------------------------------------------
 
