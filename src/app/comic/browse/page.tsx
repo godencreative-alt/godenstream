@@ -105,6 +105,7 @@ export default function ComicBrowsePage() {
           }));
         }}
         hrefPrefix="/comic"
+        buildHref={(key) => `/comic/${encodeURIComponent(key)}?type=${type}`}
         emptyMessage="Konten komik belum tersedia"
       />
     </div>

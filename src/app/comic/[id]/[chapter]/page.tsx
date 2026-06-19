@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
@@ -24,16 +25,18 @@ export default function ComicChapterPage({
   params: Promise<{ id: string; chapter: string }>;
 }) {
   const { id, chapter } = use(params);
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type") || "manga";
 
   const { data: imgs, isLoading, error } = useQuery({
-    queryKey: ["comic-chapter-images", chapter],
-    queryFn: () => fetchComicChapterImages(chapter),
+    queryKey: ["comic-chapter-images", chapter, type],
+    queryFn: () => fetchComicChapterImages(chapter, { type }),
     retry: 1,
   });
 
   const { data: detailData } = useQuery({
-    queryKey: ["comic-detail", id],
-    queryFn: () => fetchComicDetail(id),
+    queryKey: ["comic-detail", id, type],
+    queryFn: () => fetchComicDetail(id, { type }),
   });
 
   const chapters = detailData?.data?.chapters ?? [];

@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { BookOpenIcon, FilmIcon } from "@heroicons/react/24/solid";
@@ -16,10 +17,12 @@ export default function ComicDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type") || "manga";
 
   const { data: detail, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["comic-detail", id],
-    queryFn: () => fetchComicDetail(id),
+    queryKey: ["comic-detail", id, type],
+    queryFn: () => fetchComicDetail(id, { type }),
   });
 
   const item = detail?.data;
@@ -95,7 +98,7 @@ export default function ComicDetailPage({
 
           {firstCh && (
             <Link
-              href={`/comic/${encodeURIComponent(id)}/${encodeURIComponent(firstCh.slug)}`}
+              href={`/comic/${encodeURIComponent(id)}/${encodeURIComponent(firstCh.slug)}?type=${type}`}
               className="inline-flex items-center gap-2 rounded-xl bg-[var(--dc-rose)] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110"
             >
               <BookOpenIcon className="h-4 w-4" />
@@ -112,7 +115,7 @@ export default function ComicDetailPage({
             {chapters.map((ch) => (
               <Link
                 key={ch.slug}
-                href={`/comic/${encodeURIComponent(id)}/${encodeURIComponent(ch.slug)}`}
+                href={`/comic/${encodeURIComponent(id)}/${encodeURIComponent(ch.slug)}?type=${type}`}
                 className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-sm text-white/70 transition-colors hover:border-[var(--dc-rose)]/30 hover:bg-[var(--dc-rose)]/5 hover:text-white"
               >
                 {ch.title}
