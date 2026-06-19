@@ -430,7 +430,7 @@ export async function fetchComicLatest(
   opts?: { source?: string; type?: string; genre?: string },
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
-  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.type) qs.set("subcategory", opts.type);
   if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
   setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
@@ -443,7 +443,7 @@ export async function fetchComicPopular(
   opts?: { source?: string; type?: string; genre?: string },
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
-  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.type) qs.set("subcategory", opts.type);
   if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
   setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
@@ -455,7 +455,7 @@ export async function fetchComicGenres(
   opts?: { source?: string; type?: string },
 ): Promise<GodenListEnvelope<string>> {
   const qs = new URLSearchParams();
-  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.type) qs.set("subcategory", opts.type);
   setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenListEnvelope<string>>(`/api/v1/comic/genres${suffix}`);
@@ -467,7 +467,7 @@ export async function fetchComicSearch(
   opts?: { source?: string; type?: string; genre?: string },
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ q: query, page: String(page) });
-  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.type) qs.set("subcategory", opts.type);
   if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
   setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
@@ -480,7 +480,7 @@ export async function fetchComicChapters(
   opts?: { source?: string; type?: string },
 ): Promise<GodenEnvelope<GodenEpisode[]>> {
   const qs = new URLSearchParams();
-  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.type) qs.set("subcategory", opts.type);
   setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<GodenEpisode[]>>(
@@ -493,7 +493,7 @@ export async function fetchComicDetail(
   opts?: { source?: string; type?: string },
 ): Promise<GodenEnvelope<import("@/types").ComicDetail>> {
   const qs = new URLSearchParams();
-  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.type) qs.set("subcategory", opts.type);
   setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   const detail = await apiFetch<GodenEnvelope<import("@/types").ComicDetail>>(
@@ -515,7 +515,7 @@ export async function fetchComicChapterImages(
   opts?: { source?: string; type?: string },
 ): Promise<GodenEnvelope<string[]>> {
   const qs = new URLSearchParams();
-  if (opts?.type) qs.set("type", opts.type);
+  if (opts?.type) qs.set("subcategory", opts.type);
   setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<string[]>>(
