@@ -605,10 +605,10 @@ export async function fetchEntertainmentGenres(
 export async function fetchEntertainmentDetail(
   slug: string,
   subcategory = "movie",
-  source?: string,
+  type?: string,
 ): Promise<GodenEnvelope<import("@/types").EntertainmentDetail>> {
   const qs = new URLSearchParams({ subcategory });
-  setSource(qs, source);
+  if (type && subcategory === "adult") qs.set("type", type);
   return apiFetch<GodenEnvelope<import("@/types").EntertainmentDetail>>(
     `/api/v1/entertainment/${encodeURIComponent(slug)}?${qs}`,
   );
@@ -617,18 +617,23 @@ export async function fetchEntertainmentDetail(
 export async function fetchEntertainmentSources(
   slug: string,
   subcategory = "movie",
-  source?: string,
+  type?: string,
 ): Promise<GodenEnvelope<{ title?: string; slug?: string; sources: GodenSource[]; source?: string }>> {
   const qs = new URLSearchParams({ subcategory });
-  setSource(qs, source);
-  const response = await apiFetch<GodenEnvelope<{ title?: string; slug?: string; sources?: GodenSource[]; source?: string }>>(
+  if (type && subcategory === "adult") qs.set("type", type);
+  // Backend returns sources as either { data: [...sources] } or { data: { sources: [...] } }
+  const response = await apiFetch<any>(
     `/api/v1/entertainment/${encodeURIComponent(slug)}/sources?${qs}`,
   );
+  const rawData = response.data;
+  const sourcesArray: any[] = Array.isArray(rawData)
+    ? rawData
+    : (rawData?.sources ?? []);
   return {
     ...response,
     data: {
-      ...response.data,
-      sources: normalizeSources(response.data.sources ?? []),
+      ...(typeof rawData === "object" && !Array.isArray(rawData) ? rawData : {}),
+      sources: normalizeSources(sourcesArray),
     },
   };
 }
