@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import InfiniteGrid from "@/components/sections/InfiniteGrid";
 import GenreChips from "@/components/sections/GenreChips";
+import SearchInput from "@/components/ui/SearchInput";
+import PillTabs from "@/components/ui/PillTabs";
 import {
   fetchComicLatest,
   fetchComicSearch,
@@ -12,9 +13,6 @@ import {
   toPaginated,
 } from "@/lib/api";
 
-// Comic "type" is the content category the backend scrapes (manga vs
-// manhua vs manhwa vs adult), NOT the scrape source. This is the primary
-// filter users care about.
 const TYPES = [
   { value: "manga", label: "Manga" },
   { value: "manhua", label: "Manhua" },
@@ -35,11 +33,6 @@ export default function ComicBrowsePage() {
   });
   const genres = genreData?.data ?? [];
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    setSearch(input.trim());
-  }
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
       <h1
@@ -49,37 +42,21 @@ export default function ComicBrowsePage() {
         Browse Comic
       </h1>
 
-      <form onSubmit={handleSearch} className="mb-5">
-        <div className="relative max-w-lg">
-          <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Cari komik…"
-            className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-12 pr-4 text-sm text-white placeholder:text-white/25 focus:border-white/20 focus:outline-none"
-          />
-        </div>
-      </form>
-
-      <div className="mb-4 flex flex-wrap gap-2">
-        {TYPES.map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            onClick={() => {
-              setType(t.value);
-              setGenre("");
-            }}
-            className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
-              type === t.value
-                ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
-                : "border border-white/[0.08] text-white/45 hover:text-white/70"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="mb-5">
+        <SearchInput
+          value={input}
+          onChange={setInput}
+          onSubmit={(q) => setSearch(q)}
+          placeholder="Cari komik…"
+        />
       </div>
+
+      <PillTabs
+        tabs={TYPES}
+        selected={type}
+        onSelect={(v) => { setType(v); setGenre(""); }}
+        accentColor="var(--dc-rose)"
+      />
 
       <GenreChips
         genres={genres}

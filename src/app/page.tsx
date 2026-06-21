@@ -8,6 +8,7 @@ import {
   fetchEntertainmentLatest,
 } from "@/lib/api";
 import ContentCard from "@/components/sections/ContentCard";
+import ContinueWatching from "@/components/sections/ContinueWatching";
 import type { GodenListItem } from "@/types";
 
 function SectionSkeleton() {
@@ -138,6 +139,7 @@ export default function HomePage() {
         </section>
 
         <div className="space-y-12">
+          <ContinueWatching />
           <HomeSection
             title="Anime Terbaru"
             eyebrow="Anime"

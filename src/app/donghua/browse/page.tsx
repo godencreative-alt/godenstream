@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import InfiniteGrid from "@/components/sections/InfiniteGrid";
+import GenreChips from "@/components/sections/GenreChips";
+import SearchInput from "@/components/ui/SearchInput";
 import {
   fetchDonghuaLatest,
   fetchDonghuaSearch,
@@ -22,12 +23,6 @@ export default function DonghuaBrowsePage() {
     staleTime: 1000 * 60 * 60,
   });
   const genres = genreData?.data ?? [];
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    setGenre("");
-    setSearch(input.trim());
-  }
 
   function pickGenre(g: string) {
     setInput("");
@@ -48,35 +43,22 @@ export default function DonghuaBrowsePage() {
         Browse Donghua
       </h1>
 
-      <form onSubmit={handleSearch} className="mb-5">
-        <div className="relative max-w-lg">
-          <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Cari donghua…"
-            className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-12 pr-4 text-sm text-white placeholder:text-white/25 focus:border-white/20 focus:outline-none"
-          />
-        </div>
-      </form>
+      <div className="mb-5">
+        <SearchInput
+          value={input}
+          onChange={setInput}
+          onSubmit={(q) => { setGenre(""); setSearch(q); }}
+          placeholder="Cari donghua…"
+        />
+      </div>
 
       {genres.length > 0 && (
-        <div className="mb-6 flex flex-wrap gap-2">
-          {genres.map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => pickGenre(g)}
-              className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                genre === g
-                  ? "bg-[var(--dc-cyan)]/20 text-[var(--dc-cyan)]"
-                  : "border border-white/[0.08] text-white/45 hover:text-white/70"
-              }`}
-            >
-              {g}
-            </button>
-          ))}
-        </div>
+        <GenreChips
+          genres={genres}
+          selected={genre}
+          onSelect={pickGenre}
+          accentClass="bg-[var(--dc-cyan)]/20 text-[var(--dc-cyan)]"
+        />
       )}
 
       <InfiniteGrid

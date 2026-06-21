@@ -10,7 +10,6 @@ const sections = [
   { href: "/moviebox/browse", label: "Movie" },
   { href: "/comic/browse", label: "Comic" },
   { href: "/entertainment/browse", label: "Entertainment" },
-  { href: "/adult/browse", label: "18+" },
 ];
 
 export default function SectionNav() {

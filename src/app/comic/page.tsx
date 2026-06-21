@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import InfiniteGrid from "@/components/sections/InfiniteGrid";
-import { fetchComicLatest, toPaginated } from "@/lib/api";
+import { fetchComicLatest, fetchComicLibrary, toPaginated } from "@/lib/api";
 
 const TYPES = [
   { value: "manga", label: "Manga" },
@@ -11,8 +11,22 @@ const TYPES = [
   { value: "adult", label: "Adult" },
 ];
 
+const MODES = [
+  { value: "library", label: "Pustaka" },
+  { value: "latest", label: "Terbaru" },
+];
+
+// Genre tabs for adult subcategory
+const ADULT_GENRES = [
+  { value: "adult", label: "Video" },
+  { value: "doujinshi", label: "Doujinshi" },
+];
+
 export default function ComicHomePage() {
   const [type, setType] = useState("manga");
+  const [mode, setMode] = useState("library");
+  const [adultGenre, setAdultGenre] = useState("adult"); // "adult"=video, "doujinshi"
+  const effectiveMode = type === "adult" ? "latest" : mode;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
@@ -24,7 +38,7 @@ export default function ComicHomePage() {
           className="text-3xl font-bold text-white md:text-4xl"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Komik Terbaru
+          {effectiveMode === "library" ? "Pustaka Komik" : "Komik Terbaru"}
         </h1>
       </header>
 
@@ -45,10 +59,50 @@ export default function ComicHomePage() {
         ))}
       </div>
 
+      {type === "adult" ? (
+        // Adult genre tabs: Video (default) = lustpress, Doujinshi = jandapress
+        <div className="mb-4 flex flex-wrap gap-2">
+          {ADULT_GENRES.map((g) => (
+            <button
+              key={g.value}
+              type="button"
+              onClick={() => setAdultGenre(g.value)}
+              className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
+                adultGenre === g.value
+                  ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
+                  : "border border-white/[0.08] text-white/45 hover:text-white/70"
+              }`}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {MODES.map((m) => (
+            <button
+              key={m.value}
+              type="button"
+              onClick={() => setMode(m.value)}
+              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
+                effectiveMode === m.value
+                  ? "bg-white/[0.12] text-white"
+                  : "border border-white/[0.08] text-white/40 hover:text-white/65"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <InfiniteGrid
-        queryKey={["comic-latest-infinite", type]}
+        queryKey={["comic-infinite", effectiveMode, type, adultGenre]}
         queryFn={(page) =>
-          fetchComicLatest(page, { type }).then((r) => ({
+          (effectiveMode === "library"
+            ? fetchComicLibrary(type, page)
+            : fetchComicLatest(page, { type, genre: type === "adult" ? adultGenre : undefined })
+          ).then((r) => ({
             ...toPaginated(r, page),
             data: r.data.map((item) => ({
               ...item,

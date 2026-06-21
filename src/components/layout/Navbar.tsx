@@ -82,7 +82,7 @@ export default function Navbar() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari drama, anime…"
+              placeholder="Cari anime, film…"
               className="h-10 w-full rounded-xl border border-white/[0.06] bg-white/[0.03] pl-9 pr-3 text-sm text-white placeholder:text-white/25 focus:border-[var(--dc-gold)]/40 focus:outline-none"
             />
           </div>
@@ -126,7 +126,7 @@ export default function Navbar() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari drama, anime…"
+              placeholder="Cari anime, film…"
               className="h-10 w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 text-sm text-white placeholder:text-white/25 focus:border-[var(--dc-gold)]/40 focus:outline-none"
             />
           </form>

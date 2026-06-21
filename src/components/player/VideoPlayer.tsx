@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import Hls from "hls.js";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   PlayIcon,
   PauseIcon,
@@ -10,25 +9,27 @@ import {
   ArrowsPointingOutIcon,
   Cog6ToothIcon,
   LanguageIcon,
+  ForwardIcon,
 } from "@heroicons/react/24/solid";
 import { STORAGE_KEYS } from "@/lib/constants";
 
+// Lazy-load hls.js only when needed — saves ~200KB from the initial bundle.
+let HlsModule: typeof import("hls.js").default | null = null;
+async function loadHls() {
+  if (HlsModule) return HlsModule;
+  const mod = await import("hls.js");
+  HlsModule = mod.default;
+  return HlsModule;
+}
+
 interface VideoPlayerProps {
   src: string;
-  /** Declared source type from the API (e.g. "hls"). Used to pick the
-   *  HLS engine even when the URL path has no .m3u8 extension. */
   sourceType?: string;
   qualities?: Record<string, string> | null;
   subtitleUrl?: string | null;
   subtitles?: { lang: string; url: string }[] | null;
-  backHref?: string;
-  dramaTitle?: string;
-  episodeLabel?: string;
-  prevHref?: string | null;
-  nextHref?: string | null;
   isLandscape?: boolean;
   accentColor?: string;
-  subscriptionTier?: string;
   startTime?: number;
   onProgress?: (progress: number, duration: number) => void;
   onEnded?: () => void;
@@ -82,12 +83,15 @@ function parseVTT(
 }
 
 function formatTime(seconds: number): string {
+  if (!seconds || !isFinite(seconds)) return "0:00";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
   if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
+
+const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 export default function VideoPlayer({
   src,
@@ -102,35 +106,40 @@ export default function VideoPlayer({
   onEnded,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
+  const hlsRef = useRef<InstanceType<typeof import("hls.js").default> | null>(null);
   const lastSaveRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const progressFillRef = useRef<HTMLDivElement>(null);
+  const timeDisplayRef = useRef<HTMLSpanElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  // Only store floored seconds for display — avoids re-rendering 4x/sec
+  const [displayTime, setDisplayTime] = useState({ current: 0, duration: 0 });
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentQuality, setCurrentQuality] = useState<string>("");
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [showSubMenu, setShowSubMenu] = useState(false);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [currentSpeed, setCurrentSpeed] = useState(1);
   const [currentSubLang, setCurrentSubLang] = useState<string | null>(null);
   const [cues, setCues] = useState<{ start: number; end: number; text: string }[]>([]);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const sortedQualities = qualities
-    ? Object.keys(qualities).sort((a, b) => {
-        const order: Record<string, number> = {
-          "1080p": 4,
-          "720p": 3,
-          "480p": 2,
-          "360p": 1,
-        };
-        return (order[b] ?? 0) - (order[a] ?? 0);
-      })
-    : [];
+  // Ref for raw currentTime — updated via DOM, not React state
+  const currentTimeRef = useRef(0);
+
+  const sortedQualities = useMemo(() => {
+    if (!qualities) return [];
+    return Object.keys(qualities).sort((a, b) => {
+      const order: Record<string, number> = {
+        "1080p": 4, "720p": 3, "480p": 2, "360p": 1,
+      };
+      return (order[b] ?? 0) - (order[a] ?? 0);
+    });
+  }, [qualities]);
 
   const activeSrc = currentQuality && qualities?.[currentQuality]
     ? qualities[currentQuality]
@@ -146,33 +155,35 @@ export default function VideoPlayer({
     const video = videoRef.current;
     if (!video || !activeSrc) return;
 
-    // Trust the source's declared type when present (HLS URLs from CDNs
-    // often don't carry .m3u8 in the path, e.g. signed/tokenized paths).
     const isHls =
       sourceType === "hls" ||
       activeSrc.endsWith(".m3u8") ||
       activeSrc.includes(".m3u8?");
 
+    let cancelled = false;
+
     if (isHls) {
-      if (Hls.isSupported()) {
-        hlsRef.current?.destroy();
-        const hls = new Hls({
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
-        });
-        hls.loadSource(activeSrc);
-        hls.attachMedia(video);
-        hlsRef.current = hls;
-      } else if (
-        video.canPlayType("application/vnd.apple.mpegurl")
-      ) {
-        video.src = activeSrc;
-      }
+      loadHls().then((Hls) => {
+        if (cancelled || !Hls) return;
+        if (Hls.isSupported()) {
+          hlsRef.current?.destroy();
+          const hls = new Hls({
+            maxBufferLength: 30,
+            maxMaxBufferLength: 60,
+          });
+          hls.loadSource(activeSrc);
+          hls.attachMedia(video);
+          hlsRef.current = hls;
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = activeSrc;
+        }
+      });
     } else {
       video.src = activeSrc;
     }
 
     return () => {
+      cancelled = true;
       hlsRef.current?.destroy();
     };
   }, [activeSrc, sourceType]);
@@ -241,6 +252,27 @@ export default function VideoPlayer({
     }
   }, []);
 
+  const togglePiP = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await video.requestPictureInPicture();
+      }
+    } catch {
+      /* PiP not supported */
+    }
+  }, []);
+
+  const changeSpeed = useCallback((speed: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.playbackRate = speed;
+    setCurrentSpeed(speed);
+  }, []);
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const video = videoRef.current;
@@ -263,6 +295,9 @@ export default function VideoPlayer({
         case "f":
           toggleFullscreen();
           break;
+        case "p":
+          togglePiP();
+          break;
         case "ArrowLeft":
           video.currentTime = Math.max(0, video.currentTime - 10);
           break;
@@ -282,31 +317,63 @@ export default function VideoPlayer({
           video.volume = Math.max(0, video.volume - 0.1);
           setVolume(video.volume);
           break;
+        case "<":
+          if (currentSpeed > 0.5) changeSpeed(Math.max(0.5, currentSpeed - 0.25));
+          break;
+        case ">":
+          if (currentSpeed < 2) changeSpeed(Math.min(2, currentSpeed + 0.25));
+          break;
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [togglePlay, toggleMute, toggleFullscreen]);
+  }, [togglePlay, toggleMute, toggleFullscreen, togglePiP, currentSpeed, changeSpeed]);
 
+  /** Optimized time update: directly manipulates DOM for progress bar
+   *  and only updates React state once per second for the time display. */
   function handleTimeUpdate() {
     const video = videoRef.current;
     if (!video) return;
-    setCurrentTime(video.currentTime);
-    setDuration(video.duration || 0);
+    const ct = video.currentTime;
+    const dur = video.duration || 0;
+    currentTimeRef.current = ct;
+
+    // Direct DOM update for progress bar — no React re-render
+    if (progressFillRef.current && dur > 0) {
+      progressFillRef.current.style.width = `${(ct / dur) * 100}%`;
+    }
+
+    // Only update React state once per second for the display text
+    const flooredCurrent = Math.floor(ct);
+    const flooredDuration = Math.floor(dur);
+    setDisplayTime((prev) => {
+      if (prev.current === flooredCurrent && prev.duration === flooredDuration) return prev;
+      return { current: flooredCurrent, duration: flooredDuration };
+    });
 
     const now = Date.now();
     if (now - lastSaveRef.current >= 10_000) {
       lastSaveRef.current = now;
-      onProgress?.(video.currentTime, video.duration);
+      onProgress?.(ct, dur);
     }
   }
 
   function handleSeek(e: React.MouseEvent<HTMLDivElement>) {
     const video = videoRef.current;
-    if (!video || !duration) return;
+    if (!video || !displayTime.duration) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    video.currentTime = ratio * duration;
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    video.currentTime = ratio * displayTime.duration;
+  }
+
+  function handleSeekKeyboard(e: React.KeyboardEvent<HTMLDivElement>) {
+    const video = videoRef.current;
+    if (!video || !displayTime.duration) return;
+    if (e.key === "ArrowLeft") {
+      video.currentTime = Math.max(0, video.currentTime - 5);
+    } else if (e.key === "ArrowRight") {
+      video.currentTime = Math.min(displayTime.duration, video.currentTime + 5);
+    }
   }
 
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -327,9 +394,18 @@ export default function VideoPlayer({
     }, 3000);
   }
 
-  const currentCue = cues.find(
-    (c) => currentTime >= c.start && currentTime <= c.end,
-  );
+  // Memoized subtitle cue lookup — floor to 1 decimal for stable memo key
+  const currentCue = useMemo(() => {
+    const t = currentTimeRef.current;
+    return cues.find((c) => t >= c.start && t <= c.end);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cues, displayTime.current]);
+
+  function closeAllMenus() {
+    setShowQualityMenu(false);
+    setShowSubMenu(false);
+    setShowSpeedMenu(false);
+  }
 
   return (
     <div
@@ -369,15 +445,24 @@ export default function VideoPlayer({
         }`}
       >
         <div className="bg-gradient-to-t from-black/80 to-transparent px-4 pb-4 pt-16">
-          {/* Progress bar */}
+          {/* Progress bar — keyboard accessible */}
           <div
-            className="mb-3 h-1 cursor-pointer rounded-full bg-white/20"
+            className="mb-3 h-1.5 cursor-pointer rounded-full bg-white/20 transition-all hover:h-2.5"
             onClick={handleSeek}
+            onKeyDown={handleSeekKeyboard}
+            role="slider"
+            tabIndex={0}
+            aria-label="Video progress"
+            aria-valuemin={0}
+            aria-valuemax={Math.floor(displayTime.duration)}
+            aria-valuenow={displayTime.current}
+            aria-valuetext={`${formatTime(displayTime.current)} of ${formatTime(displayTime.duration)}`}
           >
             <div
+              ref={progressFillRef}
               className="h-full rounded-full"
               style={{
-                width: `${duration ? (currentTime / duration) * 100 : 0}%`,
+                width: `${displayTime.duration ? (displayTime.current / displayTime.duration) * 100 : 0}%`,
                 backgroundColor: accentColor,
               }}
             />
@@ -417,32 +502,59 @@ export default function VideoPlayer({
                   step="0.05"
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
-                  className="h-1 w-16 accent-white"
+                  className="hidden h-1 w-16 accent-white sm:block"
+                  aria-label="Volume"
                 />
               </div>
 
-              <span className="text-[12px] text-white/60">
-                {formatTime(currentTime)} / {formatTime(duration)}
+              <span ref={timeDisplayRef} className="text-[12px] text-white/60">
+                {formatTime(displayTime.current)} / {formatTime(displayTime.duration)}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {/* Speed selector */}
+              <div className="relative">
+                <button
+                  onClick={() => { closeAllMenus(); setShowSpeedMenu(!showSpeedMenu); }}
+                  className="rounded-lg px-1.5 py-1 text-[11px] font-bold text-white/70 hover:bg-white/10"
+                  aria-label="Playback speed"
+                >
+                  {currentSpeed === 1 ? "1×" : `${currentSpeed}×`}
+                </button>
+                {showSpeedMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 rounded-xl border border-white/[0.08] bg-[#0e0e0e]/98 p-1 shadow-2xl" role="menu">
+                    {SPEED_OPTIONS.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => { changeSpeed(s); setShowSpeedMenu(false); }}
+                        className={`block w-full rounded-lg px-3 py-1.5 text-left text-[12px] ${
+                          s === currentSpeed
+                            ? "bg-white/10 text-white"
+                            : "text-white/60 hover:bg-white/[0.05]"
+                        }`}
+                        role="menuitem"
+                      >
+                        {s}×
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Quality selector */}
               {sortedQualities.length > 1 && (
                 <div className="relative">
                   <button
-                    onClick={() => {
-                      setShowQualityMenu(!showQualityMenu);
-                      setShowSubMenu(false);
-                    }}
+                    onClick={() => { closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}
                     className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-white/70 hover:bg-white/10"
                     aria-label="Quality settings"
                   >
                     <Cog6ToothIcon className="h-4 w-4" />
-                    {currentQuality || "Auto"}
+                    <span className="hidden sm:inline">{currentQuality || "Auto"}</span>
                   </button>
                   {showQualityMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 rounded-xl border border-white/[0.08] bg-[#0e0e0e]/98 p-1 shadow-2xl">
+                    <div className="absolute bottom-full right-0 mb-2 rounded-xl border border-white/[0.08] bg-[#0e0e0e]/98 p-1 shadow-2xl" role="menu">
                       {sortedQualities.map((q) => (
                         <button
                           key={q}
@@ -455,6 +567,7 @@ export default function VideoPlayer({
                               ? "bg-white/10 text-white"
                               : "text-white/60 hover:bg-white/[0.05]"
                           }`}
+                          role="menuitem"
                         >
                           {q}
                         </button>
@@ -468,17 +581,14 @@ export default function VideoPlayer({
               {subtitles && subtitles.length > 0 && (
                 <div className="relative">
                   <button
-                    onClick={() => {
-                      setShowSubMenu(!showSubMenu);
-                      setShowQualityMenu(false);
-                    }}
+                    onClick={() => { closeAllMenus(); setShowSubMenu(!showSubMenu); }}
                     className="rounded-lg p-1 text-white/70 hover:bg-white/10"
                     aria-label="Subtitles"
                   >
                     <LanguageIcon className="h-4 w-4" />
                   </button>
                   {showSubMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 rounded-xl border border-white/[0.08] bg-[#0e0e0e]/98 p-1 shadow-2xl">
+                    <div className="absolute bottom-full right-0 mb-2 rounded-xl border border-white/[0.08] bg-[#0e0e0e]/98 p-1 shadow-2xl" role="menu">
                       <button
                         onClick={() => {
                           setCurrentSubLang(null);
@@ -489,6 +599,7 @@ export default function VideoPlayer({
                             ? "bg-white/10 text-white"
                             : "text-white/60 hover:bg-white/[0.05]"
                         }`}
+                        role="menuitem"
                       >
                         Off
                       </button>
@@ -504,6 +615,7 @@ export default function VideoPlayer({
                               ? "bg-white/10 text-white"
                               : "text-white/60 hover:bg-white/[0.05]"
                           }`}
+                          role="menuitem"
                         >
                           {s.lang}
                         </button>
@@ -512,6 +624,15 @@ export default function VideoPlayer({
                   )}
                 </div>
               )}
+
+              {/* Picture-in-Picture */}
+              <button
+                onClick={togglePiP}
+                className="hidden text-white hover:text-white/80 sm:block"
+                aria-label="Picture in picture"
+              >
+                <ForwardIcon className="h-4 w-4 rotate-180" />
+              </button>
 
               <button
                 onClick={toggleFullscreen}
@@ -527,15 +648,15 @@ export default function VideoPlayer({
 
       {/* Play overlay when paused */}
       {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <button
-            onClick={togglePlay}
-            className="rounded-full bg-black/50 p-4 text-white transition-transform hover:scale-110"
-            aria-label="Play"
-          >
-            <PlayIcon className="h-12 w-12" />
-          </button>
-        </div>
+        <button
+          onClick={togglePlay}
+          className="absolute inset-0 flex items-center justify-center"
+          aria-label="Play"
+        >
+          <div className="rounded-full bg-black/50 p-4 transition-transform hover:scale-110">
+            <PlayIcon className="h-12 w-12 text-white" />
+          </div>
+        </button>
       )}
     </div>
   );

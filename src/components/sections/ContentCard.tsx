@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PlayIcon, FilmIcon } from "@heroicons/react/24/solid";
@@ -24,14 +25,14 @@ interface ContentCardProps {
   accentColor?: string;
 }
 
-export default function ContentCard({ item, href }: ContentCardProps) {
+function ContentCardInner({ item, href }: ContentCardProps) {
   const title = item.title || item.name || "Untitled";
   const coverUrl = proxyThumbnail(item.thumbnail || item.cover_url || null);
   const badge = item.source || item.provider_name;
   const episodeCount = item.chapter_count || item.available_episodes;
 
   return (
-    <Link href={href} className="group block">
+    <Link href={href} className="group block" aria-label={`${title}`}>
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-[var(--dc-elevated)]">
         {coverUrl ? (
           <Image
@@ -78,3 +79,6 @@ export default function ContentCard({ item, href }: ContentCardProps) {
     </Link>
   );
 }
+
+const ContentCard = memo(ContentCardInner);
+export default ContentCard;

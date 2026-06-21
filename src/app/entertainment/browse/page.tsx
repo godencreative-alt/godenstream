@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import InfiniteGrid from "@/components/sections/InfiniteGrid";
 import GenreChips from "@/components/sections/GenreChips";
+import SearchInput from "@/components/ui/SearchInput";
+import PillTabs from "@/components/ui/PillTabs";
 import {
   fetchEntertainmentLatest,
   fetchEntertainmentSearch,
@@ -59,15 +60,11 @@ export default function EntertainmentBrowsePage() {
     ? (adultGenreData?.data ?? [])
     : (movieGenreData?.data ?? []);
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    setSearch(input.trim());
-  }
-
   function handleSubcategoryChange(cat: string) {
     setSubcategory(cat);
     setGenre("");
     setSearch("");
+    setInput("");
   }
 
   return (
@@ -79,56 +76,29 @@ export default function EntertainmentBrowsePage() {
         Browse Entertainment
       </h1>
 
-      <form onSubmit={handleSearch} className="mb-5">
-        <div className="relative max-w-lg">
-          <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Cari entertainment…"
-            className="h-12 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-12 pr-4 text-sm text-white placeholder:text-white/25 focus:border-white/20 focus:outline-none"
-          />
-        </div>
-      </form>
-
-      <div className="mb-4 flex flex-wrap gap-2">
-        {SUBCATEGORIES.map((cat) => (
-          <button
-            key={cat.value}
-            type="button"
-            onClick={() => handleSubcategoryChange(cat.value)}
-            className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
-              subcategory === cat.value
-                ? "bg-[var(--dc-gold)]/20 text-[var(--dc-gold)]"
-                : "border border-white/[0.08] text-white/45 hover:text-white/70"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
+      <div className="mb-5">
+        <SearchInput
+          value={input}
+          onChange={setInput}
+          onSubmit={(q) => setSearch(q)}
+          placeholder="Cari entertainment…"
+        />
       </div>
 
+      <PillTabs
+        tabs={SUBCATEGORIES}
+        selected={subcategory}
+        onSelect={handleSubcategoryChange}
+        accentColor="var(--dc-gold)"
+      />
+
       {subcategory === "adult" && (
-        <div className="mb-4 flex flex-wrap gap-2">
-          {ADULT_TYPES.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              onClick={() => {
-                setAdultType(t.value);
-                setGenre("");
-                setSearch("");
-              }}
-              className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
-                adultType === t.value
-                  ? "bg-[var(--dc-rose)]/20 text-[var(--dc-rose)]"
-                  : "border border-white/[0.08] text-white/30 hover:text-white/60"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <PillTabs
+          tabs={ADULT_TYPES}
+          selected={adultType}
+          onSelect={(v) => { setAdultType(v); setGenre(""); setSearch(""); setInput(""); }}
+          accentColor="var(--dc-rose)"
+        />
       )}
 
       <GenreChips

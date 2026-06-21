@@ -2,8 +2,6 @@ import type {
   GodenListEnvelope,
   GodenEnvelope,
   GodenListItem,
-  DracinDetail,
-  DracinSourcesData,
   AnimeDetail,
   AnimeSourcesData,
   AnimeDownloadData,
@@ -185,98 +183,6 @@ export function pickVaultPlayback(resolve: VaultResolveResponse | undefined | nu
     sourceType: best?.stream_url ? inferSourceType(best.stream_url, "mp4") : undefined,
     qualities,
   };
-}
-
-// ─── Drama (short drama, formerly "dracin") ───────────────────────
-// Backend renamed /api/v1/dracin/* → /api/v1/drama/* (api.godenpg.dev).
-// Function names kept as fetchDracin* so callers stay unchanged.
-
-export async function fetchDracinLatest(
-  page = 1,
-  type = "drakor",
-  genre?: string,
-  source?: string,
-): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page), type });
-  if (genre && genre !== "all") qs.set("genre", genre);
-  setSource(qs, source);
-  return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/drama/latest?${qs}`,
-  );
-}
-
-export async function fetchDracinPopular(
-  page = 1,
-  type = "drakor",
-  genre?: string,
-  source?: string,
-): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page), type });
-  if (genre && genre !== "all") qs.set("genre", genre);
-  setSource(qs, source);
-  return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/drama/popular?${qs}`,
-  );
-}
-
-export async function fetchDracinSearch(
-  query: string,
-  page = 1,
-  type = "drakor",
-  genre?: string,
-  source?: string,
-): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ q: query, page: String(page), type });
-  if (genre && genre !== "all") qs.set("genre", genre);
-  setSource(qs, source);
-  return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/drama/search?${qs}`,
-  );
-}
-
-export async function fetchDracinGenres(
-  type = "drakor",
-  source?: string,
-): Promise<GodenListEnvelope<string>> {
-  const qs = new URLSearchParams({ type });
-  setSource(qs, source);
-  return apiFetch<GodenListEnvelope<string>>(`/api/v1/drama/genres?${qs}`);
-}
-
-export async function fetchDracinDetail(
-  slug: string,
-  type = "drakor",
-  source?: string,
-): Promise<GodenEnvelope<DracinDetail>> {
-  const qs = new URLSearchParams({ type });
-  setSource(qs, source);
-  return apiFetch<GodenEnvelope<DracinDetail>>(
-    `/api/v1/drama/${encodeURIComponent(slug)}?${qs}`,
-  );
-}
-
-export async function fetchDracinEpisodes(
-  slug: string,
-  type = "drakor",
-  source?: string,
-): Promise<GodenEnvelope<GodenEpisode[]>> {
-  const qs = new URLSearchParams({ type });
-  setSource(qs, source);
-  return apiFetch<GodenEnvelope<GodenEpisode[]>>(
-    `/api/v1/drama/${encodeURIComponent(slug)}/episodes?${qs}`,
-  );
-}
-
-export async function fetchDracinEpisodeSources(
-  episodeSlug: string,
-  type = "drakor",
-  source?: string,
-): Promise<GodenEnvelope<DracinSourcesData>> {
-  const qs = new URLSearchParams({ type });
-  setSource(qs, source);
-  return apiFetch<GodenEnvelope<DracinSourcesData>>(
-    `/api/v1/drama/episode/${encodeURIComponent(episodeSlug)}/sources?${qs}`,
-  );
 }
 
 // ─── Anime ────────────────────────────────────────────────────────
@@ -523,6 +429,20 @@ export async function fetchComicChapterImages(
   );
 }
 
+// ─── Comic Library (731 Drive titles) ──────────────────────────────
+
+export async function fetchComicLibrary(
+  subcategory?: string,
+  page = 1,
+  limit = 24,
+): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (subcategory && subcategory !== "all") qs.set("subcategory", subcategory);
+  return apiFetch<GodenListEnvelope<GodenListItem>>(
+    `/api/v1/comic/library?${qs}`,
+  );
+}
+
 // ─── Donghua ──────────────────────────────────────────────────────
 
 export async function fetchDonghuaLatest(
@@ -598,91 +518,8 @@ export async function fetchDonghuaEpisodeSources(
   );
 }
 
-// ─── Adult (via /entertainment?subcategory=adult&type=X) ──────────
-// Backend type mapping: korea → asia (alias). Valid types: jav, asia, indonesia, west.
-
-export async function fetchAdultLatest(
-  page = 1,
-  type = "west",
-  source?: string,
-  genre?: string,
-): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page), subcategory: "adult", type });
-  setSource(qs, source);
-  if (genre && genre !== "all") qs.set("genre", genre);
-  return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/latest?${qs}`,
-  );
-}
-
-export async function fetchAdultPopular(
-  page = 1,
-  type = "west",
-  source?: string,
-  genre?: string,
-): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ page: String(page), subcategory: "adult", type });
-  setSource(qs, source);
-  if (genre && genre !== "all") qs.set("genre", genre);
-  return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/popular?${qs}`,
-  );
-}
-
-export async function fetchAdultSearch(
-  query: string,
-  page = 1,
-  type = "west",
-  source?: string,
-  genre?: string,
-): Promise<GodenListEnvelope<GodenListItem>> {
-  const qs = new URLSearchParams({ q: query, page: String(page), subcategory: "adult", type });
-  setSource(qs, source);
-  if (genre && genre !== "all") qs.set("genre", genre);
-  return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/search?${qs}`,
-  );
-}
-
-export async function fetchAdultGenres(
-  type = "west",
-  source?: string,
-): Promise<GodenListEnvelope<string>> {
-  const qs = new URLSearchParams({ subcategory: "adult", type });
-  setSource(qs, source);
-  return apiFetch<GodenListEnvelope<string>>(`/api/v1/entertainment/genres?${qs}`);
-}
-
-export async function fetchAdultDetail(
-  videoId: string,
-  type = "west",
-  source?: string,
-): Promise<GodenEnvelope<import("@/types").AdultDetail>> {
-  const qs = new URLSearchParams({ subcategory: "adult", type });
-  setSource(qs, source);
-  return apiFetch<GodenEnvelope<import("@/types").AdultDetail>>(
-    `/api/v1/entertainment/${encodeURIComponent(videoId)}?${qs}`,
-  );
-}
-
-export async function fetchAdultSources(
-  slug: string,
-  type = "west",
-  source?: string,
-): Promise<GodenEnvelope<GodenSource[]>> {
-  const qs = new URLSearchParams({ subcategory: "adult", type });
-  setSource(qs, source);
-  const response = await apiFetch<GodenEnvelope<Array<{ url: string; quality?: string; label?: string }>>>(
-    `/api/v1/entertainment/${encodeURIComponent(slug)}/sources?${qs}`,
-  );
-  return {
-    ...response,
-    data: normalizeSources(response.data, "mp4"),
-  };
-}
-
 // ─── Entertainment ────────────────────────────────────────────────
-// Backend /api/v1/entertainment/* — subcategory: movie, adult, semi
+// Backend /api/v1/entertainment/* — subcategory: movie, tv-series, adult
 
 export async function fetchEntertainmentLatest(
   page = 1,

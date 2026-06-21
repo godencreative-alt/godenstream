@@ -5,6 +5,7 @@ import Providers from "@/providers";
 import Navbar from "@/components/layout/Navbar";
 import SectionNav from "@/components/layout/SectionNav";
 import Footer from "@/components/layout/Footer";
+import AdblockSW from "@/components/AdblockSW";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -20,15 +21,17 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "GodenStream — Streaming Drama, Anime & More",
+    default: "GodenStream — Anime, Film, Donghua, Komik & Entertainment",
     template: "%s | GodenStream",
   },
   description:
-    "Stream drama, anime, donghua, movies, and comics — all in one place.",
+    "Stream anime, donghua, film, komik, dan entertainment favorit kamu — semua dalam satu tempat.",
   openGraph: {
     title: "GodenStream",
-    description: "Streaming Drama, Anime, Donghua, Movies & Comics",
+    description: "Streaming Anime, Donghua, Film, Komik & Entertainment",
     type: "website",
+    siteName: "GodenStream",
+    locale: "id_ID",
   },
 };
 
@@ -39,11 +42,17 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={`${spaceGrotesk.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body className="min-h-screen bg-[var(--dc-base)] text-white antialiased">
+        <AdblockSW />
         <Providers>
           <a
             href="#main-content"
