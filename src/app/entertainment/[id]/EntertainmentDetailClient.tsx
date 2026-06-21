@@ -26,19 +26,16 @@ export default function EntertainmentDetailClient({
   id,
   subcategory,
   type,
-  initialData,
 }: {
   id: string;
   subcategory: string;
   type?: string;
-  initialData?: any;
 }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["entertainment-detail", id, subcategory, type],
     queryFn: () => fetchEntertainmentDetail(id, subcategory, type),
-    initialData: initialData ?? undefined,
     staleTime: 60_000,
   });
 

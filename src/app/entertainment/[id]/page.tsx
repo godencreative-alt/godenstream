@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { fetchEntertainmentDetail } from "@/lib/api";
 import { proxyThumbnail } from "@/lib/utils";
 import EntertainmentDetailClient from "./EntertainmentDetailClient";
 
+// Skip server-side fetch to avoid blocking page render on slow backend.
+// Client component fetches data via /api/proxy which has caching.
+// generateMetadata is optional — falls back to generic title if fetch fails.
 export async function generateMetadata({
   params,
   searchParams,
@@ -12,24 +14,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const sp = await searchParams;
-  const subcategory = sp.subcategory ?? "movie";
-  const type = sp.type;
-  try {
-    const res = await fetchEntertainmentDetail(id, subcategory, type);
-    const detail = res.data;
-    return {
-      title: detail.title,
-      description: detail.description || `Tonton ${detail.title} di GodenStream`,
-      openGraph: {
-        title: `${detail.title} | GodenStream`,
-        description: detail.description || `Tonton ${detail.title} di GodenStream`,
-        images: detail.thumbnail ? [{ url: proxyThumbnail(detail.thumbnail) ?? detail.thumbnail }] : [],
-        type: "video.movie",
-      },
-    };
-  } catch {
-    return { title: "Entertainment" };
-  }
+  // Use slug as fallback title (humanize it)
+  const fallbackTitle = id.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  return {
+    title: fallbackTitle,
+    description: `Tonton ${fallbackTitle} di GodenStream`,
+  };
 }
 
 export default async function EntertainmentDetailPage({
@@ -42,17 +32,11 @@ export default async function EntertainmentDetailPage({
   const { id } = await params;
   const sp = await searchParams;
   const subcategory = sp.subcategory ?? "movie";
-  let initialData = null;
-  try {
-    const res = await fetchEntertainmentDetail(id, subcategory, sp.type);
-    initialData = res;
-  } catch { /* handled by generateMetadata */ }
   return (
     <EntertainmentDetailClient
       id={id}
       subcategory={subcategory}
       type={sp.type}
-      initialData={initialData}
     />
   );
 }

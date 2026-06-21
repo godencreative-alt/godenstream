@@ -38,7 +38,15 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     if (GODEN_API_KEY) headers["X-API-Key"] = GODEN_API_KEY;
   }
 
-  const res = await fetch(url, { ...init, headers });
+  // Server-side: enable Next.js request memoization to deduplicate
+  // identical fetches within the same render (e.g., generateMetadata + page)
+  const fetchOptions: RequestInit = {
+    ...init,
+    headers,
+    ...(IS_BROWSER ? {} : { next: { revalidate: false } }),
+  };
+
+  const res = await fetch(url, fetchOptions);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const message = (body as { detail?: string; message?: string })?.detail

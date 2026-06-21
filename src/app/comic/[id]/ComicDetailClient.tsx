@@ -13,13 +13,12 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { useState, useEffect, useCallback } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function ComicDetailClient({ id, type, initialData }: { id: string; type: string; initialData?: any }) {
+export default function ComicDetailClient({ id, type }: { id: string; type: string }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data: detail, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["comic-detail", id, type],
     queryFn: () => fetchComicDetail(id, { type }),
-    initialData: initialData ?? undefined,
     staleTime: 60_000,
   });
 

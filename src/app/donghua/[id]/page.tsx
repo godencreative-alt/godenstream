@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { fetchDonghuaDetail } from "@/lib/api";
-import { proxyThumbnail } from "@/lib/utils";
 import DonghuaDetailClient from "./DonghuaDetailClient";
 
 export async function generateMetadata({
@@ -9,22 +7,11 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  try {
-    const res = await fetchDonghuaDetail(id);
-    const item = res.data;
-    return {
-      title: item.title,
-      description: item.description || `Tonton ${item.title} di GodenStream`,
-      openGraph: {
-        title: `${item.title} | GodenStream`,
-        description: item.description || `Tonton ${item.title} di GodenStream`,
-        images: item.thumbnail ? [{ url: proxyThumbnail(item.thumbnail) ?? item.thumbnail }] : [],
-        type: "video.tv_show",
-      },
-    };
-  } catch {
-    return { title: "Donghua" };
-  }
+  const fallbackTitle = id.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  return {
+    title: fallbackTitle,
+    description: `Tonton ${fallbackTitle} di GodenStream`,
+  };
 }
 
 export default async function DonghuaDetailPage({
@@ -33,10 +20,5 @@ export default async function DonghuaDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  let initialData = null;
-  try {
-    const res = await fetchDonghuaDetail(id);
-    initialData = res;
-  } catch { /* handled by generateMetadata */ }
-  return <DonghuaDetailClient id={id} initialData={initialData} />;
+  return <DonghuaDetailClient id={id} />;
 }

@@ -13,13 +13,12 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { useState, useEffect, useCallback } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function DonghuaDetailClient({ id, source, initialData }: { id: string; source?: string; initialData?: any }) {
+export default function DonghuaDetailClient({ id, source }: { id: string; source?: string }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data: detail, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["donghua-detail", id],
     queryFn: () => fetchDonghuaDetail(id, source),
-    initialData: initialData ?? undefined,
     staleTime: 60_000,
   });
 

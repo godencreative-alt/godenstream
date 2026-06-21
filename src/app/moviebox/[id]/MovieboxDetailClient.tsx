@@ -21,13 +21,12 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { useState, useEffect, useCallback } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function MovieboxDetailClient({ id, initialData }: { id: string; initialData?: any }) {
+export default function MovieboxDetailClient({ id }: { id: string }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["movie-detail", id],
     queryFn: () => fetchMovieDetail(id),
-    initialData: initialData ?? undefined,
     staleTime: 60_000,
   });
 
