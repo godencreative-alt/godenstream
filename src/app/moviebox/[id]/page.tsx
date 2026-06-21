@@ -33,5 +33,10 @@ export default async function MovieboxDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <MovieboxDetailClient id={id} />;
+  let initialData = null;
+  try {
+    const res = await fetchMovieDetail(id);
+    initialData = res;
+  } catch { /* handled by generateMetadata */ }
+  return <MovieboxDetailClient id={id} initialData={initialData} />;
 }

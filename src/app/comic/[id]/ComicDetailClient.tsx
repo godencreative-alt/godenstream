@@ -12,12 +12,15 @@ import { Spinner } from "@/components/ui/Spinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useState, useEffect, useCallback } from "react";
 
-export default function ComicDetailClient({ id, type }: { id: string; type: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function ComicDetailClient({ id, type, initialData }: { id: string; type: string; initialData?: any }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data: detail, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["comic-detail", id, type],
     queryFn: () => fetchComicDetail(id, { type }),
+    initialData: initialData ?? undefined,
+    staleTime: 60_000,
   });
 
   const item = detail?.data;
@@ -72,7 +75,7 @@ export default function ComicDetailClient({ id, type }: { id: string; type: stri
                 fill
                 className="object-cover"
                 priority
-                unoptimized
+                unoptimized={!!(proxyThumbnail(item.thumbnail)?.startsWith("/api/"))}
               />
             ) : (
               <div className="flex h-full items-center justify-center bg-[var(--dc-elevated)]">
@@ -108,7 +111,7 @@ export default function ComicDetailClient({ id, type }: { id: string; type: stri
               {infoEntries.slice(0, 6).map(([key, value]) => (
                 <span key={key}>
                   <span className="capitalize text-white/30">{key}:</span>{" "}
-                  {value}
+                  {String(value)}
                 </span>
               ))}
             </div>
@@ -136,7 +139,7 @@ export default function ComicDetailClient({ id, type }: { id: string; type: stri
         <section className="mt-10">
           <h2 className="mb-4 text-lg font-semibold">Chapters</h2>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {chapters.map((ch) => (
+            {chapters.map((ch: { slug: string; title?: string; date?: string }) => (
               <Link
                 key={ch.slug}
                 href={`/comic/${encodeURIComponent(id)}/${encodeURIComponent(ch.slug)}?type=${type}`}

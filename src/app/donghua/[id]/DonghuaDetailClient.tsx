@@ -12,12 +12,15 @@ import { Spinner } from "@/components/ui/Spinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useState, useEffect, useCallback } from "react";
 
-export default function DonghuaDetailClient({ id, source }: { id: string; source?: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function DonghuaDetailClient({ id, source, initialData }: { id: string; source?: string; initialData?: any }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data: detail, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["donghua-detail", id],
     queryFn: () => fetchDonghuaDetail(id, source),
+    initialData: initialData ?? undefined,
+    staleTime: 60_000,
   });
 
   const { data: epList } = useQuery({
@@ -77,6 +80,7 @@ export default function DonghuaDetailClient({ id, source }: { id: string; source
                 fill
                 className="object-cover"
                 priority
+                unoptimized={!!(proxyThumbnail(item.thumbnail)?.startsWith("/api/"))}
               />
             ) : (
               <div className="flex h-full items-center justify-center bg-[var(--dc-elevated)]">
@@ -112,7 +116,7 @@ export default function DonghuaDetailClient({ id, source }: { id: string; source
               {infoEntries.slice(0, 6).map(([key, value]) => (
                 <span key={key}>
                   <span className="capitalize text-white/30">{key}:</span>{" "}
-                  {value}
+                  {String(value)}
                 </span>
               ))}
             </div>
@@ -140,7 +144,7 @@ export default function DonghuaDetailClient({ id, source }: { id: string; source
         <section className="mt-10">
           <h2 className="mb-4 text-lg font-semibold">Episodes</h2>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {episodes.map((ep) => (
+            {episodes.map((ep: { slug: string; title?: string; date?: string }) => (
               <Link
                 key={ep.slug}
                 href={`/donghua/${encodeURIComponent(id)}/${encodeURIComponent(ep.slug)}${source ? `?source=${encodeURIComponent(source)}` : ""}`}

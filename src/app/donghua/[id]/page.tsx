@@ -33,5 +33,10 @@ export default async function DonghuaDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <DonghuaDetailClient id={id} />;
+  let initialData = null;
+  try {
+    const res = await fetchDonghuaDetail(id);
+    initialData = res;
+  } catch { /* handled by generateMetadata */ }
+  return <DonghuaDetailClient id={id} initialData={initialData} />;
 }

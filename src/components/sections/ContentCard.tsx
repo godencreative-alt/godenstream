@@ -41,6 +41,7 @@ function ContentCardInner({ item, href }: ContentCardProps) {
             fill
             sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 16vw"
             className="object-cover transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
+            unoptimized={coverUrl.startsWith("/api/")}
           />
         ) : (
           <div className="flex h-full items-center justify-center">

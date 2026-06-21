@@ -12,12 +12,15 @@ import { Spinner } from "@/components/ui/Spinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useState, useEffect, useCallback } from "react";
 
-export default function AnimeDetailClient({ id }: { id: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function AnimeDetailClient({ id, initialData }: { id: string; initialData?: any }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data: animeData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["anime-detail", id],
     queryFn: () => fetchAnimeDetail(id),
+    initialData: initialData ?? undefined,
+    staleTime: 60_000,
   });
 
   const { data: epData } = useQuery({
@@ -77,6 +80,7 @@ export default function AnimeDetailClient({ id }: { id: string }) {
                 fill
                 className="object-cover"
                 priority
+                unoptimized={!!(proxyThumbnail(anime.thumbnail)?.startsWith("/api/"))}
               />
             ) : (
               <div className="flex h-full items-center justify-center bg-[var(--dc-elevated)]">
@@ -112,7 +116,7 @@ export default function AnimeDetailClient({ id }: { id: string }) {
               {infoEntries.slice(0, 6).map(([key, value]) => (
                 <span key={key}>
                   <span className="capitalize text-white/30">{key}:</span>{" "}
-                  {value}
+                  {String(value)}
                 </span>
               ))}
             </div>

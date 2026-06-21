@@ -117,12 +117,15 @@ async function handler(
 
   try {
     const isAsset = upstreamPath.startsWith("/api/v1/asset");
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30_000);
+    const isVaultStream = upstreamPath.startsWith("/api/v1/vault/stream");
+    const isLargeBinary = isAsset || isVaultStream;
 
-    // Asset endpoints (thumbnails) lazy-fetch+cache on the upstream's first
-    // hit and frequently 502 mid-bake. Retry once with a short backoff so
-    // page grids don't show broken images on cold cache.
+    // Large binary assets (video, images) get a generous timeout;
+    // JSON API endpoints keep a short one.
+    const timeoutMs = isLargeBinary ? 120_000 : 30_000;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
     const requestBody =
       req.method !== "GET" && req.method !== "HEAD" ? await req.text() : undefined;
 
@@ -135,6 +138,8 @@ async function handler(
       });
 
     let upstream = await doFetch();
+
+    // Asset thumbnails sometimes 502 on cold cache — retry once.
     if (isAsset && upstream.status >= 502 && upstream.status <= 504) {
       await new Promise((r) => setTimeout(r, 250));
       upstream = await doFetch();
@@ -149,8 +154,7 @@ async function handler(
       }
     });
 
-    // Tell the browser/CDN to cache thumbnails aggressively so we only pay
-    // the upstream cold-fetch latency once per asset.
+    // Cache control
     if (isAsset && upstream.ok) {
       responseHeaders.set(
         "Cache-Control",
@@ -161,15 +165,23 @@ async function handler(
       req.method === "GET" &&
       upstream.ok
     ) {
-      // Content list/detail JSON is slow to regenerate upstream (cold scrape
-      // can take 5-9s). Short browser cache + SWR keeps navigation snappy
-      // without serving very stale data.
       responseHeaders.set(
         "Cache-Control",
         "public, max-age=300, s-maxage=600, stale-while-revalidate=86400",
       );
     }
 
+    // For large binary responses (video files, images), stream the body
+    // instead of buffering the entire thing into memory. This avoids
+    // timeouts on large files and reduces memory usage.
+    if (isLargeBinary && upstream.body) {
+      return new NextResponse(upstream.body, {
+        status: upstream.status,
+        headers: responseHeaders,
+      });
+    }
+
+    // For JSON API responses, buffer normally (they're small).
     const body = await upstream.arrayBuffer();
     return new NextResponse(body, {
       status: upstream.status,

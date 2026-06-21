@@ -40,5 +40,11 @@ export default async function ComicDetailPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
-  return <ComicDetailClient id={id} type={sp.type || "manga"} />;
+  const type = sp.type || "manga";
+  let initialData = null;
+  try {
+    const res = await fetchComicDetail(id, { type });
+    initialData = res;
+  } catch { /* handled by generateMetadata */ }
+  return <ComicDetailClient id={id} type={type} initialData={initialData} />;
 }

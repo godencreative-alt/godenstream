@@ -33,5 +33,10 @@ export default async function AnimeDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <AnimeDetailClient id={id} />;
+  let initialData = null;
+  try {
+    const res = await fetchAnimeDetail(id);
+    initialData = res;
+  } catch { /* metadata handles errors separately */ }
+  return <AnimeDetailClient id={id} initialData={initialData} />;
 }

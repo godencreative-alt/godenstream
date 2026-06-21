@@ -41,20 +41,53 @@ const HOTLINK_BLOCKED_HOSTS = [
 ];
 
 /**
- * Returns a thumbnail URL safe to use in <Image>. Hosts known to block
- * hotlinking are routed through the /api/img proxy; everything else is
- * returned untouched to avoid unnecessary bandwidth through our server.
+ * Decode a base64url / standard base64 string to UTF-8 text.
+ * Returns null on failure.
+ */
+function decodeBase64(b64: string): string | null {
+  try {
+    let s = b64.replace(/-/g, "+").replace(/_/g, "/");
+    s += "=".repeat((-s.length % 4 + 4) % 4);
+    return atob(s);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns a thumbnail URL safe to use in <Image>.
+ *
+ * Backend asset-proxy URLs (`/api/v1/asset/<base64>`) are decoded to the
+ * original upstream URL so images are fetched directly — the backend proxy
+ * pool is unreliable and frequently returns 502.
+ *
+ * Hosts known to block hotlinking are routed through the /api/img proxy;
+ * everything else is returned untouched so Next.js can optimise the image.
  */
 export function proxyThumbnail(
   url: string | null | undefined,
 ): string | null {
   if (!url) return null;
-  // Backend now serves thumbnails via relative /api/v1/asset/<base64>.
-  // Route those through our same-origin proxy so the API key is attached
-  // and the asset is reachable from the browser.
+
+  // Backend asset-proxy: decode the embedded base64 to the original URL.
+  if (url.startsWith("/api/v1/asset/")) {
+    const b64 = url.slice("/api/v1/asset/".length);
+    const decoded = decodeBase64(b64);
+    if (decoded && decoded.startsWith("http")) {
+      // Use the original URL directly; fall through to hotlink check.
+      url = decoded;
+    } else {
+      // Could not decode — fall back to proxy route.
+      return `/api/proxy${url}`;
+    }
+  }
+
+  // Legacy /api/v1/ paths (non-asset) still go through the proxy.
   if (url.startsWith("/api/v1/")) {
     return `/api/proxy${url}`;
   }
+
+  // Check if the (possibly decoded) host blocks hotlinking.
   try {
     const host = new URL(url).hostname.toLowerCase();
     const blocked = HOTLINK_BLOCKED_HOSTS.some(

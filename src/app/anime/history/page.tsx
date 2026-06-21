@@ -18,7 +18,7 @@ export default function AnimeHistoryPage() {
             <Link key={`${e.content_id}-${i}`} href={`/anime/${e.content_id}`}
               className="flex items-center gap-4 rounded-xl border border-white/[0.06] p-3 hover:bg-white/[0.03]">
               <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg">
-                {e.cover_url ? <Image src={e.cover_url} alt={e.content_name} fill className="object-cover" /> : <div className="h-full w-full bg-[var(--dc-elevated)]" />}
+                {e.cover_url ? <Image src={e.cover_url} alt={e.content_name} fill className="object-cover" unoptimized={e.cover_url.startsWith("/api/")} /> : <div className="h-full w-full bg-[var(--dc-elevated)]" />}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-white/80">{e.content_name}</p>

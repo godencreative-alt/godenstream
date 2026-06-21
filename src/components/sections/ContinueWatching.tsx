@@ -85,6 +85,7 @@ export default function ContinueWatching() {
                     fill
                     className="object-cover transition-transform group-hover:scale-105"
                     sizes="128px"
+                    unoptimized={entry.cover_url.startsWith("/api/")}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">

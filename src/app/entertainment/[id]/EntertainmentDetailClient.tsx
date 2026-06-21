@@ -21,20 +21,25 @@ import { Spinner } from "@/components/ui/Spinner";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useState, useEffect, useCallback } from "react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function EntertainmentDetailClient({
   id,
   subcategory,
   type,
+  initialData,
 }: {
   id: string;
   subcategory: string;
   type?: string;
+  initialData?: any;
 }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["entertainment-detail", id, subcategory, type],
     queryFn: () => fetchEntertainmentDetail(id, subcategory, type),
+    initialData: initialData ?? undefined,
+    staleTime: 60_000,
   });
 
   const { data: sourcesData } = useQuery({
@@ -151,6 +156,7 @@ export default function EntertainmentDetailClient({
                 alt={detail.title}
                 fill
                 className="object-cover"
+                unoptimized={!!(proxyThumbnail(detail.thumbnail)?.startsWith("/api/"))}
               />
             ) : (
               <div className="flex h-full items-center justify-center bg-[var(--dc-elevated)]">
@@ -195,7 +201,7 @@ export default function EntertainmentDetailClient({
               {infoEntries.slice(0, 8).map(([key, value]) => (
                 <span key={key}>
                   <span className="capitalize text-white/30">{key}:</span>{" "}
-                  {value}
+                  {String(value)}
                 </span>
               ))}
             </div>

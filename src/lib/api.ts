@@ -65,11 +65,40 @@ async function userFetch<T>(path: string, token: string, init?: RequestInit): Pr
 
 // ─── Source selector helpers ──────────────────────────────────────
 
-/** Rewrite a relative backend asset path (/api/v1/...) to go through our
- *  same-origin proxy so the API key is attached and the URL is reachable
- *  from the browser. Absolute URLs are returned untouched. */
+/** Decode a backend asset base64 URL to its original URL.
+ *  Returns null if the URL is not an asset path or decode fails. */
+function decodeAssetBase64(url: string): string | null {
+  const m = url.match(/^\/api\/v1\/asset\/([A-Za-z0-9+/_-]+=*)$/);
+  if (!m) return null;
+  try {
+    let b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    const decoded = typeof atob === "function"
+      ? atob(b64)
+      : Buffer.from(b64, "base64").toString("utf-8");
+    if (/^https?:\/\//i.test(decoded)) return decoded;
+  } catch {
+    /* fall through */
+  }
+  return null;
+}
+
+/** Rewrite a backend asset path to the best reachable URL.
+ *  For video files (.mp4, .m3u8, .webm), decode the base64 and use the original
+ *  URL directly — this avoids proxying large files through Next.js.
+ *  For images/thumbnails, route through the proxy for caching + API key injection. */
 export function proxyAssetUrl(url: string | null | undefined): string | null {
   if (!url) return null;
+  if (url.startsWith("/api/v1/asset/")) {
+    // Try to decode the base64 to check if it's a video file
+    const decoded = decodeAssetBase64(url);
+    if (decoded) {
+      // Video files: use direct URL to avoid proxying large files
+      if (/\.(mp4|m3u8|webm)(\?|\/|$)/i.test(decoded)) return decoded;
+    }
+    // Images/thumbnails: route through proxy for caching
+    return `/api/proxy${url}`;
+  }
   if (url.startsWith("/api/v1/")) return `/api/proxy${url}`;
   return url;
 }
@@ -81,18 +110,8 @@ export function proxyAssetUrl(url: string | null | undefined): string | null {
  *  the original URL. Falls back to the proxy path on decode failure. */
 function unwrapAssetUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  const m = url.match(/^\/api\/v1\/asset\/([A-Za-z0-9+/_-]+=*)$/);
-  if (!m) return url;
-  try {
-    let b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
-    while (b64.length % 4) b64 += "=";
-    const decoded = typeof atob === "function"
-      ? atob(b64)
-      : Buffer.from(b64, "base64").toString("utf-8");
-    if (/^https?:\/\//i.test(decoded)) return decoded;
-  } catch {
-    /* fall through */
-  }
+  const decoded = decodeAssetBase64(url);
+  if (decoded) return decoded;
   return proxyAssetUrl(url);
 }
 
@@ -526,9 +545,11 @@ export async function fetchEntertainmentLatest(
   subcategory = "movie",
   genre?: string,
   source?: string,
+  type?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page), subcategory });
   if (genre && genre !== "all") qs.set("genre", genre);
+  if (type) qs.set("type", type);
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/entertainment/latest?${qs}`,
@@ -540,9 +561,11 @@ export async function fetchEntertainmentPopular(
   subcategory = "movie",
   genre?: string,
   source?: string,
+  type?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page), subcategory });
   if (genre && genre !== "all") qs.set("genre", genre);
+  if (type) qs.set("type", type);
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/entertainment/popular?${qs}`,
@@ -554,8 +577,10 @@ export async function fetchEntertainmentSearch(
   page = 1,
   subcategory = "movie",
   source?: string,
+  type?: string,
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ q: query, page: String(page), subcategory });
+  if (type) qs.set("type", type);
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/entertainment/search?${qs}`,

@@ -41,11 +41,18 @@ export default async function EntertainmentDetailPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
+  const subcategory = sp.subcategory ?? "movie";
+  let initialData = null;
+  try {
+    const res = await fetchEntertainmentDetail(id, subcategory, sp.type);
+    initialData = res;
+  } catch { /* handled by generateMetadata */ }
   return (
     <EntertainmentDetailClient
       id={id}
-      subcategory={sp.subcategory ?? "movie"}
+      subcategory={subcategory}
       type={sp.type}
+      initialData={initialData}
     />
   );
 }

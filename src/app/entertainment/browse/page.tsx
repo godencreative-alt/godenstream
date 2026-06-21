@@ -111,9 +111,10 @@ export default function EntertainmentBrowsePage() {
       <InfiniteGrid
         queryKey={["entertainment-browse", search, subcategory, subcategory === "adult" ? adultType : "all", genre]}
         queryFn={(page) => {
+          const adultTypeParam = subcategory === "adult" ? adultType : undefined;
           const req = search
-            ? fetchEntertainmentSearch(search, page, subcategory)
-            : fetchEntertainmentLatest(page, subcategory, genre || undefined);
+            ? fetchEntertainmentSearch(search, page, subcategory, undefined, adultTypeParam)
+            : fetchEntertainmentLatest(page, subcategory, genre || undefined, undefined, adultTypeParam);
           return req.then((r) => ({
             ...toPaginated(r, page),
             data: r.data.map((item) => ({
