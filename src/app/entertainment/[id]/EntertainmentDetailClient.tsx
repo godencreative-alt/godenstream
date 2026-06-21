@@ -26,23 +26,28 @@ export default function EntertainmentDetailClient({
   id,
   subcategory,
   type,
+  embedUrl,
 }: {
   id: string;
   subcategory: string;
   type?: string;
+  embedUrl?: string;
 }) {
   const [bookmarked, setBookmarked] = useState(false);
+  const isAdultWithEmbed = subcategory === "adult" && !!embedUrl;
 
+  // For adult content with embed URL, skip detail/sources queries
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["entertainment-detail", id, subcategory, type],
     queryFn: () => fetchEntertainmentDetail(id, subcategory, type),
     staleTime: 60_000,
+    enabled: !isAdultWithEmbed,
   });
 
   const { data: sourcesData } = useQuery({
     queryKey: ["entertainment-sources", id, subcategory, type],
     queryFn: () => fetchEntertainmentSources(id, subcategory, type),
-    enabled: !!data?.data,
+    enabled: !isAdultWithEmbed && !!data?.data,
   });
 
   const { data: vaultData } = useQuery({
@@ -52,7 +57,7 @@ export default function EntertainmentDetailClient({
       slug: id,
       kind: "video"
     }),
-    enabled: data?.data?.in_vault === true,
+    enabled: !isAdultWithEmbed && data?.data?.in_vault === true,
   });
 
   const detail = data?.data;
@@ -63,17 +68,64 @@ export default function EntertainmentDetailClient({
   }, [detail, id]);
 
   const handleBookmark = useCallback(() => {
-    if (!detail) return;
     const nowBookmarked = toggleLocalBookmark({
       id: `entertainment:${id}`,
       section: "entertainment",
       slug: id,
-      title: detail.title,
-      thumbnail: detail.thumbnail || null,
+      title: detail?.title ?? id.replace(/-/g, " "),
+      thumbnail: detail?.thumbnail || null,
     });
     setBookmarked(nowBookmarked);
   }, [detail, id]);
 
+  // Adult content with embed URL: render iframe directly
+  if (isAdultWithEmbed) {
+    const fallbackTitle = id.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-6">
+        <div className="mb-4">
+          <Link
+            href={`/entertainment/browse?subcategory=${encodeURIComponent(subcategory)}${type ? `&type=${encodeURIComponent(type)}` : ''}`}
+            className="text-sm text-white/50 hover:text-white"
+          >
+            &larr; Back to Entertainment
+          </Link>
+        </div>
+
+        <div className="mb-6">
+          <SafeEmbed src={embedUrl!} title={fallbackTitle} />
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <h1
+            className="text-xl font-bold md:text-2xl"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {fallbackTitle}
+          </h1>
+          <button
+            onClick={handleBookmark}
+            className="shrink-0 rounded-xl border border-white/[0.08] p-2 text-white/40 transition-colors hover:border-[var(--dc-gold)]/30 hover:text-[var(--dc-gold)]"
+            aria-label={bookmarked ? "Remove bookmark" : "Add bookmark"}
+          >
+            {bookmarked ? (
+              <BookmarkSolidIcon className="h-5 w-5 text-[var(--dc-gold)]" />
+            ) : (
+              <BookmarkOutlineIcon className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+
+        {type && (
+          <p className="mt-2 text-xs text-white/30 capitalize">
+            Type: {type}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Non-adult content: standard flow
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -100,7 +152,7 @@ export default function EntertainmentDetailClient({
   const videoUrl = vaultPlayback.src ?? regularPlayback.src;
   const videoType = vaultPlayback.src ? vaultPlayback.sourceType : regularPlayback.sourceType;
   const qualities = vaultPlayback.src ? vaultPlayback.qualities : regularPlayback.qualities;
-  const embedUrl = vaultPlayback.src ? null : pickEmbedUrl(sources);
+  const embedFromSources = vaultPlayback.src ? null : pickEmbedUrl(sources);
   const infoEntries = Object.entries(detail.info || {});
 
   return (
@@ -135,8 +187,8 @@ export default function EntertainmentDetailClient({
               });
             }}
           />
-        ) : embedUrl ? (
-          <SafeEmbed src={embedUrl} title={detail.title} />
+        ) : embedFromSources ? (
+          <SafeEmbed src={embedFromSources} title={detail.title} />
         ) : (
           <div className="flex aspect-video items-center justify-center rounded-2xl bg-[var(--dc-elevated)]">
             <p className="text-sm text-white/30">Video not available</p>

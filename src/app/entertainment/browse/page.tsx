@@ -12,6 +12,7 @@ import {
   fetchEntertainmentSearch,
   fetchEntertainmentGenres,
   toPaginated,
+  decodeAssetBase64,
 } from "@/lib/api";
 
 const SUBCATEGORIES = [
@@ -125,9 +126,17 @@ export default function EntertainmentBrowsePage() {
           }));
         }}
         hrefPrefix="/entertainment"
-        buildHref={(key) =>
-          `/entertainment/${encodeURIComponent(key)}?subcategory=${encodeURIComponent(subcategory)}${subcategory === "adult" ? `&type=${encodeURIComponent(adultType)}` : ''}`
-        }
+        buildHref={(key, item) => {
+          const base = `/entertainment/${encodeURIComponent(key)}?subcategory=${encodeURIComponent(subcategory)}${subcategory === "adult" ? `&type=${encodeURIComponent(adultType)}` : ''}`;
+          // For adult content, pass the decoded embed URL so detail page can render iframe directly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const embedAsset = (item as any)?.video?.embed;
+          if (subcategory === "adult" && embedAsset) {
+            const decoded = decodeAssetBase64(embedAsset);
+            if (decoded) return `${base}&embed=${encodeURIComponent(decoded)}`;
+          }
+          return base;
+        }}
         emptyMessage="Konten entertainment belum tersedia"
       />
     </div>

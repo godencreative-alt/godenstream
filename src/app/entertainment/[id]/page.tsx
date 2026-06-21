@@ -27,7 +27,7 @@ export default async function EntertainmentDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ subcategory?: string; type?: string }>;
+  searchParams: Promise<{ subcategory?: string; type?: string; embed?: string }>;
 }) {
   const { id } = await params;
   const sp = await searchParams;
@@ -37,6 +37,7 @@ export default async function EntertainmentDetailPage({
       id={id}
       subcategory={subcategory}
       type={sp.type}
+      embedUrl={sp.embed}
     />
   );
 }

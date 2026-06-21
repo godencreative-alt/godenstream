@@ -75,7 +75,7 @@ async function userFetch<T>(path: string, token: string, init?: RequestInit): Pr
 
 /** Decode a backend asset base64 URL to its original URL.
  *  Returns null if the URL is not an asset path or decode fails. */
-function decodeAssetBase64(url: string): string | null {
+export function decodeAssetBase64(url: string): string | null {
   const m = url.match(/^\/api\/v1\/asset\/([A-Za-z0-9+/_-]+=*)$/);
   if (!m) return null;
   try {
