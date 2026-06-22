@@ -216,10 +216,11 @@ export function pickVaultPlayback(resolve: VaultResolveResponse | undefined | nu
 
 export async function fetchAnimeLatest(
   page = 1,
-  genre?: string,
+  opts?: { genre?: string; subcategory?: string },
 ): Promise<GodenListEnvelope<GodenListItem>> {
   const qs = new URLSearchParams({ page: String(page) });
-  if (genre && genre !== "all") qs.set("genre", genre);
+  if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
+  if (opts?.subcategory) qs.set("subcategory", opts.subcategory);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
     `/api/v1/anime/latest?${qs}`,
   );
@@ -227,9 +228,12 @@ export async function fetchAnimeLatest(
 
 export async function fetchAnimePopular(
   page = 1,
+  opts?: { subcategory?: string },
 ): Promise<GodenListEnvelope<GodenListItem>> {
+  const qs = new URLSearchParams({ page: String(page) });
+  if (opts?.subcategory) qs.set("subcategory", opts.subcategory);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/anime/popular?page=${page}`,
+    `/api/v1/anime/popular?${qs}`,
   );
 }
 

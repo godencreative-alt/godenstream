@@ -1,9 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import InfiniteGrid from "@/components/sections/InfiniteGrid";
 import { fetchAnimePopular, toPaginated } from "@/lib/api";
 
+const TYPES = [
+  { value: "anime", label: "Anime" },
+  { value: "hentai", label: "Hentai" },
+];
+
 export default function AnimePopularPage() {
+  const [type, setType] = useState("anime");
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
       <header className="mb-6">
@@ -18,10 +26,27 @@ export default function AnimePopularPage() {
         </h1>
       </header>
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        {TYPES.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            onClick={() => setType(t.value)}
+            className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
+              type === t.value
+                ? "bg-[var(--dc-violet)]/20 text-[var(--dc-violet)]"
+                : "border border-white/[0.08] text-white/45 hover:text-white/70"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <InfiniteGrid
-        queryKey={["anime-popular-infinite"]}
+        queryKey={["anime-popular-infinite", type]}
         queryFn={(page) =>
-          fetchAnimePopular(page).then((r) => ({
+          fetchAnimePopular(page, { subcategory: type }).then((r) => ({
             ...toPaginated(r, page),
             data: r.data.map((item) => ({
               ...item,

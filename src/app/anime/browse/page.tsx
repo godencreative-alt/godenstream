@@ -16,7 +16,7 @@ import {
 
 const TYPES = [
   { value: "anime", label: "Anime" },
-  { value: "hentai", label: "Hentai", disabled: true },
+  { value: "hentai", label: "Hentai" },
 ];
 
 export default function AnimeBrowsePage() {
@@ -61,7 +61,21 @@ export default function AnimeBrowsePage() {
       </div>
 
       {type === "hentai" ? (
-        <ErrorState message="Hentai belum tersedia. Backend sedang dipersiapkan." />
+        <InfiniteGrid
+          queryKey={["anime-browse", "hentai", search]}
+          queryFn={(page) =>
+            fetchAnimeLatest(page, { subcategory: "hentai" }).then((r) => ({
+              ...toPaginated(r, page),
+              data: r.data.map((item) => ({
+                ...item,
+                id: item.slug ?? "",
+                cover_url: item.thumbnail,
+              })),
+            }))
+          }
+          hrefPrefix="/anime"
+          emptyMessage="Konten hentai belum tersedia"
+        />
       ) : (
         <>
           <GenreChips genres={genres} selected={genre} onSelect={setGenre} />
@@ -69,8 +83,8 @@ export default function AnimeBrowsePage() {
             queryKey={["anime-browse", search, genre]}
             queryFn={(page) => {
               const req = search
-                ? fetchAnimeSearch(search, page, genre || undefined)
-                : fetchAnimeLatest(page, genre || undefined);
+                ? fetchAnimeSearch(search, page)
+                : fetchAnimeLatest(page);
               return req.then((r) => ({
                 ...toPaginated(r, page),
                 data: r.data.map((item) => ({
@@ -81,6 +95,7 @@ export default function AnimeBrowsePage() {
               }));
             }}
             hrefPrefix="/anime"
+            emptyMessage="Konten anime belum tersedia"
           />
         </>
       )}
