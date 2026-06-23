@@ -152,7 +152,12 @@ export default function EntertainmentDetailClient({
   const videoUrl = vaultPlayback.src ?? regularPlayback.src;
   const videoType = vaultPlayback.src ? vaultPlayback.sourceType : regularPlayback.sourceType;
   const qualities = vaultPlayback.src ? vaultPlayback.qualities : regularPlayback.qualities;
-  const embedFromSources = vaultPlayback.src ? null : pickEmbedUrl(sources);
+  const embedFromSources = vaultPlayback.src
+    ? null
+    // Adult detail also carries the embed URL directly on the payload
+    // (e.g. JAV via video.embed). Use it as a fallback so a direct
+    // navigation / refresh — which has no ?embed= query param — still plays.
+    : (pickEmbedUrl(sources) ?? ((detail as any).video?.embed as string | undefined) ?? null);
   const infoEntries = Object.entries(detail.info || {});
 
   return (

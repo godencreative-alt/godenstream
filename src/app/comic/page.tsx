@@ -16,16 +16,19 @@ const MODES = [
   { value: "latest", label: "Terbaru" },
 ];
 
-// Genre tabs for adult subcategory
+// Genre tabs for adult subcategory.
+// "video" → no genre filter (backend default listing, 75+ items).
+// "doujinshi" → genre=doujinshi. Other genre values (adult/Video/Adult)
+// return zero items from the backend, so don't expose them.
 const ADULT_GENRES = [
-  { value: "adult", label: "Video" },
+  { value: "video", label: "Video" },
   { value: "doujinshi", label: "Doujinshi" },
 ];
 
 export default function ComicHomePage() {
   const [type, setType] = useState("manga");
   const [mode, setMode] = useState("library");
-  const [adultGenre, setAdultGenre] = useState("adult"); // "adult"=video, "doujinshi"
+  const [adultGenre, setAdultGenre] = useState("video"); // "video"=no genre filter, "doujinshi"
   const effectiveMode = type === "adult" ? "latest" : mode;
 
   return (
@@ -101,7 +104,7 @@ export default function ComicHomePage() {
         queryFn={(page) =>
           (effectiveMode === "library"
             ? fetchComicLibrary(type, page)
-            : fetchComicLatest(page, { type, genre: type === "adult" ? adultGenre : undefined })
+            : fetchComicLatest(page, { type, genre: type === "adult" && adultGenre !== "video" ? adultGenre : undefined })
           ).then((r) => ({
             ...toPaginated(r, page),
             data: r.data.map((item) => ({
