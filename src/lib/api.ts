@@ -76,7 +76,7 @@ async function userFetch<T>(path: string, token: string, init?: RequestInit): Pr
 /** Decode a backend asset base64 URL to its original URL.
  *  Returns null if the URL is not an asset path or decode fails. */
 export function decodeAssetBase64(url: string): string | null {
-  const m = url.match(/^\/api\/v1\/asset\/([A-Za-z0-9+/_-]+=*)$/);
+  const m = url.match(/^\/v1\/asset\/([A-Za-z0-9+/_-]+=*)$/);
   if (!m) return null;
   try {
     let b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -625,14 +625,23 @@ export async function fetchEntertainmentSources(
 ): Promise<GodenEnvelope<{ title?: string; slug?: string; sources: GodenSource[]; source?: string }>> {
   const qs = new URLSearchParams({ subcategory });
   if (type && subcategory === "adult") qs.set("type", type);
-  // Backend returns sources as either { data: [...sources] } or { data: { sources: [...] } }
+  // Backend returns sources in several shapes:
+  //  - movie/tv:  { data: [...sources] }  or  { data: { sources: [...] } }
+  //  - adult:     { data: { embed, src } }  (a bare object, no `sources` key)
   const response = await apiFetch<any>(
     `/v1/entertainment/${encodeURIComponent(slug)}/sources?${qs}`,
   );
   const rawData = response.data;
-  const sourcesArray: any[] = Array.isArray(rawData)
+  let sourcesArray: any[] = Array.isArray(rawData)
     ? rawData
     : (rawData?.sources ?? []);
+  // Adult: no `sources`, but a top-level `embed`/`src` URL → treat as an embed source.
+  if (sourcesArray.length === 0 && rawData && typeof rawData === "object") {
+    const embed = rawData.embed || rawData.src;
+    if (typeof embed === "string" && embed) {
+      sourcesArray = [{ type: "embed", url: embed }];
+    }
+  }
   return {
     ...response,
     data: {

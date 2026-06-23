@@ -46,7 +46,7 @@ const nextConfig: NextConfig = {
         // global "X-Frame-Options: DENY" above blocks our own SafeEmbed
         // (same-origin iframe), so override to SAMEORIGIN here. Later
         // matches override the same header from earlier entries.
-        source: "/api/proxy/api/v1/asset/:path*",
+        source: "/api/proxy/v1/asset/:path*",
         headers: [
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
         ],

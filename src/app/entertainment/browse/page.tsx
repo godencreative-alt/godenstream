@@ -128,12 +128,15 @@ export default function EntertainmentBrowsePage() {
         hrefPrefix="/entertainment"
         buildHref={(key, item) => {
           const base = `/entertainment/${encodeURIComponent(key)}?subcategory=${encodeURIComponent(subcategory)}${subcategory === "adult" ? `&type=${encodeURIComponent(adultType)}` : ''}`;
-          // For adult content, pass the decoded embed URL so detail page can render iframe directly
+          // For adult content, pass the embed URL so detail page can render iframe directly.
+          // The backend sends `video.embed` as a raw URL (e.g. https://host/embed/id),
+          // but older payloads used the /v1/asset/<base64> wrapper — handle both.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const embedAsset = (item as any)?.video?.embed;
+          const embedAsset = (item as any)?.video?.embed as string | undefined;
           if (subcategory === "adult" && embedAsset) {
-            const decoded = decodeAssetBase64(embedAsset);
-            if (decoded) return `${base}&embed=${encodeURIComponent(decoded)}`;
+            const embed = decodeAssetBase64(embedAsset)
+              ?? (/^https?:\/\//i.test(embedAsset) ? embedAsset : null);
+            if (embed) return `${base}&embed=${encodeURIComponent(embed)}`;
           }
           return base;
         }}

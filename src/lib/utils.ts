@@ -31,13 +31,22 @@ export function providerBadgeColor(name: string): string {
 }
 
 // Hosts that block hotlinking and must be served via /api/img.
-// Keep in sync with REFERER_BY_HOST_SUFFIX in src/app/api/img/route.ts —
-// any host that requires a Referer override is, by definition, blocking
-// hotlinking and must be proxied.
+// Keep in sync with ALLOWED_HOSTS in src/app/api/img/route.ts — any host
+// listed there needs the proxy's User-Agent / per-host Referer to avoid a
+// 403/timeout, so it must be routed through /api/img rather than fetched
+// directly by the Next image optimizer. CDN-friendly hosts (imgur, wp.com)
+// are intentionally omitted so Next can optimize them directly.
 const HOTLINK_BLOCKED_HOSTS = [
   "donghuastream.org",
   "komiku.org",
   "komiku.id",
+  "otakudesu.blog",
+  "imz.streamv.site",
+  "terbit21.com",
+  "rebahin.is",
+  "lk21.media",
+  "drakorid.click",
+  "drakorid.cc",
 ];
 
 /**
