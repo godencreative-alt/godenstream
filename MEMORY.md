@@ -1,0 +1,1 @@
+- [API Category Mapping](memory/api-category-mapping.md) — Category vs subcategory parameter naming for backend API

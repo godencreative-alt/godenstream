@@ -57,7 +57,7 @@ function decodeBase64(b64: string): string | null {
 /**
  * Returns a thumbnail URL safe to use in <Image>.
  *
- * Backend asset-proxy URLs (`/api/v1/asset/<base64>`) are decoded to the
+ * Backend asset-proxy URLs (`/v1/asset/<base64>`) are decoded to the
  * original upstream URL so images are fetched directly — the backend proxy
  * pool is unreliable and frequently returns 502.
  *
@@ -70,8 +70,8 @@ export function proxyThumbnail(
   if (!url) return null;
 
   // Backend asset-proxy: decode the embedded base64 to the original URL.
-  if (url.startsWith("/api/v1/asset/")) {
-    const b64 = url.slice("/api/v1/asset/".length);
+  if (url.startsWith("/v1/asset/")) {
+    const b64 = url.slice("/v1/asset/".length);
     const decoded = decodeBase64(b64);
     if (decoded && decoded.startsWith("http")) {
       // Use the original URL directly; fall through to hotlink check.
@@ -82,8 +82,8 @@ export function proxyThumbnail(
     }
   }
 
-  // Legacy /api/v1/ paths (non-asset) still go through the proxy.
-  if (url.startsWith("/api/v1/")) {
+  // Legacy /v1/ paths (non-asset) still go through the proxy.
+  if (url.startsWith("/v1/")) {
     return `/api/proxy${url}`;
   }
 

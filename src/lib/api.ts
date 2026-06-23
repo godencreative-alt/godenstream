@@ -34,7 +34,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   };
 
   // Server-side: inject X-API-Key directly for content endpoints
-  if (!IS_BROWSER && path.startsWith("/api/v1/") && !path.startsWith("/api/v1/auth")) {
+  if (!IS_BROWSER && path.startsWith("/v1/") && !path.startsWith("/v1/auth")) {
     if (GODEN_API_KEY) headers["X-API-Key"] = GODEN_API_KEY;
   }
 
@@ -97,7 +97,7 @@ export function decodeAssetBase64(url: string): string | null {
  *  For images/thumbnails, route through the proxy for caching + API key injection. */
 export function proxyAssetUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  if (url.startsWith("/api/v1/asset/")) {
+  if (url.startsWith("/v1/asset/")) {
     // Try to decode the base64 to check if it's a video file
     const decoded = decodeAssetBase64(url);
     if (decoded) {
@@ -107,12 +107,12 @@ export function proxyAssetUrl(url: string | null | undefined): string | null {
     // Images/thumbnails: route through proxy for caching
     return `/api/proxy${url}`;
   }
-  if (url.startsWith("/api/v1/")) return `/api/proxy${url}`;
+  if (url.startsWith("/v1/")) return `/api/proxy${url}`;
   return url;
 }
 
 /** For iframe embeds (dailymotion, blogger, etc.), the backend's
- *  /api/v1/asset/<base64> wrapper is counterproductive: many embed hosts
+ *  /v1/asset/<base64> wrapper is counterproductive: many embed hosts
  *  reject server-side fetches (502) but render fine when the browser
  *  loads them directly. So for type=embed we decode the base64 and use
  *  the original URL. Falls back to the proxy path on decode failure. */
@@ -222,7 +222,7 @@ export async function fetchAnimeLatest(
   if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
   if (opts?.subcategory) qs.set("subcategory", opts.subcategory);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/anime/latest?${qs}`,
+    `/v1/anime/latest?${qs}`,
   );
 }
 
@@ -233,12 +233,12 @@ export async function fetchAnimePopular(
   const qs = new URLSearchParams({ page: String(page) });
   if (opts?.subcategory) qs.set("subcategory", opts.subcategory);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/anime/popular?${qs}`,
+    `/v1/anime/popular?${qs}`,
   );
 }
 
 export async function fetchAnimeGenres(): Promise<GodenListEnvelope<string>> {
-  return apiFetch<GodenListEnvelope<string>>(`/api/v1/anime/genres`);
+  return apiFetch<GodenListEnvelope<string>>(`/v1/anime/genres`);
 }
 
 export async function fetchAnimeSearch(
@@ -249,7 +249,7 @@ export async function fetchAnimeSearch(
   const qs = new URLSearchParams({ q: query, page: String(page) });
   if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/anime/search?${qs}`,
+    `/v1/anime/search?${qs}`,
   );
 }
 
@@ -257,7 +257,7 @@ export async function fetchAnimeDetail(
   slug: string,
 ): Promise<GodenEnvelope<AnimeDetail>> {
   return apiFetch<GodenEnvelope<AnimeDetail>>(
-    `/api/v1/anime/${encodeURIComponent(slug)}`,
+    `/v1/anime/${encodeURIComponent(slug)}`,
   );
 }
 
@@ -265,7 +265,7 @@ export async function fetchAnimeEpisodes(
   slug: string,
 ): Promise<GodenEnvelope<GodenEpisode[]>> {
   return apiFetch<GodenEnvelope<GodenEpisode[]>>(
-    `/api/v1/anime/${encodeURIComponent(slug)}/episodes`,
+    `/v1/anime/${encodeURIComponent(slug)}/episodes`,
   );
 }
 
@@ -273,7 +273,7 @@ export async function fetchAnimeEpisodeSources(
   episodeSlug: string,
 ): Promise<GodenEnvelope<AnimeSourcesData>> {
   return apiFetch<GodenEnvelope<AnimeSourcesData>>(
-    `/api/v1/anime/episode/${encodeURIComponent(episodeSlug)}/sources`,
+    `/v1/anime/episode/${encodeURIComponent(episodeSlug)}/sources`,
   );
 }
 
@@ -281,7 +281,7 @@ export async function fetchAnimeEpisodeDownloads(
   episodeSlug: string,
 ): Promise<GodenEnvelope<AnimeDownloadData>> {
   return apiFetch<GodenEnvelope<AnimeDownloadData>>(
-    `/api/v1/anime/episode/${encodeURIComponent(episodeSlug)}/download`,
+    `/v1/anime/episode/${encodeURIComponent(episodeSlug)}/download`,
   );
 }
 
@@ -296,7 +296,7 @@ export async function fetchMovieLatest(
   setSource(qs, source);
   if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/latest?${qs}`,
+    `/v1/entertainment/latest?${qs}`,
   );
 }
 
@@ -307,7 +307,7 @@ export async function fetchMoviePopular(
   const qs = new URLSearchParams({ page: String(page), subcategory: "movie" });
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/popular?${qs}`,
+    `/v1/entertainment/popular?${qs}`,
   );
 }
 
@@ -321,12 +321,12 @@ export async function fetchMovieSearch(
   setSource(qs, source);
   if (genre && genre !== "all") qs.set("genre", genre);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/search?${qs}`,
+    `/v1/entertainment/search?${qs}`,
   );
 }
 
 export async function fetchMovieGenres(): Promise<GodenListEnvelope<string>> {
-  return apiFetch<GodenListEnvelope<string>>(`/api/v1/entertainment/genres?subcategory=movie`);
+  return apiFetch<GodenListEnvelope<string>>(`/v1/entertainment/genres?subcategory=movie`);
 }
 
 export async function fetchMovieDetail(
@@ -337,7 +337,7 @@ export async function fetchMovieDetail(
   setSource(qs, source);
   const suffix = qs.size ? `?${qs}` : "?subcategory=movie";
   return apiFetch<GodenEnvelope<MovieDetail>>(
-    `/api/v1/entertainment/${encodeURIComponent(slug)}${suffix}`,
+    `/v1/entertainment/${encodeURIComponent(slug)}${suffix}`,
   );
 }
 
@@ -349,7 +349,7 @@ export async function fetchMovieSources(
   setSource(qs, source);
   const suffix = qs.size ? `?${qs}` : "?subcategory=movie";
   const response = await apiFetch<GodenEnvelope<{ title?: string; slug?: string; sources?: GodenSource[]; source?: string }>>(
-    `/api/v1/entertainment/${encodeURIComponent(slug)}/sources${suffix}`,
+    `/v1/entertainment/${encodeURIComponent(slug)}/sources${suffix}`,
   );
   return {
     ...response,
@@ -371,7 +371,7 @@ export async function fetchComicLatest(
   if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
   setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/comic/latest?${qs}`,
+    `/v1/comic/latest?${qs}`,
   );
 }
 
@@ -384,7 +384,7 @@ export async function fetchComicPopular(
   if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
   setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/comic/popular?${qs}`,
+    `/v1/comic/popular?${qs}`,
   );
 }
 
@@ -395,7 +395,7 @@ export async function fetchComicGenres(
   if (opts?.type) qs.set("subcategory", opts.type);
   setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
-  return apiFetch<GodenListEnvelope<string>>(`/api/v1/comic/genres${suffix}`);
+  return apiFetch<GodenListEnvelope<string>>(`/v1/comic/genres${suffix}`);
 }
 
 export async function fetchComicSearch(
@@ -408,7 +408,7 @@ export async function fetchComicSearch(
   if (opts?.genre && opts.genre !== "all") qs.set("genre", opts.genre);
   setSource(qs, opts?.source ?? "auto");
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/comic/search?${qs}`,
+    `/v1/comic/search?${qs}`,
   );
 }
 
@@ -421,7 +421,7 @@ export async function fetchComicChapters(
   setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<GodenEpisode[]>>(
-    `/api/v1/comic/${encodeURIComponent(slug)}/chapters${suffix}`,
+    `/v1/comic/${encodeURIComponent(slug)}/chapters${suffix}`,
   );
 }
 
@@ -434,7 +434,7 @@ export async function fetchComicDetail(
   setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   const detail = await apiFetch<GodenEnvelope<import("@/types").ComicDetail>>(
-    `/api/v1/comic/${encodeURIComponent(slug)}${suffix}`,
+    `/v1/comic/${encodeURIComponent(slug)}${suffix}`,
   );
 
   const chapters = await fetchComicChapters(slug, opts).catch(() => null);
@@ -456,7 +456,7 @@ export async function fetchComicChapterImages(
   setSource(qs, opts?.source ?? "auto");
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<string[]>>(
-    `/api/v1/comic/chapter/${encodeURIComponent(chapterSlug)}/images${suffix}`,
+    `/v1/comic/chapter/${encodeURIComponent(chapterSlug)}/images${suffix}`,
   );
 }
 
@@ -470,7 +470,7 @@ export async function fetchComicLibrary(
   const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (subcategory && subcategory !== "all") qs.set("subcategory", subcategory);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/comic/library?${qs}`,
+    `/v1/comic/library?${qs}`,
   );
 }
 
@@ -483,7 +483,7 @@ export async function fetchDonghuaLatest(
   const qs = new URLSearchParams({ page: String(page) });
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/donghua/latest?${qs}`,
+    `/v1/donghua/latest?${qs}`,
   );
 }
 
@@ -493,12 +493,12 @@ export async function fetchDonghuaPopular(
   // Backend popular endpoint hardcodes anichin and ignores `source`, so
   // don't bother sending it. (latest/search/detail still use it.)
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/donghua/popular?page=${page}`,
+    `/v1/donghua/popular?page=${page}`,
   );
 }
 
 export async function fetchDonghuaGenres(): Promise<GodenListEnvelope<string>> {
-  return apiFetch<GodenListEnvelope<string>>(`/api/v1/donghua/genres`);
+  return apiFetch<GodenListEnvelope<string>>(`/v1/donghua/genres`);
 }
 
 export async function fetchDonghuaSearch(
@@ -509,7 +509,7 @@ export async function fetchDonghuaSearch(
   const qs = new URLSearchParams({ q: query, page: String(page) });
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/donghua/search?${qs}`,
+    `/v1/donghua/search?${qs}`,
   );
 }
 
@@ -521,7 +521,7 @@ export async function fetchDonghuaDetail(
   setSource(qs, source);
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<import("@/types").DonghuaDetail>>(
-    `/api/v1/donghua/${encodeURIComponent(slug)}${suffix}`,
+    `/v1/donghua/${encodeURIComponent(slug)}${suffix}`,
   );
 }
 
@@ -533,7 +533,7 @@ export async function fetchDonghuaEpisodes(
   setSource(qs, source);
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<GodenEpisode[]>>(
-    `/api/v1/donghua/${encodeURIComponent(slug)}/episodes${suffix}`,
+    `/v1/donghua/${encodeURIComponent(slug)}/episodes${suffix}`,
   );
 }
 
@@ -545,12 +545,12 @@ export async function fetchDonghuaEpisodeSources(
   setSource(qs, source);
   const suffix = qs.size ? `?${qs}` : "";
   return apiFetch<GodenEnvelope<AnimeSourcesData>>(
-    `/api/v1/donghua/episode/${encodeURIComponent(episodeSlug)}${suffix}`,
+    `/v1/donghua/episode/${encodeURIComponent(episodeSlug)}${suffix}`,
   );
 }
 
 // ─── Entertainment ────────────────────────────────────────────────
-// Backend /api/v1/entertainment/* — subcategory: movie, tv-series, adult
+// Backend /v1/entertainment/* — subcategory: movie, tv-series, adult
 
 export async function fetchEntertainmentLatest(
   page = 1,
@@ -564,7 +564,7 @@ export async function fetchEntertainmentLatest(
   if (type) qs.set("type", type);
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/latest?${qs}`,
+    `/v1/entertainment/latest?${qs}`,
   );
 }
 
@@ -580,7 +580,7 @@ export async function fetchEntertainmentPopular(
   if (type) qs.set("type", type);
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/popular?${qs}`,
+    `/v1/entertainment/popular?${qs}`,
   );
 }
 
@@ -595,7 +595,7 @@ export async function fetchEntertainmentSearch(
   if (type) qs.set("type", type);
   setSource(qs, source);
   return apiFetch<GodenListEnvelope<GodenListItem>>(
-    `/api/v1/entertainment/search?${qs}`,
+    `/v1/entertainment/search?${qs}`,
   );
 }
 
@@ -603,7 +603,7 @@ export async function fetchEntertainmentGenres(
   subcategory = "movie",
 ): Promise<GodenListEnvelope<string>> {
   const qs = new URLSearchParams({ subcategory });
-  return apiFetch<GodenListEnvelope<string>>(`/api/v1/entertainment/genres?${qs}`);
+  return apiFetch<GodenListEnvelope<string>>(`/v1/entertainment/genres?${qs}`);
 }
 
 export async function fetchEntertainmentDetail(
@@ -614,7 +614,7 @@ export async function fetchEntertainmentDetail(
   const qs = new URLSearchParams({ subcategory });
   if (type && subcategory === "adult") qs.set("type", type);
   return apiFetch<GodenEnvelope<import("@/types").EntertainmentDetail>>(
-    `/api/v1/entertainment/${encodeURIComponent(slug)}?${qs}`,
+    `/v1/entertainment/${encodeURIComponent(slug)}?${qs}`,
   );
 }
 
@@ -627,7 +627,7 @@ export async function fetchEntertainmentSources(
   if (type && subcategory === "adult") qs.set("type", type);
   // Backend returns sources as either { data: [...sources] } or { data: { sources: [...] } }
   const response = await apiFetch<any>(
-    `/api/v1/entertainment/${encodeURIComponent(slug)}/sources?${qs}`,
+    `/v1/entertainment/${encodeURIComponent(slug)}/sources?${qs}`,
   );
   const rawData = response.data;
   const sourcesArray: any[] = Array.isArray(rawData)
@@ -643,7 +643,7 @@ export async function fetchEntertainmentSources(
 }
 
 // ─── Vault ────────────────────────────────────────────────────────
-// Backend /api/v1/vault/* — cached content with signed stream URLs
+// Backend /v1/vault/* — cached content with signed stream URLs
 
 export async function fetchVaultResolve(
   opts: { code?: string; title?: string; kind?: "video" | "comic" | "image"; category?: string; slug?: string; ttl?: number },
@@ -656,14 +656,14 @@ export async function fetchVaultResolve(
   if (opts.slug) qs.set("slug", opts.slug);
   if (opts.ttl) qs.set("ttl", String(opts.ttl));
   return apiFetch<import("@/types").VaultResolveResponse>(
-    `/api/v1/vault/resolve?${qs}`,
+    `/v1/vault/resolve?${qs}`,
   );
 }
 
 // ─── Auth (user-facing, Bearer JWT) ──────────────────────────────
 
 export async function fetchAuthMe(token: string): Promise<AuthUser> {
-  return userFetch<AuthUser>("/api/v1/auth/me", token);
+  return userFetch<AuthUser>("/v1/auth/me", token);
 }
 
 /** Google OAuth login — redirect the browser to this URL.
@@ -676,9 +676,9 @@ export function getGoogleLoginUrl(returnTo?: string): string {
     : typeof window !== "undefined"
       ? `${window.location.origin}/auth/callback`
       : "";
-  if (!target) return `${upstream}/api/v1/auth/google/login`;
+  if (!target) return `${upstream}/v1/auth/google/login`;
   const qs = new URLSearchParams({ return_to: target });
-  return `${upstream}/api/v1/auth/google/login?${qs}`;
+  return `${upstream}/v1/auth/google/login?${qs}`;
 }
 
 // ─── InfiniteGrid adapter ─────────────────────────────────────────

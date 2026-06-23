@@ -10,12 +10,12 @@ import { fetchComicChapterImages, fetchComicDetail } from "@/lib/api";
 import { Spinner } from "@/components/ui/Spinner";
 
 // Comic page image URL resolver. The backend now returns relative
-// /api/v1/asset/<base64> paths (the asset endpoint fetches the upstream
+// /v1/asset/<base64> paths (the asset endpoint fetches the upstream
 // komiku image server-side with the correct Referer and attaches our API
 // key), so those must go through /api/proxy. Absolute komiku URLs still
 // need the /api/img proxy for per-host Referer injection.
 function proxyPage(url: string): string {
-  if (url.startsWith("/api/v1/")) return `/api/proxy${url}`;
+  if (url.startsWith("/v1/")) return `/api/proxy${url}`;
   return `/api/img?url=${encodeURIComponent(url)}`;
 }
 

@@ -4,15 +4,15 @@ const UPSTREAM = process.env.UPSTREAM_API_URL || "https://api.godenpg.dev";
 const GODEN_API_KEY = process.env.GODEN_API_KEY || process.env.API_KEY;
 
 const CONTENT_PREFIXES = [
-  "/api/v1/anime",
-  "/api/v1/entertainment",
-  "/api/v1/comic",
-  "/api/v1/donghua",
-  "/api/v1/asset",
-  "/api/v1/vault",
+  "/v1/anime",
+  "/v1/entertainment",
+  "/v1/comic",
+  "/v1/donghua",
+  "/v1/asset",
+  "/v1/vault",
 ] as const;
 
-const AUTH_PREFIX = "/api/v1/auth";
+const AUTH_PREFIX = "/v1/auth";
 
 const ALLOWED_PREFIXES = [...CONTENT_PREFIXES, AUTH_PREFIX];
 
@@ -116,8 +116,8 @@ async function handler(
   }
 
   try {
-    const isAsset = upstreamPath.startsWith("/api/v1/asset");
-    const isVaultStream = upstreamPath.startsWith("/api/v1/vault/stream");
+    const isAsset = upstreamPath.startsWith("/v1/asset");
+    const isVaultStream = upstreamPath.startsWith("/v1/vault/stream");
     const isLargeBinary = isAsset || isVaultStream;
 
     // Large binary assets (video, images) get a generous timeout;
